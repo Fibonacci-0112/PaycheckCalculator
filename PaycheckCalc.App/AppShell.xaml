@@ -10,14 +10,9 @@
        Shell.NavBarHasShadow="False"
        Shell.BackgroundColor="#1565C0"
        Shell.TitleColor="White"
-       Shell.FlyoutBackgroundColor="#F0F4FF"
-       FlyoutBehavior="Flyout">
+       FlyoutBehavior="Disabled">
 
-    <FlyoutItem Title="Dashboard" Route="Dashboard">
-        <ShellContent Route="Home"
-                      ContentTemplate="{DataTemplate views:DashboardPage}" />
-    </FlyoutItem>
-    <FlyoutItem Title="Paycheck Calculator" Route="Paycheck">
+    <TabBar>
         <Tab Title="Inputs">
             <ShellContent Route="Inputs"
                           ContentTemplate="{DataTemplate views:InputsPage}" />
@@ -26,64 +21,5 @@
             <ShellContent Route="Results"
                           ContentTemplate="{DataTemplate views:ResultsPage}" />
         </Tab>
-        <Tab Title="Compare">
-            <ShellContent Route="Compare"
-                          ContentTemplate="{DataTemplate views:ComparePage}" />
-        </Tab>
-        <Tab Title="Saved">
-            <ShellContent Route="Saved"
-                          ContentTemplate="{DataTemplate views:SavedPaychecksPage}" />
-        </Tab>
-    </FlyoutItem>
-    <FlyoutItem Title="Self-Employment" Route="SelfEmploymentHub">
-        <Tab Title="SE Inputs">
-            <ShellContent Route="SelfEmployment"
-                          ContentTemplate="{DataTemplate views:SelfEmploymentPage}" />
-        </Tab>
-        <Tab Title="SE Results">
-            <ShellContent Route="SEResults"
-                          ContentTemplate="{DataTemplate views:SelfEmploymentResultsPage}" />
-        </Tab>
-    </FlyoutItem>
-    <FlyoutItem Title="Annual Tax Planner" Route="AnnualPlanner">
-        <Tab Title="Jobs &amp; YTD">
-            <ShellContent Route="JobsAndYtd"
-                          ContentTemplate="{DataTemplate views:JobsAndYtdPage}" />
-        </Tab>
-        <Tab Title="Adjustments">
-            <ShellContent Route="OtherIncomeAdjustments"
-                          ContentTemplate="{DataTemplate views:OtherIncomeAdjustmentsPage}" />
-        </Tab>
-        <Tab Title="Credits">
-            <ShellContent Route="Credits"
-                          ContentTemplate="{DataTemplate views:CreditsPage}" />
-        </Tab>
-        <Tab Title="Estimates">
-            <ShellContent Route="QuarterlyEstimates"
-                          ContentTemplate="{DataTemplate views:QuarterlyEstimatesPage}" />
-        </Tab>
-        <Tab Title="What-If">
-            <ShellContent Route="WhatIf"
-                          ContentTemplate="{DataTemplate views:WhatIfPage}" />
-        </Tab>
-        <Tab Title="Projection">
-            <ShellContent Route="AnnualProjection"
-                          ContentTemplate="{DataTemplate views:AnnualProjectionPage}" />
-        </Tab>
-        <Tab Title="Annual Results">
-            <ShellContent Route="AnnualResults"
-                          ContentTemplate="{DataTemplate views:AnnualTaxResultsPage}" />
-        </Tab>
-    </FlyoutItem>
-
-    <!-- Account hub: signed-in users see their email + sign-out; anonymous
-         users see a "sign in to sync" CTA. The Login route is targeted by
-         GoToAsync("//Login") from the Account page and after sign-out. -->
-    <FlyoutItem Title="Account" Route="AccountHub">
-        <ShellContent Route="Account"
-                      ContentTemplate="{DataTemplate views:AccountPage}" />
-    </FlyoutItem>
-    <ShellContent Title="Sign in" Route="Login"
-                  FlyoutItemIsVisible="False"
-                  ContentTemplate="{DataTemplate views:LoginPage}" />
+    </TabBar>
 </Shell>

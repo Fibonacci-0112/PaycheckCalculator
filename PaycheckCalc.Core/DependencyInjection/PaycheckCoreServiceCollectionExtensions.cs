@@ -10,7 +10,6 @@ using PaycheckCalc.Core.Tax.Connecticut;
 using PaycheckCalc.Core.Tax.Delaware;
 using PaycheckCalc.Core.Tax.DistrictOfColumbia;
 using PaycheckCalc.Core.Tax.Federal;
-using PaycheckCalc.Core.Tax.Federal.Annual;
 using PaycheckCalc.Core.Tax.Fica;
 using PaycheckCalc.Core.Tax.Georgia;
 using PaycheckCalc.Core.Tax.Hawaii;
@@ -45,10 +44,8 @@ using PaycheckCalc.Core.Tax.Oklahoma;
 using PaycheckCalc.Core.Tax.Oregon;
 using PaycheckCalc.Core.Tax.Pennsylvania;
 using PaycheckCalc.Core.Tax.RhodeIsland;
-using PaycheckCalc.Core.Tax.SelfEmployment;
 using PaycheckCalc.Core.Tax.SouthCarolina;
 using PaycheckCalc.Core.Tax.State;
-using PaycheckCalc.Core.Tax.State.Annual;
 using PaycheckCalc.Core.Tax.Utah;
 using PaycheckCalc.Core.Tax.Vermont;
 using PaycheckCalc.Core.Tax.Virginia;
@@ -79,7 +76,6 @@ public static class PaycheckCoreServiceCollectionExtensions
         var ohRitaJson = dataReader.ReadAllText("oh_rita_2026.json");
         var ohCcaJson  = dataReader.ReadAllText("oh_cca_2026.json");
         var mdJson     = dataReader.ReadAllText("md_county_surtax_2026.json");
-        var f1040Json  = dataReader.ReadAllText("federal_1040_brackets_2026.json");
 
         var schemaJsonMap = new Dictionary<UsState, string>();
         foreach (var state in Enum.GetValues<UsState>())
@@ -187,27 +183,6 @@ public static class PaycheckCoreServiceCollectionExtensions
 
         services.AddSingleton(new PayCalculator(stateRegistry, fica, irs15t, localRegistry));
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
-        services.AddSingleton<YtdSummaryCalculator>();
-
-        var seCalc = new SelfEmploymentTaxCalculator(fica);
-        services.AddSingleton(seCalc);
-        services.AddSingleton<QbiDeductionCalculator>();
-        services.AddSingleton(new SelfEmploymentCalculator(seCalc, new QbiDeductionCalculator(), irs15t, stateRegistry));
-
-        var f1040TaxCalc = new Federal1040TaxCalculator(f1040Json);
-        services.AddSingleton(f1040TaxCalc);
-        services.AddSingleton<Schedule1Calculator>();
-        services.AddSingleton(new AnnualStateTaxCalculator(stateRegistry));
-        services.AddSingleton(sp =>
-            new Form1040Calculator(
-                f1040TaxCalc,
-                sp.GetRequiredService<Schedule1Calculator>(),
-                seCalc,
-                sp.GetRequiredService<QbiDeductionCalculator>(),
-                fica,
-                stateTax: sp.GetRequiredService<AnnualStateTaxCalculator>()));
-        services.AddSingleton<WithholdingSuggestionCalculator>();
-        services.AddSingleton<Form1040ESCalculator>();
 
         return services;
     }

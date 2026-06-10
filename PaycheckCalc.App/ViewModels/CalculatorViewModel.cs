@@ -4,10 +4,8 @@ using PaycheckCalc.App.Helpers;
 using PaycheckCalc.App.Mappers;
 using PaycheckCalc.App.Models;
 using PaycheckCalc.Core.Explanation;
-using PaycheckCalc.Core.Export;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Pay;
-using PaycheckCalc.Core.Storage;
 using PaycheckCalc.Core.Tax.Federal;
 using PaycheckCalc.Core.Tax.State;
 using System.Collections.ObjectModel;
@@ -27,16 +25,14 @@ public partial class CalculatorViewModel : ObservableObject
     private readonly AnnualProjectionCalculator _projectionCalc;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
-    private readonly IPaycheckRepository _repo;
     private UsState _previousState;
 
-    public CalculatorViewModel(PayCalculator calc, AnnualProjectionCalculator projectionCalc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPaycheckRepository repo)
+    public CalculatorViewModel(PayCalculator calc, AnnualProjectionCalculator projectionCalc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider)
     {
         _calc = calc;
         _projectionCalc = projectionCalc;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
-        _repo = repo;
         Frequency = PayFrequency.Biweekly;
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
         OvertimeMultiplier = 1.5m;
@@ -206,16 +202,6 @@ public partial class CalculatorViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Pre-populates the state field cache for a given state from saved values.
-    /// Used by <see cref="Mappers.PaycheckInputRestorer"/> to restore state-specific
-    /// input values before triggering <see cref="RebuildStateFields"/>.
-    /// </summary>
-    public void SetStateFieldCache(UsState state, Dictionary<string, object?> values)
-    {
-        _stateFieldCache[state] = new Dictionary<string, object?>(values, StringComparer.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
     /// Collection of itemized deductions. Users can add, remove, and edit each entry.
     /// </summary>
     public ObservableCollection<DeductionItemViewModel> Deductions { get; } = new();
@@ -280,17 +266,9 @@ public partial class CalculatorViewModel : ObservableObject
     [ObservableProperty] public partial decimal FederalStep4cExtraWithholding { get; set; }
 
     /// <summary>
-    /// The last computed domain result, retained for export (CSV / PDF).
-    /// </summary>
-    private PaycheckResult? _lastResult;
-
-    /// <summary>
     /// Presentation-ready result card for the UI — never the raw domain PaycheckResult.
     /// </summary>
     [ObservableProperty] public partial ResultCardModel? ResultCard { get; set; }
-
-    /// <summary>True when a result has been calculated and export is possible.</summary>
-    public bool CanExport => _lastResult is not null;
 
     /// <summary>
     /// Presentation-ready annual projection for the UI.
@@ -299,8 +277,6 @@ public partial class CalculatorViewModel : ObservableObject
 
     partial void OnResultCardChanged(ResultCardModel? value)
     {
-        OnPropertyChanged(nameof(NetPayDifference));
-        OnPropertyChanged(nameof(CanExport));
         OnPropertyChanged(nameof(ShowDeductions));
         OnPropertyChanged(nameof(ShowBothDeductions));
     }
@@ -312,30 +288,6 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>True when the result has both pre-tax and post-tax deductions (for separator visibility).</summary>
     public bool ShowBothDeductions =>
         (ResultCard?.PreTaxDeductions ?? 0m) > 0m && (ResultCard?.PostTaxDeductions ?? 0m) > 0m;
-
-    /// <summary>
-    /// Saved scenario snapshot for side-by-side comparison.
-    /// </summary>
-    [ObservableProperty] public partial ScenarioSnapshot? SavedScenario { get; set; }
-
-    public bool HasSavedComparison => SavedScenario is not null;
-    public bool HasNoSavedComparison => SavedScenario is null;
-
-    public decimal NetPayDifference =>
-        (ResultCard?.NetPay ?? 0m) - (SavedScenario?.ResultCard?.NetPay ?? 0m);
-
-    partial void OnSavedScenarioChanged(ScenarioSnapshot? value)
-    {
-        OnPropertyChanged(nameof(HasSavedComparison));
-        OnPropertyChanged(nameof(HasNoSavedComparison));
-        OnPropertyChanged(nameof(NetPayDifference));
-    }
-
-    [RelayCommand]
-    private void SaveForCompare()
-    {
-        SavedScenario = ScenarioMapper.Capture(this);
-    }
 
     /// <summary>
     /// Opens a "Show Your Work" alert for the paycheck line identified by
@@ -440,7 +392,6 @@ public partial class CalculatorViewModel : ObservableObject
 
         // Run domain calculation
         var domainResult = _calc.Calculate(input);
-        _lastResult = domainResult;
 
         // Map domain result → presentation model via mapper
         ResultCard = ResultCardMapper.Map(domainResult);
@@ -448,133 +399,5 @@ public partial class CalculatorViewModel : ObservableObject
         // Compute annual projections
         var domainProjection = _projectionCalc.Calculate(input, domainResult);
         Projection = AnnualProjectionMapper.Map(domainProjection);
-    }
-
-    // ── Export commands ──────────────────────────────────────
-
-    [RelayCommand]
-    private async Task ExportCsv()
-    {
-        if (_lastResult is null) return;
-
-        var csv = CsvPaycheckExporter.Generate(_lastResult);
-        var fileName = $"paycheck_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllTextAsync(filePath, csv);
-
-        await Share.Default.RequestAsync(new ShareFileRequest
-        {
-            Title = "Export Paycheck CSV",
-            File = new ShareFile(filePath)
-        });
-    }
-
-    [RelayCommand]
-    private async Task ExportPdf()
-    {
-        if (_lastResult is null) return;
-
-        var pdf = PdfPaycheckExporter.Generate(_lastResult);
-        var fileName = $"paycheck_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-        await File.WriteAllBytesAsync(filePath, pdf);
-
-        await Share.Default.RequestAsync(new ShareFileRequest
-        {
-            Title = "Export Paycheck PDF",
-            File = new ShareFile(filePath)
-        });
-    }
-
-    // ── Save / Load paycheck persistence ────────────────────
-
-    /// <summary>
-    /// The ID of the currently loaded saved paycheck, if any.
-    /// When set, "Save Paycheck" overwrites this entry instead of creating a new one.
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasLoadedPaycheck))]
-    [NotifyPropertyChangedFor(nameof(SaveButtonText))]
-    public partial Guid? LoadedPaycheckId { get; set; }
-
-    /// <summary>
-    /// The display name of the currently loaded saved paycheck.
-    /// </summary>
-    [ObservableProperty] public partial string? LoadedPaycheckName { get; set; }
-
-    public bool HasLoadedPaycheck => LoadedPaycheckId is not null;
-
-    /// <summary>Button text changes based on whether we're overwriting or creating new.</summary>
-    public string SaveButtonText => HasLoadedPaycheck ? "Save Paycheck" : "Save as New Paycheck";
-
-    /// <summary>
-    /// Saves the current paycheck. If a paycheck is loaded (overwrite mode),
-    /// updates the existing entry. Otherwise the page prompts for a name first
-    /// and calls <see cref="SaveWithNameAsync"/>.
-    /// </summary>
-    public async Task SaveCurrentAsync()
-    {
-        if (_lastResult is null) return;
-
-        if (LoadedPaycheckId is { } existingId)
-        {
-            // Overwrite the existing saved paycheck
-            var existing = await _repo.GetByIdAsync(existingId);
-            if (existing is not null)
-            {
-                var stateValues = new StateInputValues();
-                foreach (var field in StateFields)
-                    stateValues[field.Key] = field.GetResolvedValue();
-
-                var input = PaycheckInputMapper.Map(this, stateValues);
-                var updated = new SavedPaycheck
-                {
-                    Id = existing.Id,
-                    Name = existing.Name,
-                    CreatedAt = existing.CreatedAt,
-                    UpdatedAt = DateTimeOffset.UtcNow,
-                    Input = input,
-                    Result = _lastResult
-                };
-                await _repo.SaveAsync(updated);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Saves the current paycheck with a new name, creating a new entry.
-    /// Called by the page after a DisplayPromptAsync dialog.
-    /// </summary>
-    public async Task SaveWithNameAsync(string name)
-    {
-        if (_lastResult is null) return;
-
-        var stateValues = new StateInputValues();
-        foreach (var field in StateFields)
-            stateValues[field.Key] = field.GetResolvedValue();
-
-        var input = PaycheckInputMapper.Map(this, stateValues);
-        var paycheck = new SavedPaycheck
-        {
-            Name = name,
-            Input = input,
-            Result = _lastResult
-        };
-
-        await _repo.SaveAsync(paycheck);
-
-        // Track the newly saved paycheck for future overwrites
-        LoadedPaycheckId = paycheck.Id;
-        LoadedPaycheckName = paycheck.Name;
-    }
-
-    /// <summary>
-    /// Clears the loaded paycheck tracking so the next save creates a new entry.
-    /// </summary>
-    [RelayCommand]
-    private void ClearLoadedPaycheck()
-    {
-        LoadedPaycheckId = null;
-        LoadedPaycheckName = null;
     }
 }

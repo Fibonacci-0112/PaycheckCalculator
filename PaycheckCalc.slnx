@@ -4,5 +4,4 @@
   </Project>
   <Project Path="PaycheckCalc.Core/PaycheckCalc.Core.csproj" />
   <Project Path="PaycheckCalc.Tests/PaycheckCalc.Tests.csproj" />
-  <Project Path="PaycheckCalc.Blazor/PaycheckCalc.Blazor.csproj" />
 </Solution>

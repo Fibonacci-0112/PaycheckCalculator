@@ -1,4 +1,3 @@
-using PaycheckCalc.Core.Geocoding;
 using PaycheckCalc.Core.Tax.Federal;
 using PaycheckCalc.Core.Tax.Local;
 using PaycheckCalc.Core.Tax.State;
@@ -42,12 +41,6 @@ public sealed class PaycheckInput
     /// calculator's <see cref="ILocalWithholdingCalculator.GetInputSchema"/>.
     /// </summary>
     public LocalInputValues? LocalInputValues { get; init; }
-
-    /// <summary>Raw home-address input used only by the resolver chain, not by tax calculators.</summary>
-    public AddressInput? HomeAddress { get; init; }
-
-    /// <summary>Raw work-address input used only by the resolver chain, not by tax calculators.</summary>
-    public AddressInput? WorkAddress { get; init; }
 
     public FederalW4Input FederalW4 { get; init; } = new();
 

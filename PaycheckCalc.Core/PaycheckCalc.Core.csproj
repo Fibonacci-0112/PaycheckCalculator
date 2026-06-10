@@ -2,8 +2,8 @@
   <PropertyGroup>
     <!--
       Dynamically select target frameworks based on the installed SDK.
-      - SDK >= .NET 10: build net10.0 (primary target for MAUI/Blazor/Tests) AND net9.0.
-      - SDK <  .NET 10: build net9.0 only (MAUI/Blazor/Tests require .NET 10+).
+      - SDK >= .NET 10: build net10.0 (primary target for MAUI/Tests) AND net9.0.
+      - SDK <  .NET 10: build net9.0 only (MAUI/Tests require .NET 10+).
       This avoids NETSDK1045 "unsupported target framework" when building Core
       with the stable .NET 9 SDK on CI or developer machines.
     -->
@@ -29,9 +29,6 @@
     <None Include="Data\connecticut_withholding_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Data\Federal2026\federal_1040_brackets_2026.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="Data\pa_eit_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -52,18 +49,13 @@
     </None>
   </ItemGroup>
 
-  <!-- net10.0-only packages (QuestPDF PDF rendering, kept out of the net9.0 fallback) -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
-    <PackageReference Include="QuestPDF" Version="2026.5.0" />
   </ItemGroup>
 
-  <!-- net9.0 (Web/WASM) build: exclude QuestPDF and the PDF exporters that depend on it -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
-    <Compile Remove="Export/PdfPaycheckExporter.cs" />
-    <Compile Remove="Export/PdfSelfEmploymentExporter.cs" />
   </ItemGroup>
 
 </Project>
