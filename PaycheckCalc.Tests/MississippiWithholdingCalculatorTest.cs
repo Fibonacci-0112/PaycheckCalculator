@@ -269,19 +269,20 @@ public class MississippiWithholdingCalculatorTest
 
     // ── Dependent exemption ─────────────────────────────────────────
 
-    // Single, biweekly $3,000, 2 dependents ($3,000 additional exemption):
+    // Single, biweekly $3,000, 2 dependents ($1,500 each):
     //   annual wages = $78,000
-    //   less $2,300 + $6,000 + 2 × $1,500 = $67,200
-    //   over $10,000: $67,200 − $10,000 = $57,200
-    //   annual tax = $57,200 × 4% = $2,288.00
-    //   per period = $2,288.00 / 26 = $88.00
+    //   less $2,300 std + $6,000 personal + 2 × $1,500 dependents = $11,300
+    //   taxable = $78,000 − $11,300 = $66,700
+    //   over $10,000: $66,700 − $10,000 = $56,700
+    //   annual tax = $56,700 × 4% = $2,268.00
+    //   per period = $2,268.00 / 26 = $87.230769... → $87.23
     [Fact]
     public void Single_TwoDependents_ReducesTaxCorrectly()
     {
         var result = Calculate(GrossWages: 3_000m, PayFrequency.Biweekly, "Single",
             dependents: 2);
 
-        Assert.Equal(88.00m, result.Withholding);
+        Assert.Equal(87.23m, result.Withholding);
     }
 
     // ── Extra withholding ───────────────────────────────────────────

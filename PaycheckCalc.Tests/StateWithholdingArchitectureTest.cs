@@ -28,9 +28,20 @@ using PaycheckCalc.Core.Tax.Nebraska;
 using PaycheckCalc.Core.Tax.NewJersey;
 using PaycheckCalc.Core.Tax.NewMexico;
 using PaycheckCalc.Core.Tax.NorthCarolina;
+using PaycheckCalc.Core.Tax.NorthDakota;
+using PaycheckCalc.Core.Tax.NewYork;
+using PaycheckCalc.Core.Tax.Ohio;
 using PaycheckCalc.Core.Tax.Oklahoma;
+using PaycheckCalc.Core.Tax.Oregon;
 using PaycheckCalc.Core.Tax.Pennsylvania;
+using PaycheckCalc.Core.Tax.RhodeIsland;
+using PaycheckCalc.Core.Tax.SouthCarolina;
+using PaycheckCalc.Core.Tax.Utah;
+using PaycheckCalc.Core.Tax.Vermont;
+using PaycheckCalc.Core.Tax.Virginia;
 using PaycheckCalc.Core.Tax.Washington;
+using PaycheckCalc.Core.Tax.WestVirginia;
+using PaycheckCalc.Core.Tax.Wisconsin;
 using PaycheckCalc.Core.Tax.Wyoming;
 using PaycheckCalc.Core.Tax.State;
 using Xunit;
@@ -307,7 +318,21 @@ public class PercentageMethodWithholdingAdapterTest
 
     private static PercentageMethodWithholdingAdapter CreateAdapter(UsState state)
     {
-        var config = StateTaxConfigs2026.Configs[state];
+        // The generic percentage-method adapter is no longer wired to any
+        // production state (every state has a dedicated calculator, so
+        // StateTaxConfigs2026.Configs is empty). Build a self-contained flat
+        // 4.65% config — no standard deduction or allowance — to exercise the
+        // adapter directly. This keeps the arithmetic clean for the fixtures
+        // below (e.g. 5000 × 26 × 4.65% ÷ 26 = 232.50).
+        var config = new PercentageMethodConfig
+        {
+            StandardDeductionSingle = 0m,
+            StandardDeductionMarried = 0m,
+            AllowanceAmount = 0m,
+            AllowanceCreditAmount = 0m,
+            BracketsSingle = [new TaxBracket { Floor = 0m, Rate = 0.0465m }],
+            BracketsMarried = [new TaxBracket { Floor = 0m, Rate = 0.0465m }],
+        };
         return new PercentageMethodWithholdingAdapter(state, config, TestSchemas.Provider);
     }
 }
@@ -788,6 +813,30 @@ public class FullRegistryIntegrationTest
         registry.Register(new NewJerseyWithholdingCalculator(TestSchemas.Provider));
 
         registry.Register(new NewMexicoWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new NewYorkWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new NorthCarolinaWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new NorthDakotaWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new OhioWithholdingCalculator());
+
+        registry.Register(new OregonWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new RhodeIslandWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new SouthCarolinaWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new UtahWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new VermontWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new VirginiaWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new WestVirginiaWithholdingCalculator(TestSchemas.Provider));
+
+        registry.Register(new WisconsinWithholdingCalculator(TestSchemas.Provider));
 
         registry.Register(new WashingtonWithholdingCalculator());
 
