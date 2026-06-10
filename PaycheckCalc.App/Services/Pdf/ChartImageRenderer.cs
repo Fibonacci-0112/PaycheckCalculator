@@ -1,4 +1,5 @@
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Graphics.Skia;
 using PaycheckCalc.App.Controls;
 using PaycheckCalc.App.Models;
 
@@ -22,7 +23,10 @@ internal static class ChartImageRenderer
 
         var drawable = new DoughnutChartDrawable { Result = result };
 
-        using var context = GraphicsPlatform.CurrentService.CreateBitmapExportContext(width, height);
+        // Skia is the one Maui.Graphics backend with a BitmapExportContext on
+        // every target (Win2D has none), so the chart renders identically on
+        // Android and Windows.
+        using var context = new SkiaBitmapExportContext(width, height, displayScale: 1f);
         var canvas = context.Canvas;
 
         // JPEG has no alpha; paint the card's white background first so any
