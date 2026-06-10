@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using PaycheckCalc.App.Helpers;
 using PaycheckCalc.App.Mappers;
 using PaycheckCalc.App.Models;
+using PaycheckCalc.App.Services.Pdf;
 using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Pay;
@@ -25,14 +26,16 @@ public partial class CalculatorViewModel : ObservableObject
     private readonly AnnualProjectionCalculator _projectionCalc;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
+    private readonly IPdfExportService _pdfExport;
     private UsState _previousState;
 
-    public CalculatorViewModel(PayCalculator calc, AnnualProjectionCalculator projectionCalc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider)
+    public CalculatorViewModel(PayCalculator calc, AnnualProjectionCalculator projectionCalc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport)
     {
         _calc = calc;
         _projectionCalc = projectionCalc;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
+        _pdfExport = pdfExport;
         Frequency = PayFrequency.Biweekly;
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
         OvertimeMultiplier = 1.5m;
@@ -399,5 +402,31 @@ public partial class CalculatorViewModel : ObservableObject
         // Compute annual projections
         var domainProjection = _projectionCalc.Calculate(input, domainResult);
         Projection = AnnualProjectionMapper.Map(domainProjection);
+
+        ExportPdfCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>True once a paycheck has been calculated and can be exported.</summary>
+    public bool CanExportPdf => ResultCard is not null;
+
+    /// <summary>
+    /// Exports the current results and annual projection (including the doughnut
+    /// chart) to a PDF and opens it in Adobe Reader/Acrobat.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExportPdf))]
+    private async Task ExportPdf()
+    {
+        if (ResultCard is null)
+            return;
+
+        try
+        {
+            await _pdfExport.ExportAndOpenAsync(ResultCard, Projection);
+        }
+        catch (Exception ex)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlert("Export PDF", $"Could not export the PDF: {ex.Message}", "OK");
+        }
     }
 }
