@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net11.0-android36.1;net11.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net11.0-android37.0;net11.0-windows10.0.19041.0</TargetFrameworks>
     <UseMaui>true</UseMaui>
     <LangVersion>preview</LangVersion>
     <SingleProject>true</SingleProject>
