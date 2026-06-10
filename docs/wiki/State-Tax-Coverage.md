@@ -64,7 +64,7 @@ Some states levy additional payroll taxes beyond income tax:
 | CT | Paid Family & Medical Leave Insurance (PFMLI) | 0.5% | "Family Leave Insurance (FLI)" |
 | WA | WA Cares Fund (Long-Term Care Insurance) | 0.58% | "WA Cares Fund (Long-Term Care)" |
 
-These amounts flow through `StateWithholdingResult.DisabilityInsurance` and appear as separate line items on the results screen, chart, and exports.
+These amounts flow through `StateWithholdingResult.DisabilityInsurance` and appear as separate line items on the results screen and chart.
 
 ---
 
@@ -99,7 +99,7 @@ Calculate(context, values)  → Computes state withholding for one pay period
 
 ### StateCalculatorRegistry
 
-The registry maps each `UsState` enum value to its `IStateWithholdingCalculator`. It is built at startup in `MauiProgram.cs` and injected into `PayCalculator`.
+The registry maps each `UsState` enum value to its `IStateWithholdingCalculator`. It is built at startup in `AddPaycheckCalcCore` (`PaycheckCalc.Core/DependencyInjection/PaycheckCoreServiceCollectionExtensions.cs`) and injected into `PayCalculator`.
 
 ### Dynamic State Inputs
 
@@ -131,8 +131,8 @@ If the state has unique inputs, formulas, or additional taxes:
 
 1. Create a new folder: `PaycheckCalc.Core/Tax/<StateName>/`.
 2. Implement `IStateWithholdingCalculator` with custom `GetInputSchema()`, `Validate()`, and `Calculate()`.
-3. If the calculator needs JSON data, add the file to `PaycheckCalc.Core/Data/` and register it as an asset in both `PaycheckCalc.App` (as a `MauiAsset`) and `PaycheckCalc.Blazor` (as a linked `Content` item under `wwwroot/data/`).
-4. Register the calculator in `MauiProgram.cs` and `PaycheckCalc.Blazor/Program.cs` within the `StateCalculatorRegistry` setup.
+3. If the calculator needs JSON data, add the file to `PaycheckCalc.Core/Data/` and register it as an asset in `PaycheckCalc.App` (as a `MauiAsset`) and `PaycheckCalc.Tests` (as a linked `None` item copied to the output directory).
+4. Register the calculator in `AddPaycheckCalcCore` (`PaycheckCoreServiceCollectionExtensions.cs`) within the `StateCalculatorRegistry` setup.
 5. Add regression tests in `PaycheckCalc.Tests/`.
 
 ### Testing a New State

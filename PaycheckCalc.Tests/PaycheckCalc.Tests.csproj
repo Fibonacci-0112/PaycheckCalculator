@@ -14,23 +14,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <!--
-      EF Core + SQLite for the EfPaycheckRepository / EfAnnualScenarioRepository
-      tests. Pinned to the same .NET 10 servicing band as the rest of the
-      EF/Identity stack pulled in transitively from PaycheckCalc.Blazor.
-    -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PaycheckCalc.Core\PaycheckCalc.Core.csproj" />
-    <!--
-      Tests reference Blazor to exercise EfPaycheckRepository, EfAnnualScenarioRepository,
-      EfSessionStateRepository, EfUserPreferencesRepository, and AppDbContext directly
-      against an in-memory SQLite database. This pulls in the Identity + ASP.NET Core
-      web dependencies, which is fine for testing.
-    -->
-    <ProjectReference Include="..\PaycheckCalc.Blazor\PaycheckCalc.Blazor.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -57,10 +44,6 @@
     <None Include="..\PaycheckCalc.Core\Data\connecticut_withholding_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>connecticut_withholding_2026.json</Link>
-    </None>
-    <None Include="..\PaycheckCalc.Core\Data\Federal2026\federal_1040_brackets_2026.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Link>federal_1040_brackets_2026.json</Link>
     </None>
     <None Include="..\PaycheckCalc.Core\Data\pa_eit_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

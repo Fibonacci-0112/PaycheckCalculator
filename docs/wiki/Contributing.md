@@ -87,7 +87,7 @@ See the [State Tax Coverage](State-Tax-Coverage.md#adding-a-new-state) page for 
 Key checklist:
 - [ ] Implement `IStateWithholdingCalculator` (or add a `StateTaxConfigs2026` entry).
 - [ ] Define the input schema, validation, and calculation logic.
-- [ ] Register the calculator in `MauiProgram.cs`.
+- [ ] Register the calculator in `AddPaycheckCalcCore` (`PaycheckCoreServiceCollectionExtensions.cs`).
 - [ ] Add JSON data files if needed (and register as app package assets).
 - [ ] Write regression tests with explicit expected values.
 - [ ] Verify the state appears in the UI picker and dynamic fields render correctly.
