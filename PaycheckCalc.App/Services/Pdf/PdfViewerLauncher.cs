@@ -3,7 +3,8 @@ using Microsoft.Maui.Storage;
 
 #if ANDROID
 using Android.Content;
-using AndroidX.Core.Content;
+// alias the AndroidX FileProvider to avoid ambiguity with Microsoft.Maui.Storage.FileProvider
+using AndroidFileProvider = AndroidX.Core.Content.FileProvider;
 #endif
 
 #if WINDOWS
@@ -38,7 +39,7 @@ public sealed class PdfViewerLauncher : IPdfViewerLauncher
         {
             var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
             var authority = context.PackageName + ".fileProvider";
-            var uri = FileProvider.GetUriForFile(context, authority, new Java.IO.File(filePath));
+            var uri = AndroidFileProvider.GetUriForFile(context, authority, new Java.IO.File(filePath));
 
             using var intent = new Intent(Intent.ActionView);
             intent.SetPackage(AdobeAndroidPackage);
