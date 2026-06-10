@@ -11,7 +11,6 @@ A simple **.NET MAUI** paycheck calculator (Android & Windows) that computes net
   - **9 no-income-tax states** — AK, FL, NV, NH, SD, TN, TX, WA, WY. Most use the shared `NoIncomeTaxWithholdingAdapter`; WA has a dedicated calculator for the WA Cares Fund (0.58% LTC premium with opt-out), and WY has its own dedicated (empty-schema) calculator.
   - **Flat-rate state** — Pennsylvania (3.07%).
   - **All other states** — Each implements its own withholding rules (W-4 / state-specific certificate, standard deductions, allowances / exemptions, graduated brackets or flat rate, and state-specific credits). Examples include Alabama (graduated + dependents + federal deduction), Arkansas (DFA formula method), California (Method B, EDD DE 44 withholding tables + SDI), Colorado (flat 4.4% + DR 0004 Table 1 allowance + FMLI), Connecticut (TPG-211 table-driven withholding + PFMLI), Delaware (DE W-4, 7 graduated brackets + $110 personal credit), Georgia (flat 5.19% per HB 111 + G-4 allowances and dependent deductions), Illinois (flat 4.95% + IL-W-4 allowances), Ohio (IT-4 exemptions + two-bracket formula), Oklahoma (OW-2), Oregon (OR-W-4 with per-allowance tax credit), Utah (flat 4.5% with phase-out allowance credit), Virginia (VA-4), Wisconsin (WT-4), West Virginia (IT-104), and the remaining states that use an annualized graduated-bracket approach with state-specific deductions and allowances.
-- **Local / Sub-State Taxes** — Plugin-based local (city / county / school district) withholding with calculators for Pennsylvania Act 32 EIT + LST, New York City, Ohio RITA and CCA, and Maryland county surtax, all JSON-backed.
 - **State Disability / Family Leave Insurance** — California SDI, Colorado FMLI (0.044%), Connecticut PFMLI, and the Washington WA Cares Fund (0.58% LTC premium) are computed alongside state withholding with dynamic labels on the results screen.
 - **Pre-Tax & Post-Tax Deductions** — Supports configurable deductions that reduce taxable wages.
 - **Dynamic State Inputs** — Each state declares its own input schema (filing status, allowances, dependents, extra withholding), and the UI renders fields dynamically.
@@ -41,7 +40,7 @@ PaycheckCalc.slnx
 │   │                          #   ExplanationStep, ExplanationLineKey) — step-by-step
 │   │                          #   walkthroughs of every line on a paycheck
 │   ├── Data/                  # JSON tax tables (IRS 15-T, OK OW-2, CA Method B, AR,
-│   │                          #   CO DR 0004, CT TPG-211, PA EIT, NYC, OH RITA/CCA, MD county surtax)
+│   │                          #   CO DR 0004, CT TPG-211)
 │   │   └── Schemas/           # One JSON file per state (al.json … wy.json) declaring that
 │   │                          #   state's input schema for the schema-driven UI
 │   └── Tax/
@@ -49,16 +48,10 @@ PaycheckCalc.slnx
 │       ├── Fica/              # Social Security & Medicare calculator
 │       ├── State/             # State tax interfaces, registry, generic percentage-method adapter,
 │       │                      #   and no-income-tax adapter
-│       ├── Local/             # Local (city/county/school district) plugin model + registry
-│       │   ├── Maryland/      # County surtax (JSON-backed)
-│       │   ├── NewYork/       # NYC withholding (JSON-backed)
-│       │   ├── Ohio/          # OhioMunicipalCalculator covering RITA + CCA (JSON-backed)
-│       │   └── Pennsylvania/  # Act 32 EIT (JSON-backed) + LST flat head tax
 │       └── <State>/           # One folder per state (Alabama, Arizona, … Wyoming)
 │                              #   each containing a dedicated IStateWithholdingCalculator
 │                              #   implementation for that state's withholding rules
 ├── PaycheckCalc.Tests/        # xUnit test suite
-│   └── Local/                 # Local-tax calculator integration tests
 └── docs/                      # Class diagrams and documentation
 ```
 
@@ -70,7 +63,7 @@ PaycheckCalc.slnx
 | **Target Platforms** | Android, Windows 10+ |
 | **UI Pattern** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) |
 | **Test Framework** | xUnit 2.9.3 |
-| **Tax Data** | JSON-based IRS 15-T and state / local tax bracket tables (2026) |
+| **Tax Data** | JSON-based IRS 15-T and state tax bracket tables (2026) |
 
 ## Prerequisites
 
@@ -112,8 +105,7 @@ The **PayCalculator** orchestrates the full paycheck calculation pipeline:
 3. **FICA** — Social Security and Medicare are calculated on gross wages minus applicable pre-tax deductions, with annual wage-base caps.
 4. **Federal Withholding** — Wages are annualized, the standard deduction and W-4 adjustments are applied, the tax is computed using graduated brackets from IRS Publication 15-T, and the result is de-annualized back to the pay period.
 5. **State Withholding** — The `StateCalculatorRegistry` looks up the registered `IStateWithholdingCalculator` for the selected state and delegates calculation using the state's specific rules and inputs.
-6. **Local Withholding** — When a local jurisdiction is selected, the `LocalCalculatorRegistry` delegates to a registered `ILocalWithholdingCalculator` (e.g., PA Act 32 EIT + LST, NYC, Ohio RITA/CCA, MD county surtax). Local taxes are additive — they reduce net pay but do not reduce federal or state taxable wages.
-7. **Net Pay** — `Gross Pay − Pre-Tax Deductions − Post-Tax Deductions − Federal Tax − State Tax − State Disability − Social Security − Medicare − Additional Medicare − Local Withholding − Local Head Tax`
+6. **Net Pay** — `Gross Pay − Pre-Tax Deductions − Post-Tax Deductions − Federal Tax − State Tax − State Disability − Social Security − Medicare − Additional Medicare`
 
 Gross pay, taxes, and deductions are rounded individually to two decimal places using `MidpointRounding.AwayFromZero` (round half away from zero). Net pay is computed from the unrounded components and then rounded so the displayed net equals `gross − taxes − deductions` to the cent.
 
@@ -141,21 +133,6 @@ Notable state-specific details:
 - **OK** — OW-2 percentage method (JSON-backed) with whole-dollar rounding.
 - **OR** — OR-W-4 with a per-allowance tax *credit* (not deduction) and four graduated brackets.
 - **UT** — flat 4.5% with phase-out allowance credit.
-
-## Local (Sub-State) Tax Coverage
-
-PaycheckCalc also models a growing set of local / sub-state payroll taxes via an `ILocalWithholdingCalculator` plugin model and `LocalCalculatorRegistry`. Current coverage:
-
-| Jurisdiction | Calculator | Notes |
-|---|---|---|
-| Pennsylvania (Act 32) | `PaEitCalculator` | Earned Income Tax by municipality, JSON-backed rate table |
-| Pennsylvania LST | `PaLstCalculator` | Flat per-pay-period Local Services Tax (head tax) |
-| New York City | `NycWithholdingCalculator` | NYC resident personal income tax, JSON-backed |
-| Ohio (RITA) | `OhioMunicipalCalculator` | Regional Income Tax Agency municipal rates, JSON-backed |
-| Ohio (CCA) | `OhioMunicipalCalculator` | Central Collection Agency municipal rates, JSON-backed (same calculator handles both rate tables) |
-| Maryland county surtax | `MdCountyCalculator` | County-level surtax paired with the MD state calculator, JSON-backed |
-
-Local taxes are additive: they subtract from net pay but do **not** reduce federal or state taxable wages.
 
 ## UI Overview
 

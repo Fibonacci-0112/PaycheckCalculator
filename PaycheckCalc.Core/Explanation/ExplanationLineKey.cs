@@ -14,7 +14,5 @@ public enum ExplanationLineKey
     AdditionalMedicare,
     StateWithholding,
     StateDisability,
-    LocalWithholding,
-    LocalHeadTax,
     NetPay
 }

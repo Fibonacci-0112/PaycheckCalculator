@@ -4,9 +4,9 @@
 > Render with any Mermaid-compatible viewer (GitHub markdown, VS Code extension, etc.).
 >
 > The diagram below is intentionally architectural rather than exhaustive: each
-> per-state withholding calculator (50 states + DC) and each per-locality
-> calculator implements the registry-driven interfaces shown here, so they are
-> elided in favor of the contracts and registries that wire them together.
+> per-state withholding calculator (50 states + DC) implements the
+> registry-driven interfaces shown here, so they are elided in favor of the
+> contracts and registries that wire them together.
 
 ## Package overview
 
@@ -46,9 +46,6 @@ classDiagram
         +decimal OvertimeMultiplier
         +UsState State
         +StateInputValues? StateInputValues
-        +string? HomeLocalityCode
-        +string? WorkLocalityCode
-        +LocalInputValues? LocalInputValues
         +FederalW4Input FederalW4
         +IReadOnlyList~Deduction~ Deductions
         +decimal YtdSocialSecurityWages
@@ -70,10 +67,6 @@ classDiagram
         +decimal StateTaxableWages
         +decimal StateWithholding
         +decimal StateDisabilityInsurance
-        +decimal LocalTaxableWages
-        +decimal LocalWithholding
-        +decimal LocalHeadTax
-        +IReadOnlyList~LocalWithholdingLine~ LocalBreakdown
         +decimal TotalTaxes
         +decimal NetPay
         +PaycheckExplanation Explanation
@@ -144,18 +137,6 @@ classDiagram
         loads Data/Schemas/*.json
     }
 
-    %% ── Local plugin model ──────────────────────────────────
-    class ILocalWithholdingCalculator {
-        <<interface>>
-        +LocalityId Locality
-        +Calculate(CommonLocalWithholdingContext, LocalInputValues) LocalWithholdingResult
-    }
-
-    class LocalCalculatorRegistry {
-        +Register(ILocalWithholdingCalculator)
-        +GetCalculator(string code) ILocalWithholdingCalculator
-    }
-
     %% ── Explanations ────────────────────────────────────────
     class PaycheckExplanation {
         +Get(ExplanationLineKey) LineExplanation?
@@ -170,7 +151,6 @@ classDiagram
 
     %% ── Relationships ───────────────────────────────────────
     PayCalculator --> StateCalculatorRegistry
-    PayCalculator --> LocalCalculatorRegistry
     PayCalculator --> FicaCalculator
     PayCalculator --> Irs15TPercentageCalculator
     PayCalculator ..> PaycheckInput
@@ -179,7 +159,6 @@ classDiagram
     AnnualProjectionCalculator --> FicaCalculator
     AnnualProjectionCalculator ..> AnnualProjection
     StateCalculatorRegistry o-- IStateWithholdingCalculator : 51 registered
-    LocalCalculatorRegistry o-- ILocalWithholdingCalculator : PA EIT/LST, NYC, OH, MD
     IStateWithholdingCalculator ..> IStateSchemaProvider : schema lookup
     JsonStateSchemaProvider ..|> IStateSchemaProvider
     PaycheckInput o-- Deduction

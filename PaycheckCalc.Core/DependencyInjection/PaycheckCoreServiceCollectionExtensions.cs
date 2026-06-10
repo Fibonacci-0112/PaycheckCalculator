@@ -19,11 +19,6 @@ using PaycheckCalc.Core.Tax.Indiana;
 using PaycheckCalc.Core.Tax.Iowa;
 using PaycheckCalc.Core.Tax.Kansas;
 using PaycheckCalc.Core.Tax.Kentucky;
-using PaycheckCalc.Core.Tax.Local;
-using PaycheckCalc.Core.Tax.Local.Maryland;
-using PaycheckCalc.Core.Tax.Local.NewYork;
-using PaycheckCalc.Core.Tax.Local.Ohio;
-using PaycheckCalc.Core.Tax.Local.Pennsylvania;
 using PaycheckCalc.Core.Tax.Louisiana;
 using PaycheckCalc.Core.Tax.Maine;
 using PaycheckCalc.Core.Tax.Maryland;
@@ -71,11 +66,6 @@ public static class PaycheckCoreServiceCollectionExtensions
         var caJson     = dataReader.ReadAllText("ca_method_b_2026.json");
         var coJson     = dataReader.ReadAllText("co_dr0004_2026.json");
         var ctJson     = dataReader.ReadAllText("connecticut_withholding_2026.json");
-        var paEitJson  = dataReader.ReadAllText("pa_eit_2026.json");
-        var nycJson    = dataReader.ReadAllText("nyc_withholding_2026.json");
-        var ohRitaJson = dataReader.ReadAllText("oh_rita_2026.json");
-        var ohCcaJson  = dataReader.ReadAllText("oh_cca_2026.json");
-        var mdJson     = dataReader.ReadAllText("md_county_surtax_2026.json");
 
         var schemaJsonMap = new Dictionary<UsState, string>();
         foreach (var state in Enum.GetValues<UsState>())
@@ -172,16 +162,7 @@ public static class PaycheckCoreServiceCollectionExtensions
 
         services.AddSingleton(stateRegistry);
 
-        var localRegistry = new LocalCalculatorRegistry();
-        localRegistry.Register(new PaEitCalculator(new PaEitRateTable(paEitJson)));
-        localRegistry.Register(new PaLstCalculator());
-        localRegistry.Register(new NycWithholdingCalculator(nycJson));
-        localRegistry.Register(new OhRitaCalculator(ohRitaJson));
-        localRegistry.Register(new OhCcaCalculator(ohCcaJson));
-        localRegistry.Register(new MdCountyCalculator(mdJson));
-        services.AddSingleton(localRegistry);
-
-        services.AddSingleton(new PayCalculator(stateRegistry, fica, irs15t, localRegistry));
+        services.AddSingleton(new PayCalculator(stateRegistry, fica, irs15t));
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
 
         return services;

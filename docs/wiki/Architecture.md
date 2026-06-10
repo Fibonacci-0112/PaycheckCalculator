@@ -23,16 +23,11 @@ PaycheckCalc.slnx
 │   ├── Pay/                       # PayCalculator, AnnualProjectionCalculator
 │   ├── Explanation/               # "Show Your Work" step-by-step breakdowns
 │   ├── DependencyInjection/       # AddPaycheckCalcCore (registry + calculator wiring)
-│   ├── Data/                      # JSON tax bracket tables (state + local + federal)
+│   ├── Data/                      # JSON tax bracket tables (state + federal)
 │   └── Tax/
 │       ├── Federal/               # IRS 15-T percentage calculator
 │       ├── Fica/                  # Social Security & Medicare
 │       ├── State/                 # State tax interfaces, registry, generic percentage-method adapter
-│       ├── Local/                 # Local (city/county/school district) plugin model + registry
-│       │   ├── Maryland/          # County surtax
-│       │   ├── NewYork/           # NYC withholding
-│       │   ├── Ohio/              # RITA + CCA
-│       │   └── Pennsylvania/      # Act 32 EIT + LST
 │       └── <StateName>/           # One folder per state, each with a dedicated calculator
 └── PaycheckCalc.Tests/            # xUnit test suite
 ```
@@ -43,9 +38,9 @@ PaycheckCalc.slnx
 
 1. **Core stays UI-agnostic.** `PaycheckCalc.Core` has zero dependency on MAUI, XAML, or any UI framework. All tax math and models live here.
 
-2. **PayCalculator is an orchestrator.** It composes gross pay, deductions, FICA, federal withholding, state withholding, local withholding, and net pay — but does not contain state- or locality-specific branching or tax rules.
+2. **PayCalculator is an orchestrator.** It composes gross pay, deductions, FICA, federal withholding, state withholding, and net pay — but does not contain state-specific branching or tax rules.
 
-3. **State and local calculators are plugins.** Each state implements `IStateWithholdingCalculator` and is registered in `StateCalculatorRegistry`; each locality implements `ILocalWithholdingCalculator` and is registered in `LocalCalculatorRegistry`. Both registries are built at startup in `AddPaycheckCalcCore` (`PaycheckCalc.Core/DependencyInjection/PaycheckCoreServiceCollectionExtensions.cs`), which `MauiProgram.cs` calls with a `MauiAppPackageTaxDataReader`.
+3. **State calculators are plugins.** Each state implements `IStateWithholdingCalculator` and is registered in `StateCalculatorRegistry`. The registry is built at startup in `AddPaycheckCalcCore` (`PaycheckCalc.Core/DependencyInjection/PaycheckCoreServiceCollectionExtensions.cs`), which `MauiProgram.cs` calls with a `MauiAppPackageTaxDataReader`.
 
 4. **Schema-driven state UI.** State-specific input fields (filing status, allowances, dependents, etc.) are not hard-coded in XAML. Instead, each state calculator declares its input schema via `GetInputSchema()`, and the UI renders fields dynamically.
 
@@ -97,8 +92,7 @@ Core services are registered by `AddPaycheckCalcCore`, called from [`MauiProgram
 - `FicaCalculator` — Social Security and Medicare computation.
 - `Irs15TPercentageCalculator` — Federal income tax (loaded from JSON at startup).
 - `StateCalculatorRegistry` — Central registry of all 51 state calculators.
-- `LocalCalculatorRegistry` — Registry of local (sub-state) calculators (PA EIT + LST, NYC, OH RITA/CCA, MD county surtax).
-- `PayCalculator` — Main paycheck calculation orchestrator; consumes both state and local registries.
+- `PayCalculator` — Main paycheck calculation orchestrator; consumes the state registry.
 - `AnnualProjectionCalculator` — Annualized totals, projected year-to-date amounts, and the year-end over/under withholding estimate.
 - `IStateSchemaProvider` → `JsonStateSchemaProvider` — per-state input schemas loaded from `Data/Schemas/*.json`.
 
@@ -112,11 +106,6 @@ Several calculators load their tax tables from JSON at startup:
 - `ColoradoWithholdingCalculator` ← `co_dr0004_2026.json`
 - `ConnecticutWithholdingCalculator` ← `connecticut_withholding_2026.json`
 - `Irs15TPercentageCalculator` ← `us_irs_15t_2026_percentage_automated.json`
-- `PaEitCalculator` ← `pa_eit_2026.json`
-- `NycWithholdingCalculator` ← `nyc_withholding_2026.json`
-- `OhRitaCalculator` ← `oh_rita_2026.json`
-- `OhCcaCalculator` ← `oh_cca_2026.json`
-- `MdCountyCalculator` ← `md_county_surtax_2026.json`
 
 ### Pages and View Models
 

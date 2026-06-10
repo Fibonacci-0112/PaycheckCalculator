@@ -17,7 +17,7 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        // ── PaycheckCalc.Core wiring (state/local/federal calculators, registries,
+        // ── PaycheckCalc.Core wiring (state/federal calculators, registries,
         //    schema provider, tax JSON tables). MAUI reads the JSON from the app
         //    package via FileSystem.OpenAppPackageFileAsync.
         builder.Services.AddPaycheckCalcCore(new MauiAppPackageTaxDataReader());

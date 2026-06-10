@@ -18,8 +18,8 @@ namespace PaycheckCalc.Core.Tax.Indiana;
 ///     income tax rate.
 ///
 /// Indiana also levies a county income tax that varies by county of residence
-/// and principal work.  That component is out of scope here and is modeled
-/// through the local (sub-state) tax plugin system, not this state module.
+/// and principal work.  That component is out of scope here and is not
+/// modeled by this calculator.
 ///
 /// Calculation steps (Departmental Notice #1, "Income Tax Withholding" —
 /// annualized method):

@@ -23,11 +23,9 @@ Maryland state income tax withholding is computed by the dedicated
 | Married           | $3,200 – $5,100          | Married/HoH       |
 | Head of Household | $3,200 – $5,100          | Married/HoH       |
 
-## County / local surtax
+## County surtax
 
-Maryland county income tax is calculated separately by
-`PaycheckCalc.Core.Tax.Local.Maryland.MdCountyCalculator`, which is
-registered in the `LocalCalculatorRegistry`. The county rate (1.75%–3.20%,
-or 2.25% for non-residents) is applied to the same per-period taxable wages
-and flows into the *local* bucket in `PaycheckResult`.
+Maryland also levies a county income tax (1.75%–3.20% of taxable wages, or
+2.25% for non-residents). That component is out of scope for this module and
+is not modeled by this calculator.
 
