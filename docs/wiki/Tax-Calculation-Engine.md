@@ -78,22 +78,12 @@ The calculator returns a `StateWithholdingResult` with:
 
 See [State Tax Coverage](State-Tax-Coverage.md) for details on each state's implementation.
 
-### Step 6: Local (Sub-State) Withholding
-
-If the input includes a home/work locality, `PayCalculator` delegates to a `LocalCalculatorRegistry` to invoke the registered `ILocalWithholdingCalculator` for the matching `LocalityId`. Calculators produce `LocalWithholdingResult` values that are surfaced on `PaycheckResult` as:
-
-- `LocalWithholding` — local income tax withheld for the period
-- `LocalHeadTax` — flat per-pay-period head taxes (e.g., PA LST)
-- `LocalityLabel`, `LocalTaxableWages`, `LocalBreakdown` — itemized metadata for UI/exports
-
-Local taxes are **additive**: they reduce net pay but do **not** reduce federal or state taxable wages.
-
-### Step 7: Net Pay
+### Step 6: Net Pay
 
 ```
 Net Pay = Gross Pay − Pre-Tax Deductions − Post-Tax Deductions − Federal Tax
           − State Tax − State Disability Insurance − Social Security − Medicare
-          − Additional Medicare − Local Withholding − Local Head Tax
+          − Additional Medicare
 ```
 
 ---

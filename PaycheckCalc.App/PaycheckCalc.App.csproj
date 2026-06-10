@@ -31,11 +31,6 @@
 	<MauiAsset Include="..\PaycheckCalc.Core\Data\ar_withholding_2026.json" LogicalName="ar_withholding_2026.json" />
 	<MauiAsset Include="..\PaycheckCalc.Core\Data\co_dr0004_2026.json" LogicalName="co_dr0004_2026.json" />
 	<MauiAsset Include="..\PaycheckCalc.Core\Data\connecticut_withholding_2026.json" LogicalName="connecticut_withholding_2026.json" />
-	<MauiAsset Include="..\PaycheckCalc.Core\Data\pa_eit_2026.json" LogicalName="pa_eit_2026.json" />
-	<MauiAsset Include="..\PaycheckCalc.Core\Data\nyc_withholding_2026.json" LogicalName="nyc_withholding_2026.json" />
-	<MauiAsset Include="..\PaycheckCalc.Core\Data\oh_rita_2026.json" LogicalName="oh_rita_2026.json" />
-	<MauiAsset Include="..\PaycheckCalc.Core\Data\oh_cca_2026.json" LogicalName="oh_cca_2026.json" />
-	<MauiAsset Include="..\PaycheckCalc.Core\Data\md_county_surtax_2026.json" LogicalName="md_county_surtax_2026.json" />
 	<MauiAsset Include="..\PaycheckCalc.Core\Data\Schemas\*.json" LogicalName="schemas\%(Filename)%(Extension)" />
   </ItemGroup>
 

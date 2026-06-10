@@ -111,11 +111,11 @@ public class MontanaWithholdingCalculatorTest
         // annual tax = $23,800 × 0.047 + ($72,690 − $23,800) × 0.059
         //            = $1,118.60 + $48,890 × 0.059
         //            = $1,118.60 + $2,884.51 = $4,003.11
-        // per period = $4,003.11 / 26 = $154.003461... → $154.00
+        // per period = $4,003.11 / 26 = $153.965769... → $153.97
         var result = Calculate(GrossWages: 3_000m, PayFrequency.Biweekly, "Single");
 
         Assert.Equal(3_000m, result.TaxableWages);
-        Assert.Equal(154.00m, result.Withholding);
+        Assert.Equal(153.97m, result.Withholding);
     }
 
     // ── Single filer — annual taxable income below zero (zero withholding)

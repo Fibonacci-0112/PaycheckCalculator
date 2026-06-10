@@ -68,23 +68,6 @@ These amounts flow through `StateWithholdingResult.DisabilityInsurance` and appe
 
 ---
 
-## Local (Sub-State) Tax Coverage
-
-PaycheckCalc models local / sub-state payroll taxes behind an `ILocalWithholdingCalculator` plugin model, with calculators registered in a `LocalCalculatorRegistry` keyed by locality code. `PayCalculator` consumes the local registry after state withholding.
-
-| Jurisdiction | Calculator | JSON Data |
-|---|---|---|
-| Pennsylvania Act 32 EIT | `PaEitCalculator` | `pa_eit_2026.json` |
-| Pennsylvania LST | `PaLstCalculator` | (flat head tax, no table) |
-| New York City | `NycWithholdingCalculator` | `nyc_withholding_2026.json` |
-| Ohio (RITA) | `OhRitaCalculator` | `oh_rita_2026.json` |
-| Ohio (CCA) | `OhCcaCalculator` | `oh_cca_2026.json` |
-| Maryland county surtax | `MdCountyCalculator` | `md_county_surtax_2026.json` |
-
-Local taxes are **additive**: they subtract from net pay but do **not** reduce federal or state taxable wages. `PaycheckResult` exposes `LocalWithholding`, `LocalHeadTax` (e.g., PA LST), `LocalityLabel`, `LocalTaxableWages`, and `LocalBreakdown` for itemized display.
-
----
-
 ## Plugin Architecture
 
 ### IStateWithholdingCalculator Interface

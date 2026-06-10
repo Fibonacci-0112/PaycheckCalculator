@@ -51,7 +51,7 @@ dotnet build PaycheckCalc.slnx
 dotnet test PaycheckCalc.Tests
 ```
 
-The test suite includes over 1,000 xUnit tests covering federal tax, FICA, all state calculators, local taxes, and projection calculations.
+The test suite includes over 1,000 xUnit tests covering federal tax, FICA, all state calculators, and projection calculations.
 
 ---
 
@@ -110,11 +110,6 @@ Tax tables are stored as JSON files in [`PaycheckCalc.Core/Data/`](../../Paychec
 | `ar_withholding_2026.json` | Arkansas DFA formula method tables |
 | `co_dr0004_2026.json` | Colorado DR 0004 Table 1 allowance data |
 | `connecticut_withholding_2026.json` | Connecticut TPG-211 withholding tables |
-| `pa_eit_2026.json` | Pennsylvania Act 32 EIT rate table |
-| `nyc_withholding_2026.json` | New York City resident withholding tables |
-| `oh_rita_2026.json` | Ohio RITA municipal income tax rates |
-| `oh_cca_2026.json` | Ohio CCA municipal income tax rates |
-| `md_county_surtax_2026.json` | Maryland county surtax percentages |
 | `Schemas/*.json` | One file per state declaring its dynamic input schema |
 
 These files are loaded once at startup via dependency injection (from `FileSystem.OpenAppPackageFileAsync` on MAUI, and from the build output directory in tests) and cached for the lifetime of the process.

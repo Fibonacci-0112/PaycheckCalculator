@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-PaycheckCalc is a simple US paycheck calculator (2026 tax tables) — a **.NET MAUI** app (`PaycheckCalc.App`, Android & Windows) backed by a UI-agnostic core engine (`PaycheckCalc.Core`) and exercised by an xUnit suite (`PaycheckCalc.Tests`). It takes pay/W-4/state/deduction inputs and computes gross pay, federal/state/local withholding, FICA, deductions, net pay, and a lightweight annual projection. There is no annual Form 1040 planner, self-employment module, or web head.
+PaycheckCalc is a simple US paycheck calculator (2026 tax tables) — a **.NET MAUI** app (`PaycheckCalc.App`, Android & Windows) backed by a UI-agnostic core engine (`PaycheckCalc.Core`) and exercised by an xUnit suite (`PaycheckCalc.Tests`). It takes pay/W-4/state/deduction inputs and computes gross pay, federal/state withholding, FICA, deductions, net pay, and a lightweight annual projection. There is no annual Form 1040 planner, self-employment module, or web head.
 
 Solution: `PaycheckCalc.slnx`. The SDK version is pinned in `global.json` (10.0.x, latestPatch roll-forward).
 
@@ -51,8 +51,7 @@ dotnet run --project PaycheckCalc.App
 3. FICA via `Tax/Fica/FicaCalculator.cs` (SS 6.2% capped at $184,500, Medicare 1.45%, Additional Medicare 0.9% > $200k).
 4. Federal withholding via `Tax/Federal/Irs15TPercentageCalculator.cs` (IRS Pub 15-T 2026 percentage method, automated payroll systems): annualize → standard deduction + W-4 adjustments → graduated brackets → de-annualize.
 5. State withholding: `StateCalculatorRegistry` looks up the state's `IStateWithholdingCalculator` and delegates.
-6. Local withholding: `LocalCalculatorRegistry` delegates to an `ILocalWithholdingCalculator` (PA EIT/LST, NYC, OH RITA/CCA, MD county surtax). **Local taxes are additive — they reduce net pay but do NOT reduce federal or state taxable wages.**
-7. Net pay is computed from unrounded components; gross/taxes/deductions round individually to two decimals using `MidpointRounding.AwayFromZero`, and net is rounded so it equals `gross − taxes − deductions` to the cent.
+6. Net pay is computed from unrounded components; gross/taxes/deductions round individually to two decimals using `MidpointRounding.AwayFromZero`, and net is rounded so it equals `gross − taxes − deductions` to the cent.
 
 `Pay/AnnualProjectionCalculator.cs` extends a per-period result into the annual projection shown on the Results page's Annual tab (annualized totals, projected YTD by paycheck number, estimated year-end over/under withholding). The `Explanation/` types carry the "Show Your Work" step-by-step breakdowns attached to `PaycheckResult`.
 
@@ -61,10 +60,6 @@ dotnet run --project PaycheckCalc.App
 Every state has a dedicated folder under `PaycheckCalc.Core/Tax/<StateName>/` with its own `IStateWithholdingCalculator` implementation, registered centrally in `StateCalculatorRegistry` (wiring: `PaycheckCalc.Core/DependencyInjection/PaycheckCoreServiceCollectionExtensions.cs`, called from `MauiProgram.cs`). The state UI is **schema-driven**: each calculator returns `StateFieldDefinition`s from `GetInputSchema()` (backed by `JsonStateSchemaProvider` over `Data/Schemas/*.json`), the UI binds those to `StateFieldViewModel`, and inputs flow back as `StateInputValues`.
 
 When adding/changing state inputs, keep all four in sync: schema, validation, UI field resolution, and tests. Do **not** hardcode per-state controls in `InputsPage.xaml` when the schema can express it. The shared `NoIncomeTaxWithholdingAdapter` is for plain no-tax states (AK/FL/NV/NH/SD/TN/TX); WA and WY have dedicated calculators (WA Cares Fund 0.58% with opt-out; WY empty schema). The generic `PercentageMethodWithholdingAdapter` is retained for tests and is **not** wired to any production state.
-
-### Local tax plugin model
-
-Same pattern at the local level: `ILocalWithholdingCalculator` + `LocalCalculatorRegistry` under `Tax/Local/{Maryland,NewYork,Ohio,Pennsylvania}/`. Most are JSON-backed (rate tables in `Core/Data/`). PA also has a flat `PaLstCalculator` head tax. The MAUI UI does not currently expose locality selection; the engine and tests cover it via `PaycheckInput.HomeLocalityCode` / `WorkLocalityCode` / `LocalInputValues`.
 
 ## Conventions
 

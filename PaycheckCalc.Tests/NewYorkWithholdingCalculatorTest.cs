@@ -138,14 +138,14 @@ public class NewYorkWithholdingCalculatorTest
         // 5.25% × $2,200         =   $115.50
         // 5.90% × $7,500         =   $442.50
         // 6.09% × $59,250        = $3,608.325  ($80,650 − $21,400)
-        // 6.41% × $15,350        =   $984.035  ($96,000 − $80,650)
-        // total                  = $5,634.36
-        // per period = $5,634.36 / 26 = $216.706... → $216.71
+        // 6.41% × $15,350        =   $983.935  ($96,000 − $80,650)
+        // total                  = $5,634.26
+        // per period = $5,634.26 / 26 = $216.702... → $216.70
         var result = Calculate(GrossWages: 4_000m, PayFrequency.Biweekly,
             NewYorkWithholdingCalculator.StatusSingle);
 
         Assert.Equal(4_000m, result.TaxableWages);
-        Assert.Equal(216.71m, result.Withholding);
+        Assert.Equal(216.70m, result.Withholding);
     }
 
     [Fact]
@@ -159,17 +159,17 @@ public class NewYorkWithholdingCalculatorTest
         // 5.90%  × $7,500           =       $442.50
         // 6.09%  × $59,250          =     $3,608.325
         // 6.41%  × $134,750         =     $8,637.475
-        // 6.85%  × $861,150         =    $58,988.775
+        // 6.85%  × $862,150         =    $59,057.275  ($1,077,550 − $215,400)
         // 9.65%  × $3,922,450       =   $378,516.425
         // 10.30% × $20,000,000      = $2,060,000.00
         // 10.90% × $6,192,000       =   $674,928.00
-        // total = $3,185,721.00
-        // per period = $3,185,721.00 / 26 = $122,527.0
+        // total = $3,185,789.50
+        // per period = $3,185,789.50 / 26 = $122,530.365... → $122,530.37
         var result = Calculate(GrossWages: 1_200_000m, PayFrequency.Biweekly,
             NewYorkWithholdingCalculator.StatusSingle);
 
         Assert.Equal(1_200_000m, result.TaxableWages);
-        Assert.Equal(122_527.00m, result.Withholding);
+        Assert.Equal(122_530.37m, result.Withholding);
     }
 
     // ── Married — all bracket tiers ─────────────────────────────────

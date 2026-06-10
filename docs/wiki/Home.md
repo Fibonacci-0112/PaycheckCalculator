@@ -48,4 +48,4 @@ PaycheckCalc is a simple **.NET MAUI** app (Android & Windows) that computes net
 | Target Platforms | Android, Windows 10+ |
 | UI Pattern | MVVM with CommunityToolkit.Mvvm |
 | Test Framework | xUnit 2.9.3 |
-| Tax Data | JSON-based IRS 15-T and state / local tax bracket tables (2026) |
+| Tax Data | JSON-based IRS 15-T and state tax bracket tables (2026) |

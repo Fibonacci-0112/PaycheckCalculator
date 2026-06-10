@@ -24,5 +24,4 @@ Characteristics:
 
 Indiana also levies county income tax that varies by county of residence
 and principal work. That component is out of scope for this state
-module; it is handled by the local (sub-state) tax plugin system under
-`PaycheckCalc.Core/Tax/Local/`, not here.
+module and is not modeled by this calculator.

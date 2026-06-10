@@ -27,8 +27,8 @@ public sealed class StateWithholdingResult
     public string DisabilityInsuranceLabel { get; init; } = "State Disability Insurance";
 
     /// <summary>
-    /// Optional human-readable note (e.g., "Exempt — no tax due", 
-    /// "Includes local tax surcharge").
+    /// Optional human-readable note (e.g., "Exempt — no tax due",
+    /// "Includes supplemental surcharge").
     /// </summary>
     public string? Description { get; init; }
 }
