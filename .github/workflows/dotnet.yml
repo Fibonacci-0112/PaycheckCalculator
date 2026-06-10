@@ -22,12 +22,16 @@ jobs:
         dotnet-version: 10.0.x
     # PaycheckCalc.App (MAUI) targets net10.0-android / net10.0-windows, neither of
     # which builds on this Linux runner (no MAUI workload installed, and the Windows
-    # head only builds on Windows). CI therefore validates PaycheckCalc.Tests, which
-    # compiles PaycheckCalc.Core and runs the full test suite. Build the MAUI app on
-    # a Windows runner (with `dotnet workload install maui`) if it needs CI coverage too.
-    - name: Restore dependencies
+    # head only builds on Windows). CI therefore validates PaycheckCalc.Tests (which
+    # compiles PaycheckCalc.Core and runs the full test suite) and PaycheckCalc.Blazor
+    # (standard ASP.NET Core, builds on Linux without additional workloads).
+    - name: Restore — Tests
       run: dotnet restore PaycheckCalc.Tests
-    - name: Build
+    - name: Build — Tests
       run: dotnet build PaycheckCalc.Tests --no-restore
     - name: Test
       run: dotnet test PaycheckCalc.Tests --no-build --verbosity normal
+    - name: Restore — Blazor
+      run: dotnet restore PaycheckCalc.Blazor
+    - name: Build — Blazor
+      run: dotnet build PaycheckCalc.Blazor --no-restore
