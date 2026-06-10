@@ -23,7 +23,8 @@ public sealed class PdfExportService : IPdfExportService
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        // Drawing into a platform bitmap context must happen on the UI thread.
+        // Skia renders off-screen and has no UI-thread requirement, but the
+        // result model is UI-owned, so read it on the UI thread anyway.
         var chart = await MainThread.InvokeOnMainThreadAsync(
             () => ChartImageRenderer.Render(result, ChartPixelWidth, ChartPixelHeight));
 
