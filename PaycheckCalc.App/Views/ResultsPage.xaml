@@ -7,6 +7,12 @@
              Title="Results"
              BackgroundColor="#F0F4FF">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Export PDF"
+                     Command="{Binding ExportPdfCommand}"
+                     AutomationProperties.Name="Export results to PDF" />
+    </ContentPage.ToolbarItems>
+
     <ContentPage.Resources>
         <helpers:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
     </ContentPage.Resources>
