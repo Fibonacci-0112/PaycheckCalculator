@@ -2,13 +2,13 @@
   <PropertyGroup>
     <!--
       Dynamically select target frameworks based on the installed SDK.
-      - SDK >= .NET 11: build net11.0 (MAUI/Tests) AND net9.0 (Blazor WASM Web).
-      - SDK <  .NET 11: build net9.0 only (Blazor WASM Web; MAUI/Tests require .NET 11+).
-      This avoids NETSDK1045 "unsupported target framework" when building the Web project
+      - SDK >= .NET 10: build net10.0 (primary target for MAUI/Blazor/Tests) AND net9.0.
+      - SDK <  .NET 10: build net9.0 only (MAUI/Blazor/Tests require .NET 10+).
+      This avoids NETSDK1045 "unsupported target framework" when building Core
       with the stable .NET 9 SDK on CI or developer machines.
     -->
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(BundledNETCoreAppTargetFrameworkVersion)', '11.0'))">net11.0;net9.0</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionLessThan('$(BundledNETCoreAppTargetFrameworkVersion)', '11.0'))">net9.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(BundledNETCoreAppTargetFrameworkVersion)', '10.0'))">net10.0;net9.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::VersionLessThan('$(BundledNETCoreAppTargetFrameworkVersion)', '10.0'))">net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -52,10 +52,10 @@
     </None>
   </ItemGroup>
 
-  <!-- net11.0-only packages (preview package, QuestPDF PDF rendering) -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0-preview.4.26230.115" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0-preview.4.26230.115" />
+  <!-- net10.0-only packages (QuestPDF PDF rendering, kept out of the net9.0 fallback) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
     <PackageReference Include="QuestPDF" Version="2026.5.0" />
   </ItemGroup>
 

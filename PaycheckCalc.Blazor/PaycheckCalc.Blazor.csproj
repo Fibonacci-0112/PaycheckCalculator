@@ -3,11 +3,11 @@
   <PropertyGroup>
     <!--
       PaycheckCalc.Blazor is the Blazor Web App head (interactive Server
-      rendering). It targets .NET 11 to match the rest of the solution's
+      rendering). It targets .NET 10 to match the rest of the solution's
       primary target (PaycheckCalc.App and PaycheckCalc.Tests) and the
       pinned SDK in global.json.
     -->
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>PaycheckCalc.Blazor</RootNamespace>
@@ -18,18 +18,17 @@
   </ItemGroup>
 
   <!--
-    EF Core + ASP.NET Core Identity packages. Versions are pinned to the
-    .NET 11 preview that matches global.json's SDK pin
-    (11.0.100-preview.4.26230.115). If a build error reports that one of
-    these versions is not on NuGet, bump every entry below to the next
-    available preview/RC; they all version together.
+    EF Core + ASP.NET Core Identity packages. Versions float to the latest
+    .NET 10 servicing patch (10.0.*) to match global.json's SDK pin and the
+    .NET 10 shared framework. They all version together; move the band in
+    lockstep if the solution later targets a newer .NET.
   -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="11.0.0-preview.4.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="11.0.0-preview.4.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="11.0.0-preview.4.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="11.0.0-preview.4.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0-preview.4.*">
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.*">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

@@ -57,7 +57,7 @@ PaycheckCalc.slnx
 │   ├── Services/              # AnnualTaxSession, ComparisonSession, geocoding/jurisdiction services
 │   ├── Storage/               # JsonPaycheckRepository, JsonAnnualScenarioRepository (local JSON persistence)
 │   └── MauiProgram.cs         # DI configuration & app startup
-├── PaycheckCalc.Blazor/       # Blazor Server (Blazor Web App, net11.0) web head
+├── PaycheckCalc.Blazor/       # Blazor Server (Blazor Web App, net10.0) web head
 │   ├── Components/            # Razor components and pages (Home, Inputs, Results,
 │   │                          #   SavedPaychecks, SelfEmployment, SelfEmploymentResults)
 │   ├── Services/              # CalculatorSessionState, SelfEmploymentSessionState
@@ -109,7 +109,7 @@ PaycheckCalc.slnx
 
 | Component | Technology |
 |---|---|
-| **Frameworks** | .NET 11 — MAUI (PaycheckCalc.App) and Blazor Web App / Server rendering (PaycheckCalc.Blazor) |
+| **Frameworks** | .NET 10 — MAUI (PaycheckCalc.App) and Blazor Web App / Server rendering (PaycheckCalc.Blazor) |
 | **Target Platforms** | Android, Windows 10+ (MAUI); modern browsers via server-rendered Blazor |
 | **UI Pattern** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) on MAUI; Razor components on Blazor |
 | **Test Framework** | xUnit 2.9.3 |
@@ -118,7 +118,7 @@ PaycheckCalc.slnx
 
 ## Prerequisites
 
-- [.NET 11 SDK](https://dotnet.microsoft.com/) — the solution targets `net11.0` (see `global.json` for the pinned SDK version and preview/roll-forward settings)
+- [.NET 10 SDK](https://dotnet.microsoft.com/) — the solution targets `net10.0` (see `global.json` for the pinned SDK version and roll-forward settings)
 - .NET MAUI workload (only required for the MAUI App project):
   ```bash
   dotnet workload install maui

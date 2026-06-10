@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PaycheckCalc is a cross-platform US paycheck calculator (2026 tax tables) with two front ends — a **.NET MAUI** app (`PaycheckCalc.App`, Android & Windows) and a **Blazor Server** web head (`PaycheckCalc.Blazor`) — both backed by a UI-agnostic core engine (`PaycheckCalc.Core`) and exercised by an xUnit suite (`PaycheckCalc.Tests`). It also implements Schedule SE / QBI and full annual Form 1040 estimation.
 
-Solution: `PaycheckCalc.slnx`. SDK is pinned in `global.json` to `11.0.100-preview.4.26230.115` (preview allowed, latestPatch roll-forward).
+Solution: `PaycheckCalc.slnx`. SDK is pinned in `global.json` to `10.0.100` (stable, latestFeature roll-forward).
 
 ## Common commands
 
@@ -35,7 +35,7 @@ dotnet build PaycheckCalc.App
 dotnet run --project PaycheckCalc.App
 ```
 
-`PaycheckCalc.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is present, otherwise it falls back to `net9.0` only. The `net9.0` build excludes `Export/PdfPaycheckExporter.cs` and `Export/PdfSelfEmploymentExporter.cs` (QuestPDF is `net11.0`-only here). `PaycheckCalc.App`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are `net11.0` only.
+`PaycheckCalc.Core` multi-targets `net10.0;net9.0` when the .NET 10 SDK is present, otherwise it falls back to `net9.0` only. The `net9.0` build excludes `Export/PdfPaycheckExporter.cs` and `Export/PdfSelfEmploymentExporter.cs` (QuestPDF is `net10.0`-only here). `PaycheckCalc.App`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are `net10.0` only.
 
 ## Architecture
 
