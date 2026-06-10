@@ -46,7 +46,7 @@ PaycheckCalc computes net pay, tax withholdings, and deductions for all 50 US st
 
 | Component | Technology |
 |---|---|
-| Frameworks | .NET 11 Preview — MAUI (App) and Blazor Web App / Server rendering (Blazor) |
+| Frameworks | .NET 10 — MAUI (App) and Blazor Web App / Server rendering (Blazor) |
 | Target Platforms | Android, Windows 10+ (MAUI); modern browsers via server-rendered Blazor |
 | UI Pattern | MVVM with CommunityToolkit.Mvvm (MAUI); Razor components (Blazor) |
 | Test Framework | xUnit 2.9.3 |

@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0-preview.4.26230.115" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0-pre.4">
@@ -16,10 +16,10 @@
     </PackageReference>
     <!--
       EF Core + SQLite for the EfPaycheckRepository / EfAnnualScenarioRepository
-      tests. Pinned to the same preview as the rest of the EF/Identity stack
-      pulled in transitively from PaycheckCalc.Blazor.
+      tests. Pinned to the same .NET 10 servicing band as the rest of the
+      EF/Identity stack pulled in transitively from PaycheckCalc.Blazor.
     -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="11.0.0-preview.4.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
   </ItemGroup>
 
   <ItemGroup>
