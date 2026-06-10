@@ -1,0 +1,79 @@
+@{
+    var slices = BuildSlices();
+    var total = slices.Sum(s => s.Amount);
+}
+
+@if (total > 0)
+{
+    <div class="chart-container">
+        <div class="chart-title">Pay Breakdown</div>
+        <div class="chart-wrap">
+            <svg viewBox="0 0 200 200" class="doughnut-svg" xmlns="http://www.w3.org/2000/svg">
+                @foreach (var s in slices.Where(s => s.Amount > 0))
+                {
+                    <path d="@s.PathData" fill="@s.Color" stroke="white" stroke-width="1.5" />
+                }
+                <circle cx="100" cy="100" r="52" fill="white" />
+                <text x="100" y="96" text-anchor="middle" class="chart-label-sm">Net Pay</text>
+                <text x="100" y="114" text-anchor="middle" class="chart-label-lg">@Result.NetPay.ToString("C")</text>
+            </svg>
+        </div>
+        <div class="chart-legend">
+            @foreach (var s in slices.Where(s => s.Amount > 0))
+            {
+                <div class="legend-item">
+                    <span class="legend-dot" style="background:@s.Color"></span>
+                    <span class="legend-name">@s.Label</span>
+                    <span class="legend-amt">@s.Amount.ToString("C")</span>
+                    <span class="legend-pct">(@((s.Amount / total * 100m).ToString("F1"))%)</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public PaycheckResult Result { get; set; } = null!;
+
+    private record Slice(string Label, decimal Amount, string Color, string PathData);
+
+    private List<Slice> BuildSlices()
+    {
+        var raw = new (string Label, decimal Amount, string Color)[]
+        {
+            ("Net Pay",       Result.NetPay,                    "#4caf50"),
+            ("Federal Tax",   Result.FederalWithholding,        "#ef5350"),
+            ("State Tax",     Result.StateWithholding + Result.StateDisabilityInsurance, "#ff9800"),
+            ("FICA",          Result.SocialSecurityWithholding + Result.MedicareWithholding + Result.AdditionalMedicareWithholding, "#2196f3"),
+            ("Deductions",    Result.PreTaxDeductions + Result.PostTaxDeductions, "#9c27b0"),
+        };
+
+        var total = raw.Sum(r => r.Amount);
+        if (total <= 0) return new();
+
+        const double cx = 100, cy = 100, r = 88;
+        double angle = -Math.PI / 2;
+        var result = new List<Slice>();
+
+        foreach (var (label, amount, color) in raw)
+        {
+            if (amount <= 0) continue;
+            double sweep = (double)(amount / total) * 2 * Math.PI;
+            double endAngle = angle + sweep;
+
+            double x1 = cx + r * Math.Cos(angle);
+            double y1 = cy + r * Math.Sin(angle);
+            double x2 = cx + r * Math.Cos(endAngle);
+            double y2 = cy + r * Math.Sin(endAngle);
+            int lg = sweep > Math.PI ? 1 : 0;
+
+            var path = FormattableString.Invariant(
+                $"M {cx:F2} {cy:F2} L {x1:F2} {y1:F2} A {r:F2} {r:F2} 0 {lg} 1 {x2:F2} {y2:F2} Z");
+
+            result.Add(new Slice(label, amount, color, path));
+            angle = endAngle;
+        }
+
+        return result;
+    }
+}

@@ -1,0 +1,45 @@
+<div class="modal-overlay" @onclick="OnOverlayClick">
+    <div class="modal-container" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h3>@Explanation.Title</h3>
+            <button class="modal-close" @onclick="OnClose" title="Close">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-amount">
+                <span>Amount: </span><strong>@Explanation.FinalAmount.ToString("C")</strong>
+            </div>
+            @foreach (var step in Explanation.Steps)
+            {
+                <div class="explanation-step">
+                    <div class="step-label">@step.Label</div>
+                    @if (!string.IsNullOrEmpty(step.Detail))
+                    {
+                        <div class="step-detail">@step.Detail</div>
+                    }
+                    @if (!string.IsNullOrEmpty(step.Formula))
+                    {
+                        <div class="step-formula">@step.Formula</div>
+                    }
+                    @if (step.Value.HasValue)
+                    {
+                        <div class="step-value">@step.Value.Value.ToString("C")</div>
+                    }
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Explanation.Reference))
+            {
+                <div class="explanation-reference">Source: @Explanation.Reference</div>
+            }
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" @onclick="OnClose">Close</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LineExplanation Explanation { get; set; } = null!;
+    [Parameter, EditorRequired] public EventCallback OnClose { get; set; }
+
+    private Task OnOverlayClick() => OnClose.InvokeAsync();
+}
