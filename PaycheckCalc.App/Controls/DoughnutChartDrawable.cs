@@ -78,7 +78,7 @@ public sealed class DoughnutChartDrawable : IDrawable
         foreach (var (name, value, color) in slices)
         {
             float pct = value / gross * 100f;
-            string label = $"{name}  {pct:F1}%";
+            string label = $"{name}  {pct:F2}%";
 
             canvas.FillColor = color;
             canvas.FillRoundedRectangle(legendX, legendY, swatchSize, swatchSize, 2f);
