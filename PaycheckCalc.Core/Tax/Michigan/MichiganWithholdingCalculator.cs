@@ -1,3 +1,4 @@
+using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 
@@ -54,6 +55,9 @@ public sealed class MichiganWithholdingCalculator : IStateWithholdingCalculator
 
         int periods = GetPayPeriods(context.PayPeriod);
 
+        var steps = new List<ExplanationStep>();
+        StateExplanationSteps.AddTaxableWagesSteps(steps, context, taxableWages);
+
         // Step 1: Annual exemption allowance.
         decimal annualExemption = exemptions * ExemptionAmount;
 
@@ -63,16 +67,44 @@ public sealed class MichiganWithholdingCalculator : IStateWithholdingCalculator
         // Step 4: Taxable amount after exemptions (floored at zero).
         decimal taxableAmount = Math.Max(0m, taxableWages - exemptionPerPeriod);
 
+        if (annualExemption > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Annual exemption allowance (MI-W4)",
+                $"Each exemption claimed on the MI-W4 is worth {StateExplanationSteps.Money(ExemptionAmount)} per year.",
+                annualExemption,
+                $"{exemptions} × {StateExplanationSteps.Money(ExemptionAmount)} = {StateExplanationSteps.Money(annualExemption)}"));
+            steps.Add(new ExplanationStep(
+                $"Per-period exemption ({periods} pay periods/year)",
+                "The annual exemption allowance is spread evenly across the year's pay periods.",
+                exemptionPerPeriod,
+                $"{StateExplanationSteps.Money(annualExemption)} ÷ {periods} = {StateExplanationSteps.Money(exemptionPerPeriod)}"));
+            steps.Add(new ExplanationStep(
+                "Wages subject to tax after exemption",
+                "Taxable wages less the per-period exemption, floored at zero.",
+                taxableAmount,
+                $"max(0, {StateExplanationSteps.Money(taxableWages)} − {StateExplanationSteps.Money(exemptionPerPeriod)}) = {StateExplanationSteps.Money(taxableAmount)}"));
+        }
+
         // Step 5: Flat 4.25% withholding, rounded to cents.
         decimal withholding = Math.Round(taxableAmount * FlatRate, 2, MidpointRounding.AwayFromZero);
 
+        steps.Add(new ExplanationStep(
+            "Withholding at Michigan's flat rate (4.25%)",
+            "Michigan taxes all income at a single flat rate; filing status does not change the per-period amount.",
+            withholding,
+            $"{StateExplanationSteps.Money(taxableAmount)} × {StateExplanationSteps.Percent(FlatRate)} = {StateExplanationSteps.Money(withholding)}"));
+
         // Step 6: Add extra withholding from MI-W4, Line 6.
         withholding += extraWithholding;
+        StateExplanationSteps.AddExtraWithholdingStep(steps, extraWithholding, withholding, "MI-W4, Line 6");
 
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding = withholding
+            Withholding = withholding,
+            WithholdingSteps = steps,
+            WithholdingReference = "Michigan Dept. of Treasury Form 446 (2026) — flat 4.25% with MI-W4 exemptions."
         };
     }
 

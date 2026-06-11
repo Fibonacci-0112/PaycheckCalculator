@@ -17,5 +17,12 @@ public sealed class NoIncomeTaxWithholdingAdapter : IStateWithholdingCalculator
     public IReadOnlyList<string> Validate(StateInputValues values) => [];
 
     public StateWithholdingResult Calculate(CommonWithholdingContext context, StateInputValues values)
-        => new() { TaxableWages = 0m, Withholding = 0m, Description = "No state income tax" };
+        => new()
+        {
+            TaxableWages = 0m,
+            Withholding = 0m,
+            Description = "No state income tax",
+            WithholdingSteps = StateExplanationSteps.NoIncomeTax(State),
+            WithholdingReference = $"{State} levies no state personal income tax (2026)."
+        };
 }

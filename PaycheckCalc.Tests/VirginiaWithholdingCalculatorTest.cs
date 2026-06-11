@@ -358,6 +358,56 @@ public class VirginiaWithholdingCalculatorTest
             "VA should not be in StateTaxConfigs2026 — it uses VirginiaWithholdingCalculator.");
     }
 
+    // ── Explanation ───────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_Single_ShowsDeductionBracketsAndDeannualization()
+    {
+        // $2,000 biweekly Single, 0 exemptions:
+        // annualize = 52,000; std ded = 8,750; annual taxable = 43,250
+        // tax = 60 + 60 + 600 + (26,250 × 5.75%) = 2,229.375
+        // per period = 2,229.375 / 26 = 85.745... → 85.75
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly, "Single");
+
+        Assert.NotNull(result.WithholdingSteps);
+        var annualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Annualize wages"));
+        Assert.Equal(52_000m, annualizeStep.Value);
+        var dedStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Less standard deduction"));
+        Assert.Equal(8_750m, dedStep.Value);
+        var taxableStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual taxable income");
+        Assert.Equal(43_250m, taxableStep.Value);
+        var bracketStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual tax from Virginia's graduated brackets");
+        Assert.Equal(2_229.375m, bracketStep.Value);
+        // Top dollar falls in the 5.75% bracket over $17,000
+        Assert.Contains("5.75", bracketStep.Detail);
+        Assert.Contains("$17,000", bracketStep.Detail);
+        var deannualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "De-annualize to this pay period");
+        Assert.Equal(85.75m, deannualizeStep.Value);
+        Assert.Contains("93045", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_Exemptions_EmitPersonalExemptionStep()
+    {
+        // 2 exemptions × $930 = $1,860 annual deduction
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly, "Single", exemptions: 2);
+
+        var exemptionStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Less personal exemptions (VA-4)");
+        Assert.Equal(1_860m, exemptionStep.Value);
+    }
+
+    [Fact]
+    public void Explanation_WagesBelowStandardDeduction_OmitsBracketStep()
+    {
+        // annual = $600 × 12 = $7,200 < std ded $8,750 → zero taxable, no bracket step
+        var result = Calculate(GrossWages: 600m, PayFrequency.Monthly, "Single");
+
+        Assert.Equal(0m, result.Withholding);
+        var taxableStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual taxable income");
+        Assert.Equal(0m, taxableStep.Value);
+        Assert.DoesNotContain(result.WithholdingSteps!, s => s.Label == "Annual tax from Virginia's graduated brackets");
+    }
+
     // ── Helper ───────────────────────────────────────────────────────
 
     private static StateWithholdingResult Calculate(

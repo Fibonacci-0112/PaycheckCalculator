@@ -380,6 +380,48 @@ public class NorthCarolinaWithholdingCalculatorTest
         Assert.Empty(errors);
     }
 
+    // ── Explanation ──────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_Single_ShowsDeductionFlatRateAndDeannualization()
+    {
+        // $2,000 biweekly Single, 0 allowances:
+        // annualize = 52,000; std ded = 12,750; annual taxable = 39,250
+        // annual tax = 39,250 × 4.5% = 1,766.25; per period = 67.932... → 67.93
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly, "Single");
+
+        Assert.NotNull(result.WithholdingSteps);
+        var annualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Annualize wages"));
+        Assert.Equal(52_000m, annualizeStep.Value);
+        var dedStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Less standard deduction"));
+        Assert.Equal(12_750m, dedStep.Value);
+        var taxableStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual taxable income");
+        Assert.Equal(39_250m, taxableStep.Value);
+        var rateStep = Assert.Single(result.WithholdingSteps!, s => s.Label.Contains("4.50%"));
+        Assert.Equal(1_766.25m, rateStep.Value);
+        var deannualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "De-annualize to this pay period");
+        Assert.Equal(67.93m, deannualizeStep.Value);
+        Assert.Contains("NC-30", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_Allowances_EmitAllowanceDeductionStep()
+    {
+        // 2 allowances × $2,500 = $5,000 annual deduction
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly, "Single", allowances: 2);
+
+        var allowanceStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Less NC-4 allowance deduction");
+        Assert.Equal(5_000m, allowanceStep.Value);
+    }
+
+    [Fact]
+    public void Explanation_NoAllowances_OmitsAllowanceDeductionStep()
+    {
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly, "Single");
+
+        Assert.DoesNotContain(result.WithholdingSteps!, s => s.Label == "Less NC-4 allowance deduction");
+    }
+
     // ── Helper ───────────────────────────────────────────────────────
 
     private static StateWithholdingResult Calculate(

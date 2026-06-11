@@ -187,6 +187,17 @@ public sealed class PayCalculator
         decimal stateGross,
         decimal preTaxReducingStateWages)
     {
+        // Calculators that opt in supply the full worksheet narrative themselves.
+        if (stateResult.WithholdingSteps is { Count: > 0 })
+        {
+            return new LineExplanation(
+                ExplanationLineKey.StateWithholding,
+                $"State Income Tax ({state})",
+                stateResult.Withholding,
+                stateResult.WithholdingSteps,
+                stateResult.WithholdingReference ?? $"{state} state withholding rules (2026).");
+        }
+
         var steps = new List<ExplanationStep>();
 
         if (preTaxReducingStateWages > 0m)
@@ -227,6 +238,16 @@ public sealed class PayCalculator
 
     private static LineExplanation BuildStateDisabilityExplanation(StateWithholdingResult stateResult, UsState state)
     {
+        if (stateResult.DisabilityInsuranceSteps is { Count: > 0 })
+        {
+            return new LineExplanation(
+                ExplanationLineKey.StateDisability,
+                stateResult.DisabilityInsuranceLabel,
+                stateResult.DisabilityInsurance,
+                stateResult.DisabilityInsuranceSteps,
+                stateResult.DisabilityInsuranceReference ?? $"{state} state disability / leave insurance rules (2026).");
+        }
+
         var steps = new List<ExplanationStep>
         {
             new(stateResult.DisabilityInsuranceLabel,

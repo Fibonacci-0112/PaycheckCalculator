@@ -1,3 +1,4 @@
+using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 
@@ -224,8 +225,16 @@ public UsState State => UsState.NY;
 
         int periods = GetPayPeriods(context.PayPeriod);
 
+        var steps = new List<ExplanationStep>();
+        StateExplanationSteps.AddTaxableWagesSteps(steps, context, taxableWages);
+
         // Step 2: Annualize wages.
         var annualWages = taxableWages * periods;
+        steps.Add(new ExplanationStep(
+            $"Annualize wages ({periods} pay periods/year)",
+            "New York's exact-calculation method estimates annual income from this period's wages.",
+            annualWages,
+            $"{StateExplanationSteps.Money(taxableWages)} × {periods} = {StateExplanationSteps.Money(annualWages)}"));
 
         // Step 3: Subtract the filing-status standard deduction.
         var standardDeduction = filingStatus switch
@@ -234,13 +243,31 @@ public UsState State => UsState.NY;
             StatusHeadOfHousehold => StandardDeductionHeadOfHousehold,
             _                     => StandardDeductionSingle
         };
+        steps.Add(new ExplanationStep(
+            $"Less standard deduction ({filingStatus})",
+            "The IT-2104 filing status determines the annual standard deduction.",
+            standardDeduction,
+            $"− {StateExplanationSteps.Money(standardDeduction)}"));
 
         // Step 4: Subtract IT-2104 allowance deduction ($1,000 per allowance).
         var allowanceDeduction = allowances * AllowanceAmount;
+        if (allowanceDeduction > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less IT-2104 allowance deduction",
+                $"Each allowance claimed on Form IT-2104 reduces annual income by {StateExplanationSteps.Money(AllowanceAmount)}.",
+                allowanceDeduction,
+                $"{allowances} × {StateExplanationSteps.Money(AllowanceAmount)} = {StateExplanationSteps.Money(allowanceDeduction)}"));
+        }
 
         // Step 5: Floor annual taxable income at zero.
         var annualTaxableIncome = Math.Max(0m,
             annualWages - standardDeduction - allowanceDeduction);
+        steps.Add(new ExplanationStep(
+            "Annual taxable income",
+            "Annualized wages less the standard deduction and allowances, floored at zero.",
+            annualTaxableIncome,
+            $"max(0, {StateExplanationSteps.Money(annualWages)} − {StateExplanationSteps.Money(standardDeduction + allowanceDeduction)}) = {StateExplanationSteps.Money(annualTaxableIncome)}"));
 
         // Step 6: Apply NY's 2026 graduated brackets.
         //   Married (MFJ / QW) uses Married brackets.
@@ -249,18 +276,65 @@ public UsState State => UsState.NY;
             ? ApplyMarriedBrackets(annualTaxableIncome)
             : ApplySingleBrackets(annualTaxableIncome);
 
+        if (annualTaxableIncome > 0m)
+        {
+            var (marginalRate, marginalFloor) = filingStatus == StatusMarried
+                ? MarginalMarriedBracket(annualTaxableIncome)
+                : MarginalSingleBracket(annualTaxableIncome);
+            var scheduleName = filingStatus == StatusMarried ? "Married" : "Single / Head of Household";
+            steps.Add(new ExplanationStep(
+                $"Annual tax from New York's graduated brackets ({scheduleName} schedule)",
+                $"Each slice of income is taxed at its bracket rate (4.00% in the lowest bracket up to 10.90% in the highest) and the slices are summed; the top slice is taxed at {StateExplanationSteps.Percent(marginalRate)} (income over {StateExplanationSteps.Money(marginalFloor)}).",
+                annualTax,
+                $"Tax on {StateExplanationSteps.Money(annualTaxableIncome)} = {StateExplanationSteps.Money(annualTax)}"));
+        }
+
         // Step 7: De-annualize and round to two decimal places.
         var withholding = Math.Round(annualTax / periods, 2, MidpointRounding.AwayFromZero);
+        steps.Add(new ExplanationStep(
+            "De-annualize to this pay period",
+            "Divide the annual tax back down to a per-period amount, rounded to the nearest cent.",
+            withholding,
+            $"{StateExplanationSteps.Money(annualTax)} ÷ {periods} = {StateExplanationSteps.Money(withholding)}"));
 
         // Step 8: Add any per-period extra withholding.
         withholding += extraWithholding;
+        StateExplanationSteps.AddExtraWithholdingStep(steps, extraWithholding, withholding, "Form IT-2104");
 
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding  = withholding
+            Withholding  = withholding,
+            WithholdingSteps = steps,
+            WithholdingReference = "NYS Publication NYS-50-T-NYS (2026); Form IT-2104."
         };
     }
+
+    /// <summary>Returns the rate and lower bound of the Single/HoH bracket the income's top dollar falls in (explanation only).</summary>
+    private static (decimal Rate, decimal Floor) MarginalSingleBracket(decimal income) =>
+        income > SingleBracket9Ceiling ? (Rate10, SingleBracket9Ceiling)
+        : income > SingleBracket8Ceiling ? (Rate9, SingleBracket8Ceiling)
+        : income > SingleBracket7Ceiling ? (Rate8, SingleBracket7Ceiling)
+        : income > SingleBracket6Ceiling ? (Rate7, SingleBracket6Ceiling)
+        : income > SingleBracket5Ceiling ? (Rate6, SingleBracket5Ceiling)
+        : income > SingleBracket4Ceiling ? (Rate5, SingleBracket4Ceiling)
+        : income > SingleBracket3Ceiling ? (Rate4, SingleBracket3Ceiling)
+        : income > SingleBracket2Ceiling ? (Rate3, SingleBracket2Ceiling)
+        : income > SingleBracket1Ceiling ? (Rate2, SingleBracket1Ceiling)
+        : (Rate1, 0m);
+
+    /// <summary>Returns the rate and lower bound of the Married bracket the income's top dollar falls in (explanation only).</summary>
+    private static (decimal Rate, decimal Floor) MarginalMarriedBracket(decimal income) =>
+        income > MarriedBracket9Ceiling ? (Rate10, MarriedBracket9Ceiling)
+        : income > MarriedBracket8Ceiling ? (Rate9, MarriedBracket8Ceiling)
+        : income > MarriedBracket7Ceiling ? (Rate8, MarriedBracket7Ceiling)
+        : income > MarriedBracket6Ceiling ? (Rate7, MarriedBracket6Ceiling)
+        : income > MarriedBracket5Ceiling ? (Rate6, MarriedBracket5Ceiling)
+        : income > MarriedBracket4Ceiling ? (Rate5, MarriedBracket4Ceiling)
+        : income > MarriedBracket3Ceiling ? (Rate4, MarriedBracket3Ceiling)
+        : income > MarriedBracket2Ceiling ? (Rate3, MarriedBracket2Ceiling)
+        : income > MarriedBracket1Ceiling ? (Rate2, MarriedBracket1Ceiling)
+        : (Rate1, 0m);
 
     // ── Bracket helpers ───────────────────────────────────────────────
 

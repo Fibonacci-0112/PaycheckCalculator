@@ -1,5 +1,7 @@
 using System.Text.Json;
+using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
+using PaycheckCalc.Core.Tax.State;
 
 namespace PaycheckCalc.Core.Tax.California;
 
@@ -42,8 +44,30 @@ public sealed class CaliforniaPercentageCalculator
         CaliforniaFilingStatus filingStatus,
         int regularAllowances,
         int estimatedDeductionAllowances)
+        => CalculateWithExplanation(grossPay, frequency, filingStatus, regularAllowances, estimatedDeductionAllowances).Withholding;
+
+    /// <summary>
+    /// Computes California PIT withholding and also produces worksheet-style
+    /// steps mirroring Method B (Tables 1–5) so the UI can show how the
+    /// number was reached. Same math as <see cref="CalculateWithholding"/>.
+    /// </summary>
+    public (decimal Withholding, IReadOnlyList<ExplanationStep> Steps) CalculateWithExplanation(
+        decimal grossPay,
+        PayFrequency frequency,
+        CaliforniaFilingStatus filingStatus,
+        int regularAllowances,
+        int estimatedDeductionAllowances)
     {
-        if (grossPay <= 0m) return 0m;
+        var steps = new List<ExplanationStep>();
+
+        if (grossPay <= 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "No withholding",
+                "There are no wages subject to California withholding this period.",
+                0m));
+            return (0m, steps);
+        }
 
         var periodKey = PeriodKey(frequency);
         var thresholdStatusKey = GetThresholdStatusKey(filingStatus, regularAllowances);
@@ -51,27 +75,102 @@ public sealed class CaliforniaPercentageCalculator
 
         // Step 1: Low-income exemption test (Table 1)
         decimal threshold = _data.LowIncomeExemptionThresholds[periodKey][thresholdStatusKey];
-        if (grossPay <= threshold) return 0m;
+        if (grossPay <= threshold)
+        {
+            steps.Add(new ExplanationStep(
+                "Low-income exemption test (Table 1)",
+                "Wages at or below California's low-income exemption threshold for this pay period and filing status are exempt from withholding.",
+                threshold,
+                $"{StateExplanationSteps.Money(grossPay)} ≤ {StateExplanationSteps.Money(threshold)} → no withholding"));
+            return (0m, steps);
+        }
+
+        steps.Add(new ExplanationStep(
+            "Low-income exemption test (Table 1)",
+            "Wages exceed California's low-income exemption threshold for this pay period and filing status, so withholding is computed.",
+            threshold,
+            $"{StateExplanationSteps.Money(grossPay)} > {StateExplanationSteps.Money(threshold)} → continue"));
 
         // Step 2: Estimated deduction adjustment (Table 2)
         decimal estimatedDeduction = _data.EstimatedDeductionAllowances.GetAmount(periodKey, estimatedDeductionAllowances);
+        if (estimatedDeduction > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less estimated deduction allowance (Table 2)",
+                $"Additional allowances for estimated deductions claimed on DE 4 Line 2 ({estimatedDeductionAllowances}) reduce wages before tax is computed.",
+                estimatedDeduction,
+                $"− {StateExplanationSteps.Money(estimatedDeduction)}"));
+        }
 
         // Step 3: Standard deduction subtraction (Table 3)
         decimal standardDeduction = _data.StandardDeductions[periodKey][thresholdStatusKey];
+        steps.Add(new ExplanationStep(
+            "Less standard deduction (Table 3)",
+            "California subtracts a per-period standard deduction based on filing status before applying the rate table.",
+            standardDeduction,
+            $"− {StateExplanationSteps.Money(standardDeduction)}"));
 
         decimal taxableIncome = Math.Max(0m, grossPay - estimatedDeduction - standardDeduction);
-        if (taxableIncome <= 0m) return 0m;
+        steps.Add(new ExplanationStep(
+            "Taxable income this period",
+            "Wages less the estimated-deduction and standard deductions, floored at zero.",
+            taxableIncome,
+            $"max(0, {StateExplanationSteps.Money(grossPay)} − {StateExplanationSteps.Money(estimatedDeduction + standardDeduction)}) = {StateExplanationSteps.Money(taxableIncome)}"));
+
+        if (taxableIncome <= 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "No withholding",
+                "Taxable income is zero after deductions, so no California income tax is withheld this period.",
+                0m));
+            return (0m, steps);
+        }
 
         // Step 4: Compute tax using per-period brackets directly (round cents down)
         var brackets = _data.TaxRateTables[periodKey][rateTableStatusKey];
         decimal tax = FloorToTwoDecimals(ComputeTaxFromBrackets(taxableIncome, brackets));
 
+        var bracket = FindBracket(taxableIncome, brackets);
+        steps.Add(new ExplanationStep(
+            "Tax from the Method B rate table (Table 5)",
+            $"Apply the per-period bracket for this filing status: base amount plus {StateExplanationSteps.Percent(bracket?.Rate ?? 0m)} of income over {StateExplanationSteps.Money(bracket?.AmountOver ?? 0m)} (cents rounded down).",
+            tax,
+            bracket is null
+                ? $"= {StateExplanationSteps.Money(tax)}"
+                : $"{StateExplanationSteps.Money(bracket.Plus)} + {StateExplanationSteps.Percent(bracket.Rate)} × ({StateExplanationSteps.Money(taxableIncome)} − {StateExplanationSteps.Money(bracket.AmountOver)}) = {StateExplanationSteps.Money(tax)}"));
+
         // Step 5: Subtract exemption allowance credit (Table 4)
         decimal exemptionCredit = _data.ExemptionAllowanceCredits.GetAmount(periodKey, regularAllowances);
+        if (exemptionCredit > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less exemption allowance credit (Table 4)",
+                $"Regular withholding allowances claimed on DE 4 Line 1 ({regularAllowances}) provide a per-period credit against the computed tax.",
+                exemptionCredit,
+                $"− {StateExplanationSteps.Money(exemptionCredit)}"));
+        }
 
         decimal withholding = Math.Max(0m, tax - exemptionCredit);
+        var rounded = Math.Round(withholding, 2, MidpointRounding.AwayFromZero);
 
-        return Math.Round(withholding, 2, MidpointRounding.AwayFromZero);
+        steps.Add(new ExplanationStep(
+            "California withholding",
+            "Computed tax less the exemption credit, floored at zero and rounded to the nearest cent.",
+            rounded,
+            $"max(0, {StateExplanationSteps.Money(tax)} − {StateExplanationSteps.Money(exemptionCredit)}) = {StateExplanationSteps.Money(rounded)}"));
+
+        return (rounded, steps);
+    }
+
+    /// <summary>Returns the bracket whose range contains <paramref name="taxableIncome"/> (explanation only).</summary>
+    private static CaliforniaBracket? FindBracket(decimal taxableIncome, IReadOnlyList<CaliforniaBracket> brackets)
+    {
+        for (int i = brackets.Count - 1; i >= 0; i--)
+        {
+            if (taxableIncome > brackets[i].Over)
+                return brackets[i];
+        }
+        return null;
     }
 
     private static decimal ComputeTaxFromBrackets(decimal taxableIncome, IReadOnlyList<CaliforniaBracket> brackets)

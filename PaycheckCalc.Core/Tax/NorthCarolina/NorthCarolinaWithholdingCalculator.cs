@@ -1,3 +1,4 @@
+using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 
@@ -112,8 +113,16 @@ public sealed class NorthCarolinaWithholdingCalculator : IStateWithholdingCalcul
 
         int periods = GetPayPeriods(context.PayPeriod);
 
+        var steps = new List<ExplanationStep>();
+        StateExplanationSteps.AddTaxableWagesSteps(steps, context, taxableWages);
+
         // Step 2: Annualize wages.
         var annualWages = taxableWages * periods;
+        steps.Add(new ExplanationStep(
+            $"Annualize wages ({periods} pay periods/year)",
+            "North Carolina's percentage method estimates annual income from this period's wages.",
+            annualWages,
+            $"{StateExplanationSteps.Money(taxableWages)} × {periods} = {StateExplanationSteps.Money(annualWages)}"));
 
         // Step 3: Subtract the filing-status standard deduction.
         var standardDeduction = filingStatus switch
@@ -122,28 +131,59 @@ public sealed class NorthCarolinaWithholdingCalculator : IStateWithholdingCalcul
             StatusHeadOfHousehold => StandardDeductionHeadOfHousehold,
             _                     => StandardDeductionSingle
         };
+        steps.Add(new ExplanationStep(
+            $"Less standard deduction ({filingStatus})",
+            "The NC-4 filing status determines the annual standard deduction.",
+            standardDeduction,
+            $"− {StateExplanationSteps.Money(standardDeduction)}"));
 
         // Step 4: Subtract the NC-4 allowance deduction ($2,500 per allowance).
         var allowanceDeduction = allowances * AllowanceAmount;
+        if (allowanceDeduction > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less NC-4 allowance deduction",
+                $"Each allowance claimed on Form NC-4 reduces annual income by {StateExplanationSteps.Money(AllowanceAmount)}.",
+                allowanceDeduction,
+                $"{allowances} × {StateExplanationSteps.Money(AllowanceAmount)} = {StateExplanationSteps.Money(allowanceDeduction)}"));
+        }
 
         // Step 5: Floor annual taxable income at zero.
         var annualTaxableIncome = Math.Max(0m,
             annualWages - standardDeduction - allowanceDeduction);
+        steps.Add(new ExplanationStep(
+            "Annual taxable income",
+            "Annualized wages less the standard deduction and allowances, floored at zero.",
+            annualTaxableIncome,
+            $"max(0, {StateExplanationSteps.Money(annualWages)} − {StateExplanationSteps.Money(standardDeduction + allowanceDeduction)}) = {StateExplanationSteps.Money(annualTaxableIncome)}"));
 
         // Step 6: Apply North Carolina's flat 4.5% rate.
         var annualTax = annualTaxableIncome * TaxRate;
+        steps.Add(new ExplanationStep(
+            "Annual tax at North Carolina's flat rate (4.50%)",
+            "North Carolina taxes all taxable income at a single flat rate.",
+            annualTax,
+            $"{StateExplanationSteps.Money(annualTaxableIncome)} × {StateExplanationSteps.Percent(TaxRate)} = {StateExplanationSteps.Money(annualTax)}"));
 
         // Step 7: De-annualize and round to two decimal places.
         var periodTax   = annualTax / periods;
         var withholding = Math.Round(periodTax, 2, MidpointRounding.AwayFromZero);
+        steps.Add(new ExplanationStep(
+            "De-annualize to this pay period",
+            "Divide the annual tax back down to a per-period amount, rounded to the nearest cent.",
+            withholding,
+            $"{StateExplanationSteps.Money(annualTax)} ÷ {periods} = {StateExplanationSteps.Money(withholding)}"));
 
         // Step 8: Add any per-period extra withholding.
         withholding += extraWithholding;
+        StateExplanationSteps.AddExtraWithholdingStep(steps, extraWithholding, withholding, "Form NC-4");
 
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding  = withholding
+            Withholding  = withholding,
+            WithholdingSteps = steps,
+            WithholdingReference = "NC DOR Publication NC-30 (2026); Form NC-4."
         };
     }
 

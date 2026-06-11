@@ -343,4 +343,77 @@ public class IllinoisWithholdingCalculatorTest
 
         Assert.Equal(0m, result.DisabilityInsurance);
     }
+
+    // ── Explanation ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_AllowanceSteps_ShowAnnualAndPerPeriodExemption()
+    {
+        var calc = new IllinoisWithholdingCalculator();
+
+        var context = new CommonWithholdingContext(
+            UsState.IL,
+            GrossWages: 4000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+        var values = new StateInputValues
+        {
+            ["BasicAllowances"] = 2,
+            ["AdditionalAllowances"] = 0
+        };
+
+        var result = calc.Calculate(context, values);
+
+        Assert.NotNull(result.WithholdingSteps);
+        // Annual exemption = 2 × 2925 = 5850; per-period = 5850 / 26 = 225.00
+        var annualStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual exemption from IL-W-4 allowances");
+        Assert.Equal(5850m, annualStep.Value);
+        var perPeriodStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Per-period exemption"));
+        Assert.Equal(225m, perPeriodStep.Value);
+        // Taxable amount = 4000 − 225 = 3775; withholding = 3775 × 4.95% = 186.86
+        var afterStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Wages subject to tax after exemption");
+        Assert.Equal(3775m, afterStep.Value);
+        var rateStep = Assert.Single(result.WithholdingSteps!, s => s.Label.Contains("4.95%"));
+        Assert.Equal(186.86m, rateStep.Value);
+        Assert.Contains("IL-700-T", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_NoAllowances_OmitsExemptionSteps()
+    {
+        var calc = new IllinoisWithholdingCalculator();
+
+        var context = new CommonWithholdingContext(
+            UsState.IL,
+            GrossWages: 5000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+
+        var result = calc.Calculate(context, new StateInputValues());
+
+        Assert.DoesNotContain(result.WithholdingSteps!, s => s.Label == "Annual exemption from IL-W-4 allowances");
+        // 5000 × 4.95% = 247.50, computed directly on full taxable wages
+        var rateStep = Assert.Single(result.WithholdingSteps!, s => s.Label.Contains("4.95%"));
+        Assert.Equal(247.50m, rateStep.Value);
+    }
+
+    [Fact]
+    public void Explanation_ExtraWithholding_AppendsStepWithTotal()
+    {
+        var calc = new IllinoisWithholdingCalculator();
+
+        var context = new CommonWithholdingContext(
+            UsState.IL,
+            GrossWages: 5000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+        var values = new StateInputValues { ["AdditionalWithholding"] = 25m };
+
+        var result = calc.Calculate(context, values);
+
+        // 247.50 + 25 = 272.50 shown on the trailing extra-withholding step
+        var extraStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Extra withholding");
+        Assert.Equal(272.50m, extraStep.Value);
+        Assert.Equal(272.50m, result.Withholding);
+    }
 }

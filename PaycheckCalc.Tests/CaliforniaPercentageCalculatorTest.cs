@@ -521,4 +521,101 @@ public class CaliforniaPercentageCalculatorTest
 
         Assert.Equal("State Disability Insurance (SDI)", result.DisabilityInsuranceLabel);
     }
+
+    // ── Explanation ──────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_MethodBSteps_MirrorWorksheetTables()
+    {
+        var calc = LoadCalculator();
+
+        // Same scenario as Monthly_Single_10000_OneAllowance:
+        // std deduction $476, TI $9,524, bracket tax $647.83 (10.23% bracket),
+        // exemption credit $14.03, withholding $633.80.
+        var (withholding, steps) = calc.CalculateWithExplanation(10000m, PayFrequency.Monthly,
+            CaliforniaFilingStatus.Single, regularAllowances: 1, estimatedDeductionAllowances: 0);
+
+        Assert.Equal(633.80m, withholding);
+        var lowIncomeStep = Assert.Single(steps, s => s.Label == "Low-income exemption test (Table 1)");
+        Assert.Contains("continue", lowIncomeStep.Formula);
+        var stdDedStep = Assert.Single(steps, s => s.Label == "Less standard deduction (Table 3)");
+        Assert.Equal(476m, stdDedStep.Value);
+        var taxableStep = Assert.Single(steps, s => s.Label == "Taxable income this period");
+        Assert.Equal(9_524m, taxableStep.Value);
+        var bracketStep = Assert.Single(steps, s => s.Label == "Tax from the Method B rate table (Table 5)");
+        Assert.Equal(647.83m, bracketStep.Value);
+        Assert.Contains("10.23", bracketStep.Formula);
+        var creditStep = Assert.Single(steps, s => s.Label == "Less exemption allowance credit (Table 4)");
+        Assert.Equal(14.03m, creditStep.Value);
+        var finalStep = Assert.Single(steps, s => s.Label == "California withholding");
+        Assert.Equal(633.80m, finalStep.Value);
+    }
+
+    [Fact]
+    public void Explanation_LowIncomeExemption_EndsWithExemptStep()
+    {
+        var calc = LoadCalculator();
+
+        // $300 ≤ $363 (weekly single threshold) → exempt, single explanatory step
+        var (withholding, steps) = calc.CalculateWithExplanation(300m, PayFrequency.Weekly,
+            CaliforniaFilingStatus.Single, regularAllowances: 0, estimatedDeductionAllowances: 0);
+
+        Assert.Equal(0m, withholding);
+        var lowIncomeStep = Assert.Single(steps, s => s.Label == "Low-income exemption test (Table 1)");
+        Assert.Contains("no withholding", lowIncomeStep.Formula);
+        Assert.DoesNotContain(steps, s => s.Label == "Tax from the Method B rate table (Table 5)");
+    }
+
+    [Fact]
+    public void Explanation_WrapperSingle_EmitsTableAlignmentStep()
+    {
+        // The wrapper applies the deliberate 3-cent Single-status adjustment:
+        // inner $633.80 − $0.03 = $633.77, shown as its own step.
+        var inner = LoadCalculator();
+        var calc = new CaliforniaWithholdingCalculator(inner, TestSchemas.Provider);
+
+        var context = new CommonWithholdingContext(
+            UsState.CA, GrossWages: 10000m,
+            PayPeriod: PayFrequency.Monthly, Year: 2026);
+        var values = new StateInputValues
+        {
+            ["FilingStatus"] = "Single",
+            ["RegularAllowances"] = 1,
+            ["EstimatedDeductionAllowances"] = 0,
+            ["AdditionalWithholding"] = 0m
+        };
+
+        var result = calc.Calculate(context, values);
+
+        Assert.Equal(633.77m, result.Withholding);
+        var adjustmentStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Single filing status table alignment");
+        Assert.Equal(633.77m, adjustmentStep.Value);
+        Assert.Contains("DE 44", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_WrapperSdiSteps_ShowRateOnGrossWages()
+    {
+        var inner = LoadCalculator();
+        var calc = new CaliforniaWithholdingCalculator(inner, TestSchemas.Provider);
+
+        var context = new CommonWithholdingContext(
+            UsState.CA, GrossWages: 5000m,
+            PayPeriod: PayFrequency.Biweekly, Year: 2026);
+        var values = new StateInputValues
+        {
+            ["FilingStatus"] = "Single",
+            ["RegularAllowances"] = 0,
+            ["EstimatedDeductionAllowances"] = 0,
+            ["AdditionalWithholding"] = 0m
+        };
+
+        var result = calc.Calculate(context, values);
+
+        // SDI = 5,000 × 1.3% = $65.00
+        Assert.NotNull(result.DisabilityInsuranceSteps);
+        var sdiStep = Assert.Single(result.DisabilityInsuranceSteps!, s => s.Label == "State Disability Insurance (1.30%)");
+        Assert.Equal(65.00m, sdiStep.Value);
+        Assert.Contains("DE 44", result.DisabilityInsuranceReference);
+    }
 }
