@@ -23,16 +23,14 @@ public record PickerItem<T>(T Value, string Text)
 public partial class CalculatorViewModel : ObservableObject
 {
     private readonly PayCalculator _calc;
-    private readonly AnnualProjectionCalculator _projectionCalc;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
     private readonly IPdfExportService _pdfExport;
     private UsState _previousState;
 
-    public CalculatorViewModel(PayCalculator calc, AnnualProjectionCalculator projectionCalc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport)
+    public CalculatorViewModel(PayCalculator calc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport)
     {
         _calc = calc;
-        _projectionCalc = projectionCalc;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
         _pdfExport = pdfExport;
@@ -50,21 +48,6 @@ public partial class CalculatorViewModel : ObservableObject
         // Keep computed deduction totals in sync with the collection
         Deductions.CollectionChanged += OnDeductionsCollectionChanged;
     }
-
-    // ── Results-page tab state ──────────────────────────────
-    [ObservableProperty] public partial int SelectedResultTab { get; set; } = 0;
-
-    public bool IsResultTab0Visible => SelectedResultTab == 0;
-    public bool IsResultTab1Visible => SelectedResultTab == 1;
-
-    partial void OnSelectedResultTabChanged(int value)
-    {
-        OnPropertyChanged(nameof(IsResultTab0Visible));
-        OnPropertyChanged(nameof(IsResultTab1Visible));
-    }
-
-    [RelayCommand]
-    private void SelectResultTab(string tab) => SelectedResultTab = int.Parse(tab);
 
     public ObservableCollection<PickerItem<FederalFilingStatus>> FederalStatuses { get; } = new(
         Enum.GetValues<FederalFilingStatus>()
@@ -273,11 +256,6 @@ public partial class CalculatorViewModel : ObservableObject
     /// </summary>
     [ObservableProperty] public partial ResultCardModel? ResultCard { get; set; }
 
-    /// <summary>
-    /// Presentation-ready annual projection for the UI.
-    /// </summary>
-    [ObservableProperty] public partial AnnualProjectionModel? Projection { get; set; }
-
     partial void OnResultCardChanged(ResultCardModel? value)
     {
         OnPropertyChanged(nameof(ShowDeductions));
@@ -399,10 +377,6 @@ public partial class CalculatorViewModel : ObservableObject
         // Map domain result → presentation model via mapper
         ResultCard = ResultCardMapper.Map(domainResult);
 
-        // Compute annual projections
-        var domainProjection = _projectionCalc.Calculate(input, domainResult);
-        Projection = AnnualProjectionMapper.Map(domainProjection);
-
         ExportPdfCommand.NotifyCanExecuteChanged();
     }
 
@@ -410,8 +384,8 @@ public partial class CalculatorViewModel : ObservableObject
     public bool CanExportPdf => ResultCard is not null;
 
     /// <summary>
-    /// Exports the current results and annual projection (including the doughnut
-    /// chart) to a PDF and opens it in Adobe Reader/Acrobat.
+    /// Exports the current per-period results to a single-page PDF and opens it
+    /// in Adobe Reader/Acrobat.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExportPdf))]
     private async Task ExportPdf()
@@ -421,7 +395,7 @@ public partial class CalculatorViewModel : ObservableObject
 
         try
         {
-            await _pdfExport.ExportAndOpenAsync(ResultCard, Projection);
+            await _pdfExport.ExportAndOpenAsync(ResultCard);
         }
         catch (Exception ex)
         {

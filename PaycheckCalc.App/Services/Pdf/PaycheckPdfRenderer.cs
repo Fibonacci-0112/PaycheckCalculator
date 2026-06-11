@@ -5,10 +5,10 @@ using PaycheckCalc.App.Models;
 namespace PaycheckCalc.App.Services.Pdf;
 
 /// <summary>
-/// Lays out the paycheck results and annual projection (plus the doughnut
-/// chart image) onto Letter-size pages and produces the PDF bytes. Pure
-/// presentation: it consumes the same <see cref="ResultCardModel"/> /
-/// <see cref="AnnualProjectionModel"/> the Results page binds to.
+/// Lays out the per-period paycheck results onto a single Letter-size page and
+/// produces the PDF bytes. Pure presentation: it consumes the same
+/// <see cref="ResultCardModel"/> the Results page binds to. The page shows an
+/// INCOME section, a TAXES section, and the resulting net pay.
 /// </summary>
 internal static class PaycheckPdfRenderer
 {
@@ -18,14 +18,12 @@ internal static class PaycheckPdfRenderer
     private static readonly Rgb TextDark = Rgb.Hex("#37474F");
     private static readonly Rgb Red = Rgb.Hex("#C62828");
     private static readonly Rgb Green = Rgb.Hex("#2E7D32");
-    private static readonly Rgb Brown = Rgb.Hex("#5D4037");
 
-    /// <summary>Renders the export to PDF. <paramref name="chart"/> is optional.</summary>
-    public static byte[] Render(
-        ResultCardModel result,
-        AnnualProjectionModel? projection,
-        (byte[] Jpeg, int Width, int Height)? chart)
+    /// <summary>Renders the per-period results to single-page PDF bytes.</summary>
+    public static byte[] Render(ResultCardModel result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         var doc = new PdfDocument();
         int catalogId = doc.Reserve();
         int pagesId = doc.Reserve();
@@ -34,12 +32,13 @@ internal static class PaycheckPdfRenderer
 
         var layout = new PdfLayout(doc, pagesId, helvetica, helveticaBold);
 
-        // ── Page 1: per-period results ──────────────────────────
         var title = string.IsNullOrEmpty(result.StateName)
             ? "Paycheck Summary"
-            : $"Paycheck Summary — {result.StateName}";
+            : $"Paycheck Summary - {result.StateName}";
         layout.BeginPage(title);
-        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  •  2026 tax tables");
+        // Note: the content stream is written as ASCII (see PdfLayout.Finish), so
+        // keep page text within ASCII — use a plain "|" separator, not a bullet.
+        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  |  2026 tax tables");
 
         layout.SectionHeader("Income");
         layout.Row("Gross Pay", Money(result.GrossPay), TextDark, bold: true);
@@ -47,67 +46,13 @@ internal static class PaycheckPdfRenderer
         layout.Row("FICA Taxable Income", Money(result.FicaTaxableWages), TextDark);
         layout.Row("State Taxable Income", Money(result.StateTaxableWages), TextDark);
 
-        layout.SectionHeader("Tax Withholdings");
+        layout.SectionHeader("Taxes");
         layout.Row("Federal Tax", Money(result.FederalWithholding), Red);
         layout.Row("Social Security Tax", Money(result.SocialSecurityWithholding), Red);
         layout.Row("Medicare Tax", Money(result.MedicareWithholding + result.AdditionalMedicareWithholding), Red);
         layout.Row("State Income Tax", Money(result.StateWithholding), Red);
-        if (result.StateDisabilityInsurance > 0)
-            layout.Row(result.StateDisabilityInsuranceLabel, Money(result.StateDisabilityInsurance), Red);
-
-        if (result.PreTaxDeductions > 0 || result.PostTaxDeductions > 0)
-        {
-            layout.SectionHeader("Deductions");
-            if (result.PreTaxDeductions > 0)
-                layout.Row("Pre-Tax Deductions", Money(result.PreTaxDeductions), Brown);
-            if (result.PostTaxDeductions > 0)
-                layout.Row("Post-Tax Deductions", Money(result.PostTaxDeductions), Brown);
-        }
 
         layout.Banner("NET PAY", Money(result.NetPay), Green);
-
-        if (chart is { } c)
-        {
-            layout.SectionHeader("Where Your Money Goes");
-            layout.Image(c.Jpeg, c.Width, c.Height);
-        }
-
-        // ── Page 2: annual projection ───────────────────────────
-        if (projection is { } p)
-        {
-            layout.BeginPage("Annual Projection");
-            layout.Subtitle(
-                $"Based on {p.PayPeriodsPerYear} pay periods  •  paycheck #{p.CurrentPaycheckNumber} of {p.PayPeriodsPerYear}");
-
-            layout.SectionHeader("Annualized Amounts");
-            layout.Row("Gross Pay", Money(p.AnnualizedGrossPay), TextDark, bold: true);
-            if (p.AnnualizedPreTaxDeductions > 0)
-                layout.Row("Pre-Tax Deductions", Money(p.AnnualizedPreTaxDeductions), Brown);
-            if (p.AnnualizedPostTaxDeductions > 0)
-                layout.Row("Post-Tax Deductions", Money(p.AnnualizedPostTaxDeductions), Brown);
-            layout.Row("Federal Taxable Wages", Money(p.AnnualizedFederalTaxableWages), TextDark);
-            layout.Row("FICA Taxable Wages", Money(p.AnnualizedFicaTaxableWages), TextDark);
-            layout.Row("State Taxable Wages", Money(p.AnnualizedStateTaxableWages), TextDark);
-            layout.Row("Federal Withholding", Money(p.AnnualizedFederalWithholding), Red);
-            layout.Row("State Withholding", Money(p.AnnualizedStateWithholding), Red);
-            layout.Row("FICA (SS + Medicare)", Money(p.AnnualizedFica), Red);
-            layout.Row("Net Pay", Money(p.AnnualizedNetPay), Green, bold: true);
-
-            layout.SectionHeader("Projected Year-to-Date");
-            layout.Row("YTD Gross Pay", Money(p.ProjectedYtdGrossPay), TextDark);
-            layout.Row("YTD Federal Withholding", Money(p.ProjectedYtdFederalWithholding), Red);
-            layout.Row("YTD State Withholding", Money(p.ProjectedYtdStateWithholding), Red);
-            layout.Row("YTD FICA", Money(p.ProjectedYtdFica), Red);
-            layout.Row("YTD Net Pay", Money(p.ProjectedYtdNetPay), Green);
-
-            layout.SectionHeader("Withholding Estimate");
-            layout.Row("Annualized Total Withholding", Money(p.AnnualizedTotalWithholding), Red);
-            layout.Row("Est. Federal Tax Liability", Money(p.EstimatedAnnualFederalLiability), TextDark);
-            layout.Row("Est. FICA Liability", Money(p.EstimatedAnnualFicaLiability), TextDark);
-            layout.Row("Est. Total Tax Liability", Money(p.EstimatedTotalLiability), TextDark);
-
-            layout.Banner(p.OverUnderLabel.ToUpperInvariant(), Money(p.OverUnderAmount), p.IsUnderWithholding ? Red : Green);
-        }
 
         layout.Finish(catalogId);
         return doc.Build(catalogId);
@@ -153,7 +98,6 @@ internal sealed class PdfLayout
     private sealed class Page
     {
         public readonly StringBuilder Content = new();
-        public readonly Dictionary<string, int> Images = new();
     }
 
     private readonly PdfDocument _doc;
@@ -165,7 +109,6 @@ internal sealed class PdfLayout
     private Page _page = null!;
     private double _y;
     private string _currentTitle = "";
-    private int _imageCounter;
 
     public PdfLayout(PdfDocument doc, int pagesId, int fontRegular, int fontBold)
     {
@@ -230,29 +173,6 @@ internal sealed class PdfLayout
         _y -= height + 14;
     }
 
-    public void Image(byte[] jpeg, int pixelWidth, int pixelHeight)
-    {
-        double displayWidth = ContentWidth;
-        double displayHeight = displayWidth * pixelHeight / pixelWidth;
-        EnsureSpace(displayHeight + 10);
-
-        int objId = _doc.Add(PdfDocument.Stream(
-            $"/Type /XObject /Subtype /Image /Width {pixelWidth} /Height {pixelHeight} " +
-            "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode",
-            jpeg));
-
-        string name = $"Im{_imageCounter++}";
-        _page.Images[name] = objId;
-
-        double bottom = _y - displayHeight;
-        _page.Content.Append("q\n")
-            .Append($"{Num(displayWidth)} 0 0 {Num(displayHeight)} {Num(ContentLeft)} {Num(bottom)} cm\n")
-            .Append($"/{name} Do\n")
-            .Append("Q\n");
-
-        _y -= displayHeight + 12;
-    }
-
     /// <summary>Emits the font, content-stream, and page objects and wires up the pages tree + catalog.</summary>
     public void Finish(int catalogId)
     {
@@ -264,19 +184,9 @@ internal sealed class PdfLayout
         {
             int contentId = _doc.Add(PdfDocument.Stream("", Encoding.ASCII.GetBytes(page.Content.ToString())));
 
-            var resources = new StringBuilder();
-            resources.Append($"/Font << /F1 {_fontRegular} 0 R /F2 {_fontBold} 0 R >>");
-            if (page.Images.Count > 0)
-            {
-                resources.Append(" /XObject << ");
-                foreach (var (name, id) in page.Images)
-                    resources.Append($"/{name} {id} 0 R ");
-                resources.Append(">>");
-            }
-
             int pageId = _doc.Add(
                 $"<< /Type /Page /Parent {_pagesId} 0 R /MediaBox [0 0 {Num(PageWidth)} {Num(PageHeight)}] " +
-                $"/Resources << {resources} >> /Contents {contentId} 0 R >>");
+                $"/Resources << /Font << /F1 {_fontRegular} 0 R /F2 {_fontBold} 0 R >> >> /Contents {contentId} 0 R >>");
             kids.Add(pageId);
         }
 
