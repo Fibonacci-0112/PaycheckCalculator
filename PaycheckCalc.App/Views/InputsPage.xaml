@@ -4,33 +4,33 @@
              xmlns:behaviors="clr-namespace:PaycheckCalc.App.Behaviors"
              x:Class="PaycheckCalc.App.Views.InputsPage"
              Title="Inputs"
-             BackgroundColor="#000099">
+             BackgroundColor="#F5F5F5">
     <Grid RowDefinitions="Auto,*">
 
         <!-- Tab header row -->
         <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*"
-              BackgroundColor="#1565C0" Padding="0" ColumnSpacing="0">
+              BackgroundColor="#ECECEC" Padding="0" ColumnSpacing="0">
             <Button x:Name="TabPayHours" Text="Pay &amp; Hours"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1976D2" TextColor="White"
+                    BackgroundColor="#333333" TextColor="White"
                     FontSize="13" FontAttributes="Bold"
                     CornerRadius="0" BorderWidth="0"
                     Padding="4,10" Grid.Column="0" />
             <Button x:Name="TabFederal" Text="Federal"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1565C0" TextColor="#90CAF9"
+                    BackgroundColor="#ECECEC" TextColor="#777777"
                     FontSize="13"
                     CornerRadius="0" BorderWidth="0"
                     Padding="4,10" Grid.Column="1" />
             <Button x:Name="TabState" Text="State"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1565C0" TextColor="#90CAF9"
+                    BackgroundColor="#ECECEC" TextColor="#777777"
                     FontSize="13"
                     CornerRadius="0" BorderWidth="0"
                     Padding="4,10" Grid.Column="2" />
             <Button x:Name="TabDeductions" Text="Deductions"
                     Clicked="OnTabClicked"
-                    BackgroundColor="#1565C0" TextColor="#90CAF9"
+                    BackgroundColor="#ECECEC" TextColor="#777777"
                     FontSize="13"
                     CornerRadius="0" BorderWidth="0"
                     Padding="4,10" Grid.Column="3" />
@@ -44,48 +44,48 @@
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnSpacing="12" RowSpacing="14">
                         <Label Text="Pay Frequency" Grid.Row="0" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Picker ItemsSource="{Binding Frequencies}" SelectedItem="{Binding SelectedFrequencyPickerItem}"
                                 Grid.Row="0" Grid.Column="1" TextColor="Black" />
                         <Label Text="Hourly Rate" Grid.Row="1" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding HourlyRate}" Keyboard="Numeric" Grid.Row="1" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Regular Hours" Grid.Row="2" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding RegularHours}" Keyboard="Numeric" Grid.Row="2" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Overtime Hours" Grid.Row="3" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding OvertimeHours}" Keyboard="Numeric" Grid.Row="3" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="OT Multiplier" Grid.Row="4" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding OvertimeMultiplier}" Keyboard="Numeric" Grid.Row="4" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Paycheck # (this year)" Grid.Row="5" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding PaycheckNumber}" Keyboard="Numeric" Grid.Row="5" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF" />
+                               TextColor="Black" BackgroundColor="#F2F2F2" />
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
                                 Grid.Row="6" Grid.ColumnSpan="2"
-                                BackgroundColor="#1565C0" TextColor="White"
+                                BackgroundColor="#333333" TextColor="White"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </Grid>
@@ -101,48 +101,48 @@
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnSpacing="12" RowSpacing="14">
                         <Label Text="Filing Status" Grid.Row="0" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Picker ItemsSource="{Binding FederalStatuses}" SelectedItem="{Binding SelectedFederalPickerItem}"
                                 Grid.Row="0" Grid.Column="1" TextColor="Black" />
                         <Label Text="Step 2 checked?" Grid.Row="1" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <CheckBox IsChecked="{Binding FederalStep2Checked}" Grid.Row="1" Grid.Column="1"
-                                  Color="#1565C0" />
+                                  Color="#333333" />
                         <Label Text="Step 3 credits (annual)" Grid.Row="2" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding FederalStep3Credits}" Keyboard="Numeric" Grid.Row="2" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Step 4(a) other income (annual)" Grid.Row="3" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding FederalStep4aOtherIncome}" Keyboard="Numeric" Grid.Row="3" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Step 4(b) deductions (annual)" Grid.Row="4" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding FederalStep4bDeductions}" Keyboard="Numeric" Grid.Row="4" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Step 4(c) extra per pay" Grid.Row="5" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                         <Entry Text="{Binding FederalStep4cExtraWithholding}" Keyboard="Numeric" Grid.Row="5" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#EEF2FF">
+                               TextColor="Black" BackgroundColor="#F2F2F2">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
                                 Grid.Row="6" Grid.ColumnSpan="2"
-                                BackgroundColor="#1565C0" TextColor="White"
+                                BackgroundColor="#333333" TextColor="White"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </Grid>
@@ -158,14 +158,14 @@
                     <VerticalStackLayout Spacing="14">
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="State" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                             <Picker ItemsSource="{Binding StatePickerItems}" SelectedItem="{Binding SelectedStatePickerItem}"
                                     Grid.Column="1" TextColor="Black" />
                         </Grid>
 
                         <Label Text="No extra inputs required for this state."
                                IsVisible="{Binding HasNoStateFields}"
-                               TextColor="#78909C" FontSize="13"
+                               TextColor="#9E9E9E" FontSize="13"
                                FontAttributes="Italic"
                                HorizontalTextAlignment="Center"
                                Margin="0,8,0,0" />
@@ -176,7 +176,7 @@
                                     <VerticalStackLayout Spacing="4">
                                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                             <Label Text="{Binding Label}" Grid.Column="0"
-                                                   VerticalTextAlignment="Center" TextColor="#37474F" FontSize="14" />
+                                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
                                             <Picker IsVisible="{Binding IsPicker}"
                                                     ItemsSource="{Binding Options}"
                                                     SelectedItem="{Binding SelectedOption}"
@@ -185,16 +185,16 @@
                                                    Text="{Binding StringValue}"
                                                    Keyboard="Numeric"
                                                    Grid.Column="1"
-                                                   TextColor="Black" BackgroundColor="#EEF2FF" />
+                                                   TextColor="Black" BackgroundColor="#F2F2F2" />
                                             <Entry IsVisible="{Binding IsText}"
                                                    Text="{Binding StringValue}"
                                                    Keyboard="Default"
                                                    Grid.Column="1"
-                                                   TextColor="Black" BackgroundColor="#EEF2FF" />
+                                                   TextColor="Black" BackgroundColor="#F2F2F2" />
                                             <Switch IsVisible="{Binding IsToggle}"
                                                     IsToggled="{Binding BoolValue}"
                                                     Grid.Column="1"
-                                                    OnColor="#1565C0" />
+                                                    OnColor="#333333" />
                                         </Grid>
                                         <Label Text="{Binding ErrorMessage}"
                                                IsVisible="{Binding HasError}"
@@ -216,7 +216,7 @@
                         </VerticalStackLayout>
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
-                                BackgroundColor="#1565C0" TextColor="White"
+                                BackgroundColor="#333333" TextColor="White"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </VerticalStackLayout>
@@ -234,12 +234,12 @@
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding Deductions}" Spacing="10">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BackgroundColor="#F8FAFF" StrokeThickness="1" Stroke="#E0E0E0"
+                                    <Border BackgroundColor="#FAFAFA" StrokeThickness="1" Stroke="#E0E0E0"
                                             StrokeShape="RoundRectangle 8" Padding="12">
                                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto"
                                               RowSpacing="8" ColumnSpacing="8">
                                             <Entry Grid.Row="0" Grid.Column="0" Placeholder="Name (e.g. 401k)"
-                                                   Text="{Binding Name}" TextColor="Black" BackgroundColor="#EEF2FF"
+                                                   Text="{Binding Name}" TextColor="Black" BackgroundColor="#F2F2F2"
                                                    FontSize="14" />
                                             <Button Grid.Row="0" Grid.Column="1" Text="✕"
                                                     FontSize="14" Padding="6,2"
@@ -247,10 +247,10 @@
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveDeductionCommand}"
                                                     CommandParameter="{Binding .}" />
                                             <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                <Label Text="Amount" TextColor="#37474F" FontSize="13"
+                                                <Label Text="Amount" TextColor="#424242" FontSize="13"
                                                        VerticalTextAlignment="Center" />
                                                 <Entry Grid.Column="1" Text="{Binding Amount}" Keyboard="Numeric"
-                                                       TextColor="Black" BackgroundColor="#EEF2FF" FontSize="14">
+                                                       TextColor="Black" BackgroundColor="#F2F2F2" FontSize="14">
                                                     <Entry.Behaviors>
                                                         <behaviors:DecimalFormatBehavior IsCurrency="{Binding IsDollarAmount}"
                                                                                         IsPercentage="{Binding IsPercentageAmount}" />
@@ -258,34 +258,34 @@
                                                 </Entry>
                                             </Grid>
                                             <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                <Label Text="Amount Type" TextColor="#37474F" FontSize="13"
+                                                <Label Text="Amount Type" TextColor="#424242" FontSize="13"
                                                        VerticalTextAlignment="Center" />
                                                 <Picker Grid.Column="1" ItemsSource="{Binding AmountTypes}"
                                                         SelectedItem="{Binding AmountType}" TextColor="Black" />
                                             </Grid>
                                             <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                <Label Text="Type" TextColor="#37474F" FontSize="13"
+                                                <Label Text="Type" TextColor="#424242" FontSize="13"
                                                        VerticalTextAlignment="Center" />
                                                 <Picker Grid.Column="1" ItemsSource="{Binding DeductionTypeItems}"
                                                         SelectedItem="{Binding SelectedDeductionTypePickerItem}" TextColor="Black" />
                                             </Grid>
                                             <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <Label Text="Reduces Federal Taxable Income" TextColor="#37474F" FontSize="13"
+                                                <Label Text="Reduces Federal Taxable Income" TextColor="#424242" FontSize="13"
                                                        VerticalTextAlignment="Center" />
                                                 <Switch Grid.Column="1" IsToggled="{Binding ReducesFederalTaxableWages}"
-                                                        OnColor="#1565C0" />
+                                                        OnColor="#333333" />
                                             </Grid>
                                             <Grid Grid.Row="5" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <Label Text="Reduces State Taxable Income" TextColor="#37474F" FontSize="13"
+                                                <Label Text="Reduces State Taxable Income" TextColor="#424242" FontSize="13"
                                                        VerticalTextAlignment="Center" />
                                                 <Switch Grid.Column="1" IsToggled="{Binding ReducesStateTaxableWages}"
-                                                        OnColor="#1565C0" />
+                                                        OnColor="#333333" />
                                             </Grid>
                                             <Grid Grid.Row="6" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <Label Text="Reduces FICA Taxable Income" TextColor="#37474F" FontSize="13"
+                                                <Label Text="Reduces FICA Taxable Income" TextColor="#424242" FontSize="13"
                                                        VerticalTextAlignment="Center" />
                                                 <Switch Grid.Column="1" IsToggled="{Binding ReducesFicaWages}"
-                                                        OnColor="#1565C0" />
+                                                        OnColor="#333333" />
                                             </Grid>
                                         </Grid>
                                     </Border>
@@ -294,11 +294,11 @@
                         </VerticalStackLayout>
 
                         <Button Text="+ Add Deduction" Command="{Binding AddDeductionCommand}"
-                                BackgroundColor="#E3F2FD" TextColor="#1565C0"
+                                BackgroundColor="#ECECEC" TextColor="#333333"
                                 FontAttributes="Bold" CornerRadius="8" />
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
-                                BackgroundColor="#1565C0" TextColor="White"
+                                BackgroundColor="#333333" TextColor="White"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </VerticalStackLayout>
