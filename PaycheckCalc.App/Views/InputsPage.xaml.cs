@@ -30,13 +30,13 @@ public partial class InputsPage : ContentPage
         // Reset all tabs to inactive style
         foreach (var tab in _tabButtons)
         {
-            tab.BackgroundColor = Color.FromArgb("#1565C0");
-            tab.TextColor = Color.FromArgb("#90CAF9");
+            tab.BackgroundColor = Color.FromArgb("#ECECEC");
+            tab.TextColor = Color.FromArgb("#777777");
             tab.FontAttributes = FontAttributes.None;
         }
 
         // Activate selected tab
-        tapped.BackgroundColor = Color.FromArgb("#1976D2");
+        tapped.BackgroundColor = Color.FromArgb("#333333");
         tapped.TextColor = Colors.White;
         tapped.FontAttributes = FontAttributes.Bold;
 
