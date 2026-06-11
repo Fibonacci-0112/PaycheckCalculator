@@ -99,30 +99,67 @@ public sealed class PayCalculatorExplanationTest
         Assert.Equal(result.NetPay, netStep.Value);
     }
 
-    private static PaycheckInput SampleInput() => new()
+    // ── Calculator-provided state steps override the generic fallback ──
+
+    [Fact]
+    public void StateExplanation_UsesCalculatorProvidedSteps_WhenAvailable()
+    {
+        // Pennsylvania opts in to a custom explanation, so the state line should
+        // carry its flat-rate worksheet steps and reference instead of the
+        // generic wage-base breakdown.
+        var calc = CreateCalculator(new Core.Tax.Pennsylvania.PennsylvaniaWithholdingCalculator());
+
+        var result = calc.Calculate(SampleInput(UsState.PA));
+
+        var stateExpl = result.Explanation.Get(ExplanationLineKey.StateWithholding);
+        Assert.NotNull(stateExpl);
+        Assert.Contains(stateExpl!.Steps, s => s.Label.Contains("3.07%"));
+        Assert.Contains("3.07", stateExpl.Reference);
+        Assert.Equal(result.StateWithholding, stateExpl.FinalAmount);
+    }
+
+    [Fact]
+    public void StateDisabilityExplanation_UsesCalculatorProvidedSteps_WhenAvailable()
+    {
+        // Washington's WA Cares Fund line opts in to a custom explanation.
+        var calc = CreateCalculator(new Core.Tax.Washington.WashingtonWithholdingCalculator());
+
+        var result = calc.Calculate(SampleInput(UsState.WA));
+
+        var diExpl = result.Explanation.Get(ExplanationLineKey.StateDisability);
+        Assert.NotNull(diExpl);
+        Assert.Contains(diExpl!.Steps, s => s.Label.Contains("WA Cares Fund premium"));
+        Assert.Equal(result.StateDisabilityInsurance, diExpl.FinalAmount);
+    }
+
+    private static PaycheckInput SampleInput(UsState state = UsState.OK) => new()
     {
         Frequency = PayFrequency.Biweekly,
         HourlyRate = 18m,
         RegularHours = 80m,
-        State = UsState.OK,
+        State = state,
         FederalW4 = new FederalW4Input
         {
             FilingStatus = FederalFilingStatus.SingleOrMarriedSeparately,
             Step2Checked = true
         },
-        StateInputValues = new StateInputValues
-        {
-            ["FilingStatus"] = "Single",
-            ["Allowances"] = 0,
-            ["AdditionalWithholding"] = 0m
-        }
+        StateInputValues = state == UsState.OK
+            ? new StateInputValues
+            {
+                ["FilingStatus"] = "Single",
+                ["Allowances"] = 0,
+                ["AdditionalWithholding"] = 0m
+            }
+            : new StateInputValues()
     };
 
-    private static PayCalculator CreateCalculator()
+    private static PayCalculator CreateCalculator(IStateWithholdingCalculator? extraCalculator = null)
     {
         var registry = new StateCalculatorRegistry();
         var okJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ok_ow2_2026_percentage.json"));
         registry.Register(new OklahomaWithholdingCalculator(new OklahomaOw2PercentageCalculator(okJson), TestSchemas.Provider));
+        if (extraCalculator is not null)
+            registry.Register(extraCalculator);
         var fica = new FicaCalculator();
         var fedJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "us_irs_15t_2026_percentage_automated.json"));
         var fed = new Irs15TPercentageCalculator(fedJson);

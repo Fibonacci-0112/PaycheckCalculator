@@ -285,6 +285,51 @@ public class OhioWithholdingCalculatorTest
         Assert.Empty(errors);
     }
 
+    // ── Explanation ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_AnnualizedSteps_ShowBracketAndDeannualization()
+    {
+        // $2,000 biweekly, 0 exemptions:
+        // annualize = 2,000 × 26 = 52,000
+        // annual tax = (52,000 − 26,050) × 2.75% = 713.625
+        // per period = 713.625 / 26 = 27.447... → 27.45
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly);
+
+        Assert.NotNull(result.WithholdingSteps);
+        var annualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Annualize wages"));
+        Assert.Equal(52_000m, annualizeStep.Value);
+        var bracketStep = Assert.Single(result.WithholdingSteps!, s => s.Label.Contains("2.75%"));
+        Assert.Equal(713.625m, bracketStep.Value);
+        var deannualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "De-annualize to this pay period");
+        Assert.Equal(27.45m, deannualizeStep.Value);
+        Assert.Contains("IT-4", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_IncomeWithinZeroBracket_ShowsZeroBracketStep()
+    {
+        // $400 weekly → annual 20,800 ≤ 26,050 → 0% bracket
+        var result = Calculate(GrossWages: 400m, PayFrequency.Weekly);
+
+        Assert.Equal(0m, result.Withholding);
+        var zeroStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Within Ohio's 0% bracket");
+        Assert.Equal(0m, zeroStep.Value);
+    }
+
+    [Fact]
+    public void Explanation_Exemptions_EmitExemptionAllowanceStep()
+    {
+        // 3 exemptions × $650 = $1,950 annual exemption allowance
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly, exemptions: 3);
+
+        var exemptionStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Less IT-4 exemption allowance");
+        Assert.Equal(1_950m, exemptionStep.Value);
+        // Annual taxable = 52,000 − 1,950 = 50,050
+        var taxableStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual taxable income");
+        Assert.Equal(50_050m, taxableStep.Value);
+    }
+
     // ── Helper ──────────────────────────────────────────────────────
 
     private static StateWithholdingResult Calculate(

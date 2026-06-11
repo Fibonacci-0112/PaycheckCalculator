@@ -1,3 +1,5 @@
+using PaycheckCalc.Core.Explanation;
+
 namespace PaycheckCalc.Core.Tax.State;
 
 /// <summary>
@@ -31,4 +33,31 @@ public sealed class StateWithholdingResult
     /// "Includes supplemental surcharge").
     /// </summary>
     public string? Description { get; init; }
+
+    /// <summary>
+    /// Optional worksheet-style steps showing how <see cref="Withholding"/> was
+    /// computed. Calculators opt in by supplying the full narrative (starting
+    /// from gross/taxable wages); when null or empty, <c>PayCalculator</c> falls
+    /// back to a generic wage-base + final-amount breakdown.
+    /// </summary>
+    public IReadOnlyList<ExplanationStep>? WithholdingSteps { get; init; }
+
+    /// <summary>
+    /// Optional citation for <see cref="WithholdingSteps"/>
+    /// (e.g., "Illinois Booklet IL-700-T (2026)").
+    /// </summary>
+    public string? WithholdingReference { get; init; }
+
+    /// <summary>
+    /// Optional worksheet-style steps for the <see cref="DisabilityInsurance"/>
+    /// line (e.g., California SDI, WA Cares Fund). When null or empty,
+    /// <c>PayCalculator</c> falls back to a one-line generic breakdown.
+    /// </summary>
+    public IReadOnlyList<ExplanationStep>? DisabilityInsuranceSteps { get; init; }
+
+    /// <summary>
+    /// Optional citation for <see cref="DisabilityInsuranceSteps"/>
+    /// (e.g., "California EDD DE 44 (2026) — SDI").
+    /// </summary>
+    public string? DisabilityInsuranceReference { get; init; }
 }

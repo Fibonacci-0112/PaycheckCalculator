@@ -1,3 +1,4 @@
+using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 
@@ -87,28 +88,72 @@ public sealed class OhioWithholdingCalculator : IStateWithholdingCalculator
 
         int periods = GetPayPeriods(context.PayPeriod);
 
+        var steps = new List<ExplanationStep>();
+        StateExplanationSteps.AddTaxableWagesSteps(steps, context, taxableWages);
+
         // Step 2: Annualize wages.
         var annualWages = taxableWages * periods;
+        steps.Add(new ExplanationStep(
+            $"Annualize wages ({periods} pay periods/year)",
+            "Ohio's computer formula estimates annual income from this period's wages.",
+            annualWages,
+            $"{StateExplanationSteps.Money(taxableWages)} × {periods} = {StateExplanationSteps.Money(annualWages)}"));
 
         // Step 3: Subtract the IT-4 exemption allowance ($650 per exemption).
         var annualExemption    = exemptions * ExemptionAllowance;
         var annualTaxableIncome = Math.Max(0m, annualWages - annualExemption);
+
+        if (annualExemption > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less IT-4 exemption allowance",
+                $"Each exemption claimed on Ohio Form IT-4 reduces annual wages by {StateExplanationSteps.Money(ExemptionAllowance)}.",
+                annualExemption,
+                $"{exemptions} × {StateExplanationSteps.Money(ExemptionAllowance)} = {StateExplanationSteps.Money(annualExemption)}"));
+        }
+
+        steps.Add(new ExplanationStep(
+            "Annual taxable income",
+            "Annualized wages less exemption allowances, floored at zero.",
+            annualTaxableIncome,
+            $"max(0, {StateExplanationSteps.Money(annualWages)} − {StateExplanationSteps.Money(annualExemption)}) = {StateExplanationSteps.Money(annualTaxableIncome)}"));
 
         // Step 4: Apply Ohio's 2026 graduated brackets.
         decimal annualTax = annualTaxableIncome <= ZeroBracketCeiling
             ? 0m
             : (annualTaxableIncome - ZeroBracketCeiling) * TopRate;
 
+        steps.Add(annualTaxableIncome <= ZeroBracketCeiling
+            ? new ExplanationStep(
+                "Within Ohio's 0% bracket",
+                $"Annual taxable income up to {StateExplanationSteps.Money(ZeroBracketCeiling)} is taxed at 0%, so no income tax is withheld.",
+                0m,
+                $"{StateExplanationSteps.Money(annualTaxableIncome)} ≤ {StateExplanationSteps.Money(ZeroBracketCeiling)} → {StateExplanationSteps.Money(0m)}")
+            : new ExplanationStep(
+                "Annual tax above the 0% bracket (2.75%)",
+                $"Only income over {StateExplanationSteps.Money(ZeroBracketCeiling)} is taxed, at Ohio's 2.75% rate.",
+                annualTax,
+                $"({StateExplanationSteps.Money(annualTaxableIncome)} − {StateExplanationSteps.Money(ZeroBracketCeiling)}) × {StateExplanationSteps.Percent(TopRate)} = {StateExplanationSteps.Money(annualTax)}"));
+
         // Step 5: De-annualize and round to two decimal places.
         var withholding = Math.Round(annualTax / periods, 2, MidpointRounding.AwayFromZero);
 
+        steps.Add(new ExplanationStep(
+            "De-annualize to this pay period",
+            "Divide the annual tax back down to a per-period amount, rounded to the nearest cent.",
+            withholding,
+            $"{StateExplanationSteps.Money(annualTax)} ÷ {periods} = {StateExplanationSteps.Money(withholding)}"));
+
         // Step 6: Add any per-period extra withholding.
         withholding += extraWithholding;
+        StateExplanationSteps.AddExtraWithholdingStep(steps, extraWithholding, withholding, "Ohio Form IT-4");
 
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding  = withholding
+            Withholding  = withholding,
+            WithholdingSteps = steps,
+            WithholdingReference = "Ohio Dept. of Taxation, Optional Computer Formula (2026); Form IT-4."
         };
     }
 

@@ -316,4 +316,52 @@ public class MichiganWithholdingCalculatorTest
 
         Assert.Equal(0m, result.DisabilityInsurance);
     }
+
+    // ── Explanation ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_ExemptionSteps_ShowAnnualAllowanceAndFlatRate()
+    {
+        var calc = new MichiganWithholdingCalculator();
+
+        var context = new CommonWithholdingContext(
+            UsState.MI,
+            GrossWages: 4000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+        var values = new StateInputValues { ["Exemptions"] = 2 };
+
+        var result = calc.Calculate(context, values);
+
+        Assert.NotNull(result.WithholdingSteps);
+        // Annual exemption = 2 × 5900 = 11,800
+        var annualStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual exemption allowance (MI-W4)");
+        Assert.Equal(11_800m, annualStep.Value);
+        // Per-period = 11800 / 26 = 453.846...; taxable = 3546.153...;
+        // withholding = 3546.153... × 4.25% = 150.71
+        Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Per-period exemption"));
+        var rateStep = Assert.Single(result.WithholdingSteps!, s => s.Label.Contains("4.25%"));
+        Assert.Equal(150.71m, rateStep.Value);
+        Assert.Equal(150.71m, result.Withholding);
+        Assert.Contains("Form 446", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_NoExemptions_OmitsExemptionSteps()
+    {
+        var calc = new MichiganWithholdingCalculator();
+
+        var context = new CommonWithholdingContext(
+            UsState.MI,
+            GrossWages: 2000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+
+        var result = calc.Calculate(context, new StateInputValues());
+
+        Assert.DoesNotContain(result.WithholdingSteps!, s => s.Label == "Annual exemption allowance (MI-W4)");
+        // 2000 × 4.25% = 85.00 on the full taxable wages
+        var rateStep = Assert.Single(result.WithholdingSteps!, s => s.Label.Contains("4.25%"));
+        Assert.Equal(85.00m, rateStep.Value);
+    }
 }

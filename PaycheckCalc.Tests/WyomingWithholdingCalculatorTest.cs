@@ -150,4 +150,25 @@ public class WyomingWithholdingCalculatorTest
 
         Assert.Equal(0m, result.DisabilityInsurance);
     }
+
+    // ── Explanation ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_NoIncomeTax_SingleStep()
+    {
+        var calc = CreateCalc();
+
+        var context = new CommonWithholdingContext(
+            UsState.WY,
+            GrossWages: 5_000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+
+        var result = calc.Calculate(context, new StateInputValues());
+
+        Assert.NotNull(result.WithholdingSteps);
+        var step = Assert.Single(result.WithholdingSteps!);
+        Assert.Equal("No state income tax", step.Label);
+        Assert.Equal(0m, step.Value);
+    }
 }

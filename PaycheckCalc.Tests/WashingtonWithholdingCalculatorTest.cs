@@ -258,4 +258,62 @@ public class WashingtonWithholdingCalculatorTest
 
         Assert.Equal("WA Cares Fund (Long-Term Care)", result.DisabilityInsuranceLabel);
     }
+
+    // ── Explanation ──────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_NoIncomeTax_SingleStep()
+    {
+        var calc = CreateCalc();
+
+        var context = new CommonWithholdingContext(
+            UsState.WA,
+            GrossWages: 5_000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+
+        var result = calc.Calculate(context, new StateInputValues());
+
+        Assert.NotNull(result.WithholdingSteps);
+        var step = Assert.Single(result.WithholdingSteps!);
+        Assert.Equal("No state income tax", step.Label);
+        Assert.Equal(0m, step.Value);
+    }
+
+    [Fact]
+    public void Explanation_WaCaresSteps_ShowRateOnGrossWages()
+    {
+        var calc = CreateCalc();
+
+        var context = new CommonWithholdingContext(
+            UsState.WA,
+            GrossWages: 5_000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+
+        var result = calc.Calculate(context, new StateInputValues());
+
+        // WA Cares = 5,000 × 0.58% = $29.00
+        Assert.NotNull(result.DisabilityInsuranceSteps);
+        var premiumStep = Assert.Single(result.DisabilityInsuranceSteps!, s => s.Label == "WA Cares Fund premium (0.58%)");
+        Assert.Equal(29.00m, premiumStep.Value);
+        Assert.Contains("RCW", result.DisabilityInsuranceReference);
+    }
+
+    [Fact]
+    public void Explanation_WaCaresExempt_OmitsPremiumSteps()
+    {
+        var calc = CreateCalc();
+
+        var context = new CommonWithholdingContext(
+            UsState.WA,
+            GrossWages: 5_000m,
+            PayPeriod: PayFrequency.Biweekly,
+            Year: 2026);
+        var values = new StateInputValues { ["WaCaresExempt"] = true };
+
+        var result = calc.Calculate(context, values);
+
+        Assert.Null(result.DisabilityInsuranceSteps);
+    }
 }

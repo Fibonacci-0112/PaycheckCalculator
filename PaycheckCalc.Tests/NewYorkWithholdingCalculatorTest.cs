@@ -369,6 +369,56 @@ public class NewYorkWithholdingCalculatorTest
         Assert.Equal(19.23m, result.Withholding);
     }
 
+    // ── Explanation ─────────────────────────────────────────────────
+
+    [Fact]
+    public void Explanation_Single_ShowsDeductionBracketsAndDeannualization()
+    {
+        // $2,000 biweekly Single, 0 allowances:
+        // annualize = 52,000; std ded = 8,000; annual taxable = 44,000
+        // tax = 340 + 144 + 115.50 + 442.50 + (22,600 × 6.09%) = 2,418.34
+        // per period = 2,418.34 / 26 = 93.013... → 93.01
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly,
+            NewYorkWithholdingCalculator.StatusSingle);
+
+        Assert.NotNull(result.WithholdingSteps);
+        var annualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Annualize wages"));
+        Assert.Equal(52_000m, annualizeStep.Value);
+        var dedStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Less standard deduction"));
+        Assert.Equal(8_000m, dedStep.Value);
+        var taxableStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Annual taxable income");
+        Assert.Equal(44_000m, taxableStep.Value);
+        var bracketStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Annual tax from New York's graduated brackets"));
+        Assert.Equal(2_418.34m, bracketStep.Value);
+        // Top dollar falls in the 6.09% bracket over $21,400
+        Assert.Contains("6.09", bracketStep.Detail);
+        Assert.Contains("$21,400", bracketStep.Detail);
+        var deannualizeStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "De-annualize to this pay period");
+        Assert.Equal(93.01m, deannualizeStep.Value);
+        Assert.Contains("NYS-50-T-NYS", result.WithholdingReference);
+    }
+
+    [Fact]
+    public void Explanation_Married_UsesMarriedScheduleLabel()
+    {
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly,
+            NewYorkWithholdingCalculator.StatusMarried);
+
+        var bracketStep = Assert.Single(result.WithholdingSteps!, s => s.Label.StartsWith("Annual tax from New York's graduated brackets"));
+        Assert.Contains("Married", bracketStep.Label);
+    }
+
+    [Fact]
+    public void Explanation_Allowances_EmitAllowanceDeductionStep()
+    {
+        // 3 allowances × $1,000 = $3,000 annual deduction
+        var result = Calculate(GrossWages: 2_000m, PayFrequency.Biweekly,
+            NewYorkWithholdingCalculator.StatusSingle, allowances: 3);
+
+        var allowanceStep = Assert.Single(result.WithholdingSteps!, s => s.Label == "Less IT-2104 allowance deduction");
+        Assert.Equal(3_000m, allowanceStep.Value);
+    }
+
     // ── Validation ──────────────────────────────────────────────────
 
     [Fact]

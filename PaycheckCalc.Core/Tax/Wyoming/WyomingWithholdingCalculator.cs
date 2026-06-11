@@ -33,6 +33,8 @@ public sealed class WyomingWithholdingCalculator : IStateWithholdingCalculator
             // Wyoming levies no state income tax on wages.
             TaxableWages = 0m,
             Withholding = 0m,
-            Description = "No state income tax"
+            Description = "No state income tax",
+            WithholdingSteps = StateExplanationSteps.NoIncomeTax(State),
+            WithholdingReference = "Wyo. Const. art. 15, § 18 — Wyoming levies no state personal income tax (2026)."
         };
 }

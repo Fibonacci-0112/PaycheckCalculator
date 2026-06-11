@@ -1,3 +1,4 @@
+using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 
@@ -49,7 +50,25 @@ public sealed class WashingtonWithholdingCalculator : IStateWithholdingCalculato
             TaxableWages = 0m,
             Withholding = 0m,
             DisabilityInsurance = waCares,
-            DisabilityInsuranceLabel = WaCaresLabel
+            DisabilityInsuranceLabel = WaCaresLabel,
+            WithholdingSteps = StateExplanationSteps.NoIncomeTax(State),
+            WithholdingReference = "Washington levies no state personal income tax (2026).",
+            DisabilityInsuranceSteps = exempt ? null : BuildWaCaresSteps(context.GrossWages, waCares),
+            DisabilityInsuranceReference = "WA Cares Fund employee premium, RCW 50B.04.080 (2026)."
         };
     }
+
+    private static IReadOnlyList<ExplanationStep> BuildWaCaresSteps(decimal grossWages, decimal waCares) =>
+    [
+        new ExplanationStep(
+            "Gross wages this period",
+            "The WA Cares premium applies to all gross wages, before any pre-tax deductions, with no wage cap.",
+            grossWages,
+            $"= {StateExplanationSteps.Money(grossWages)}"),
+        new ExplanationStep(
+            "WA Cares Fund premium (0.58%)",
+            "Mandatory long-term-care insurance premium withheld from employees unless they hold a DSHS-approved exemption.",
+            waCares,
+            $"{StateExplanationSteps.Money(grossWages)} × {StateExplanationSteps.Percent(WaCaresRate)} = {StateExplanationSteps.Money(waCares)}")
+    ];
 }
