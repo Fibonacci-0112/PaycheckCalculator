@@ -72,6 +72,10 @@ public sealed class PayCalculator
             overtimeMultiplier: input.OvertimeMultiplier,
             preTax: RoundMoney(preTax),
             postTax: RoundMoney(postTax),
+            federalTaxableIncome: RoundMoney(fedTaxable),
+            federalPreTaxReducing: RoundMoney(fedPreTax),
+            ficaTaxableWages: RoundMoney(ficaWages),
+            ficaPreTaxReducing: RoundMoney(ficaPreTax),
             federalWithholding: RoundMoney(federal),
             federalExplanation: fedDetail.Explanation,
             ficaDetail: ficaDetail,
@@ -110,6 +114,10 @@ public sealed class PayCalculator
         decimal overtimeMultiplier,
         decimal preTax,
         decimal postTax,
+        decimal federalTaxableIncome,
+        decimal federalPreTaxReducing,
+        decimal ficaTaxableWages,
+        decimal ficaPreTaxReducing,
         decimal federalWithholding,
         LineExplanation federalExplanation,
         FicaCalculationResult ficaDetail,
@@ -122,6 +130,11 @@ public sealed class PayCalculator
         var lines = new List<LineExplanation>
         {
             BuildGrossExplanation(grossPay, regularHours, hourlyRate, overtimeHours, overtimeMultiplier),
+            BuildFederalTaxableIncomeExplanation(grossPay, federalPreTaxReducing, federalTaxableIncome),
+            BuildFicaTaxableIncomeExplanation(grossPay, ficaPreTaxReducing, ficaTaxableWages),
+            BuildStateTaxableIncomeExplanation(
+                stateName, grossPay, RoundMoney(preTaxReducingStateWages),
+                RoundMoney(stateResult.TaxableWages), stateResult.Description),
             federalExplanation,
             ficaDetail.SocialSecurityExplanation,
             ficaDetail.MedicareExplanation,
@@ -179,6 +192,130 @@ public sealed class PayCalculator
             "Gross Pay",
             grossPay,
             steps);
+    }
+
+    private static LineExplanation BuildFederalTaxableIncomeExplanation(
+        decimal grossPay, decimal preTaxReducing, decimal taxableIncome)
+    {
+        var steps = new List<ExplanationStep>
+        {
+            new("Gross pay",
+                "Total earnings before any deductions or taxes.",
+                grossPay,
+                $"= {Money(grossPay)}"),
+        };
+
+        if (preTaxReducing > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less pre-tax deductions reducing federal wages",
+                "Pre-tax items such as traditional 401(k)/403(b) and Section 125 medical lower the wages subject to federal income tax. Roth and other after-tax deductions do not.",
+                preTaxReducing,
+                $"− {Money(preTaxReducing)}"));
+        }
+
+        steps.Add(new ExplanationStep(
+            "Federal taxable income",
+            "The wage base the IRS percentage-method withholding formula is applied to.",
+            taxableIncome,
+            $"= {Money(taxableIncome)}"));
+
+        return new LineExplanation(
+            ExplanationLineKey.FederalTaxableIncome,
+            "Federal Taxable Income",
+            taxableIncome,
+            steps,
+            "IRS Publication 15-T (2026). Pre-tax 401(k)/Section 125 deductions reduce federally taxable wages.");
+    }
+
+    private static LineExplanation BuildFicaTaxableIncomeExplanation(
+        decimal grossPay, decimal preTaxReducing, decimal taxableWages)
+    {
+        var steps = new List<ExplanationStep>
+        {
+            new("Gross pay",
+                "Total earnings before any deductions or taxes.",
+                grossPay,
+                $"= {Money(grossPay)}"),
+        };
+
+        if (preTaxReducing > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less pre-tax deductions reducing FICA wages",
+                "Only Section 125 cafeteria-plan benefits (such as pre-tax medical) reduce Social Security and Medicare wages. 401(k)/403(b) contributions do not.",
+                preTaxReducing,
+                $"− {Money(preTaxReducing)}"));
+        }
+
+        steps.Add(new ExplanationStep(
+            "FICA taxable wages",
+            "The wage base for Social Security and Medicare (FICA) taxes.",
+            taxableWages,
+            $"= {Money(taxableWages)}"));
+
+        return new LineExplanation(
+            ExplanationLineKey.FicaTaxableWages,
+            "FICA Taxable Income",
+            taxableWages,
+            steps,
+            "FICA wages — Section 125 benefits reduce them; 401(k)/403(b) contributions do not.");
+    }
+
+    private static LineExplanation BuildStateTaxableIncomeExplanation(
+        UsState state, decimal grossPay, decimal preTaxReducing, decimal taxableWages, string? description)
+    {
+        // No-income-tax states (and fully exempt wages) report zero taxable wages
+        // even when gross pay is positive, so the gross − deductions arithmetic
+        // would not add up. Show a single informational step instead.
+        if (taxableWages == 0m && grossPay - preTaxReducing > 0m)
+        {
+            var noTaxSteps = new List<ExplanationStep>
+            {
+                new("No state taxable wages",
+                    string.IsNullOrEmpty(description)
+                        ? $"{state} does not tax these wages for income-tax purposes, so the state taxable wage base is zero."
+                        : description,
+                    0m,
+                    $"= {Money(0m)}"),
+            };
+            return new LineExplanation(
+                ExplanationLineKey.StateTaxableWages,
+                $"State Taxable Income ({state})",
+                0m,
+                noTaxSteps,
+                $"{state} state taxable wage rules (2026).");
+        }
+
+        var steps = new List<ExplanationStep>
+        {
+            new("Gross pay",
+                "Total earnings before any deductions or taxes.",
+                grossPay,
+                $"= {Money(grossPay)}"),
+        };
+
+        if (preTaxReducing > 0m)
+        {
+            steps.Add(new ExplanationStep(
+                "Less pre-tax deductions reducing state wages",
+                "Pre-tax items the state recognizes (such as traditional 401(k) or Section 125 medical) lower the wages subject to state income tax.",
+                preTaxReducing,
+                $"− {Money(preTaxReducing)}"));
+        }
+
+        steps.Add(new ExplanationStep(
+            "State taxable wages",
+            "The base the state's withholding formula is applied to.",
+            taxableWages,
+            $"= {Money(taxableWages)}"));
+
+        return new LineExplanation(
+            ExplanationLineKey.StateTaxableWages,
+            $"State Taxable Income ({state})",
+            taxableWages,
+            steps,
+            $"{state} state taxable wage rules (2026).");
     }
 
     private static LineExplanation BuildStateExplanation(

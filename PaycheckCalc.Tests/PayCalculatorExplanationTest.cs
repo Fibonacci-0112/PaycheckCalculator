@@ -132,6 +132,101 @@ public sealed class PayCalculatorExplanationTest
         Assert.Equal(result.StateDisabilityInsurance, diExpl.FinalAmount);
     }
 
+    // ── Taxable-income explanations (Federal / FICA / State) ──
+
+    [Fact]
+    public void Explanation_IncludesFederalFicaAndStateTaxableIncome()
+    {
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInput());
+
+        Assert.NotNull(result.Explanation.Get(ExplanationLineKey.FederalTaxableIncome));
+        Assert.NotNull(result.Explanation.Get(ExplanationLineKey.FicaTaxableWages));
+        Assert.NotNull(result.Explanation.Get(ExplanationLineKey.StateTaxableWages));
+    }
+
+    [Fact]
+    public void FederalTaxableIncomeExplanation_FinalAmount_MatchesResultLine()
+    {
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInput());
+
+        var expl = result.Explanation.Get(ExplanationLineKey.FederalTaxableIncome);
+        Assert.NotNull(expl);
+        Assert.Equal(result.FederalTaxableIncome, expl!.FinalAmount);
+        // No pre-tax deductions in the sample, so taxable income equals gross ($18 × 80).
+        Assert.Equal(1440.00m, expl.FinalAmount);
+        Assert.Contains(expl.Steps, s => s.Label == "Federal taxable income");
+    }
+
+    [Fact]
+    public void FicaTaxableIncomeExplanation_FinalAmount_MatchesResultLine()
+    {
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInput());
+
+        var expl = result.Explanation.Get(ExplanationLineKey.FicaTaxableWages);
+        Assert.NotNull(expl);
+        Assert.Equal(result.FicaTaxableWages, expl!.FinalAmount);
+        Assert.Equal(1440.00m, expl.FinalAmount);
+        Assert.Contains(expl.Steps, s => s.Label == "FICA taxable wages");
+    }
+
+    [Fact]
+    public void StateTaxableIncomeExplanation_FinalAmount_MatchesResultLine()
+    {
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInput());
+
+        var expl = result.Explanation.Get(ExplanationLineKey.StateTaxableWages);
+        Assert.NotNull(expl);
+        Assert.Equal(result.StateTaxableWages, expl!.FinalAmount);
+        Assert.Contains(expl.Steps, s => s.Label == "State taxable wages");
+    }
+
+    [Fact]
+    public void TaxableIncomeExplanations_ShowPreTaxDeductionReductions()
+    {
+        // 401(k) (5% = $72) reduces federal + state wages but not FICA; medical
+        // ($85) reduces all three. Gross is $1,440 biweekly, so federal/state
+        // taxable = $1,283 and FICA taxable = $1,355.
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInputWithDeductions());
+
+        var fed = result.Explanation.Get(ExplanationLineKey.FederalTaxableIncome);
+        Assert.NotNull(fed);
+        Assert.Equal(1283.00m, fed!.FinalAmount);
+        Assert.Equal(result.FederalTaxableIncome, fed.FinalAmount);
+        Assert.Contains(fed.Steps, s => s.Label == "Less pre-tax deductions reducing federal wages" && s.Value == 157.00m);
+
+        var fica = result.Explanation.Get(ExplanationLineKey.FicaTaxableWages);
+        Assert.NotNull(fica);
+        Assert.Equal(1355.00m, fica!.FinalAmount);
+        Assert.Equal(result.FicaTaxableWages, fica.FinalAmount);
+        Assert.Contains(fica.Steps, s => s.Label == "Less pre-tax deductions reducing FICA wages" && s.Value == 85.00m);
+
+        var state = result.Explanation.Get(ExplanationLineKey.StateTaxableWages);
+        Assert.NotNull(state);
+        Assert.Equal(1283.00m, state!.FinalAmount);
+        Assert.Equal(result.StateTaxableWages, state.FinalAmount);
+        Assert.Contains(state.Steps, s => s.Label == "Less pre-tax deductions reducing state wages" && s.Value == 157.00m);
+    }
+
+    [Fact]
+    public void StateTaxableIncomeExplanation_NoIncomeTaxState_ShowsZeroWageBase()
+    {
+        // Texas levies no state income tax: taxable wages are zero even though
+        // gross pay is positive, so the line shows a "No state taxable wages" note.
+        var calc = CreateCalculator(new NoIncomeTaxWithholdingAdapter(UsState.TX));
+        var result = calc.Calculate(SampleInput(UsState.TX));
+
+        var state = result.Explanation.Get(ExplanationLineKey.StateTaxableWages);
+        Assert.NotNull(state);
+        Assert.Equal(0m, state!.FinalAmount);
+        Assert.Equal(result.StateTaxableWages, state.FinalAmount);
+        Assert.Contains(state.Steps, s => s.Label == "No state taxable wages");
+    }
+
     private static PaycheckInput SampleInput(UsState state = UsState.OK) => new()
     {
         Frequency = PayFrequency.Biweekly,
@@ -151,6 +246,48 @@ public sealed class PayCalculatorExplanationTest
                 ["AdditionalWithholding"] = 0m
             }
             : new StateInputValues()
+    };
+
+    private static PaycheckInput SampleInputWithDeductions() => new()
+    {
+        Frequency = PayFrequency.Biweekly,
+        HourlyRate = 18m,
+        RegularHours = 80m,
+        State = UsState.OK,
+        FederalW4 = new FederalW4Input
+        {
+            FilingStatus = FederalFilingStatus.SingleOrMarriedSeparately,
+            Step2Checked = true
+        },
+        StateInputValues = new StateInputValues
+        {
+            ["FilingStatus"] = "Single",
+            ["Allowances"] = 0,
+            ["AdditionalWithholding"] = 0m
+        },
+        Deductions = new[]
+        {
+            new Deduction
+            {
+                Name = "401(k)",
+                Type = DeductionType.PreTax,
+                Amount = 5m,
+                AmountType = DeductionAmountType.Percentage,
+                ReducesFederalTaxableWages = true,
+                ReducesStateTaxableWages = true,
+                ReducesFicaWages = false
+            },
+            new Deduction
+            {
+                Name = "Medical",
+                Type = DeductionType.PreTax,
+                Amount = 85m,
+                AmountType = DeductionAmountType.Dollar,
+                ReducesFederalTaxableWages = true,
+                ReducesStateTaxableWages = true,
+                ReducesFicaWages = true
+            }
+        }
     };
 
     private static PayCalculator CreateCalculator(IStateWithholdingCalculator? extraCalculator = null)
