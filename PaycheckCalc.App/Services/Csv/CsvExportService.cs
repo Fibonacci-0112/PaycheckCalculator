@@ -8,12 +8,12 @@ namespace PaycheckCalc.App.Services.Csv;
 /// <inheritdoc />
 public sealed class CsvExportService : ICsvExportService
 {
-    private readonly IShareLauncher _share;
+    private readonly ICsvViewerLauncher _launcher;
 
-    public CsvExportService(IShareLauncher share) => _share = share;
+    public CsvExportService(ICsvViewerLauncher launcher) => _launcher = launcher;
 
     /// <inheritdoc />
-    public async Task<string> ExportAndShareAsync(ResultCardModel result)
+    public async Task<string> ExportAndOpenAsync(ResultCardModel result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
@@ -30,7 +30,7 @@ public sealed class CsvExportService : ICsvExportService
         // UTF-8 without a BOM; the content is ASCII in practice.
         await File.WriteAllTextAsync(path, csv, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
-        await _share.ShareAsync(path, "Paycheck Summary (CSV)");
+        await _launcher.OpenCsvAsync(path);
         return path;
     }
 }

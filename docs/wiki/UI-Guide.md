@@ -89,7 +89,7 @@ The Results page toolbar exposes three actions, each enabled once a paycheck has
 
 - **Print** — Renders the summary and opens the native print dialog (Android print framework / Windows default PDF handler). Backed by `Services/Printing`.
 - **Export PDF** — Writes a single-page PDF and opens it in a viewer (preferring Adobe Reader/Acrobat). Backed by `Services/Pdf`.
-- **Export CSV** — Writes a CSV of the per-period breakdown (Income, Taxes, Deductions, Summary) and offers it through the platform share sheet so it can be opened in a spreadsheet, emailed, or saved. Amounts are plain decimals for clean spreadsheet import. Backed by `Services/Csv`.
+- **Export CSV** — Writes a CSV of the per-period breakdown (Income, Taxes, Deductions, Summary) and opens it in the platform's default CSV application (Microsoft Excel on Windows, or the chosen default spreadsheet app on Android). Amounts are plain decimals for clean spreadsheet import. Backed by `Services/Csv`.
 
 ### Annual Tab
 
