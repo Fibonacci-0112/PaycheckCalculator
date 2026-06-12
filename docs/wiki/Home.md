@@ -2,7 +2,7 @@
 
 Welcome to the **PaycheckCalc** wiki — the documentation home for the paycheck calculator.
 
-PaycheckCalc is a simple **.NET MAUI** app (Android & Windows) that computes net pay, tax withholdings, and deductions for all 50 US states plus DC using 2026 tax tables. The UI is two tabs — Inputs and Results — backed by the UI-agnostic `PaycheckCalc.Core` library.
+PaycheckCalc computes net pay, tax withholdings, and deductions for all 50 US states plus DC using 2026 tax tables. It ships two front-ends — a **.NET MAUI** app (Android & Windows) and a **Blazor Server** web app — backed by the UI-agnostic `PaycheckCalc.Core` library. Saved paychecks can optionally sync between the two via a user account (see [Accounts & Sync](Accounts-and-Sync.md)).
 
 ---
 
@@ -17,6 +17,7 @@ PaycheckCalc is a simple **.NET MAUI** app (Android & Windows) that computes net
 - **[Architecture](Architecture.md)** — Solution structure, MVVM pattern, dependency injection, and data flow.
 - **[Tax Calculation Engine](Tax-Calculation-Engine.md)** — How gross pay, FICA, federal withholding, and state withholding are calculated.
 - **[State Tax Coverage](State-Tax-Coverage.md)** — Full list of supported states, calculator categories, and how to add a new state.
+- **[Accounts & Sync](Accounts-and-Sync.md)** — Optional accounts, local persistence, and how saved paychecks sync between the apps.
 
 ### Using the App
 

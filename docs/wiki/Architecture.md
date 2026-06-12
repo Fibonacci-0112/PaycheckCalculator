@@ -29,8 +29,21 @@ PaycheckCalc.slnx
 │       ├── Fica/                  # Social Security & Medicare
 │       ├── State/                 # State tax interfaces, registry, generic percentage-method adapter
 │       └── <StateName>/           # One folder per state, each with a dedicated calculator
-└── PaycheckCalc.Tests/            # xUnit test suite
+├── PaycheckCalc.Blazor/           # Blazor Server frontend (web)
+├── PaycheckCalc.Shared/           # Sync contracts, JSON, merge, HTTP client, store abstraction
+│   ├── Snapshots/                 # SavedPaycheckDto/ResultDto/Tombstone/Set + SavedPaycheckMerger
+│   ├── Json/                      # PaycheckJson + StateInputValuesJsonConverter
+│   ├── Client/                    # PaycheckApiClient, ITokenStore, IApiBaseAddressProvider
+│   └── Sync/                      # ISavedPaycheckStore, PaycheckSyncService, sync contracts
+├── PaycheckCalc.Api/              # ASP.NET Core Web API: Identity accounts + /api/paychecks/sync
+│   ├── Data/                      # SyncDbContext (IdentityDbContext) + SavedPaycheckEntity
+│   └── Endpoints/                 # PaycheckSyncEndpoints (authorized minimal API group)
+└── PaycheckCalc.Tests/            # xUnit test suite (Core + Shared + Api)
 ```
+
+`PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are
+`net10.0` and build without the MAUI workload. See **[Accounts & Sync](Accounts-and-Sync.md)** for the
+account/sync design.
 
 ---
 
@@ -45,6 +58,19 @@ PaycheckCalc.slnx
 4. **Schema-driven state UI.** State-specific input fields (filing status, allowances, dependents, etc.) are not hard-coded in XAML. Instead, each state calculator declares its input schema via `GetInputSchema()`, and the UI renders fields dynamically.
 
 5. **`decimal` everywhere for money.** All monetary values, tax rates, thresholds, and deductions use `decimal`. No `double` or `float` in calculation code.
+
+6. **Sync stays out of Core.** Account/sync wire and storage concerns live in `PaycheckCalc.Shared`; the HTTP server lives in `PaycheckCalc.Api`. Core remains HTTP- and persistence-free, and `PaycheckCalc.Api` never references the front-end projects.
+
+---
+
+## Accounts & Sync
+
+Saved paychecks can optionally sync across the MAUI and Blazor front-ends via a user account. The shared
+merge logic (`SavedPaycheckMerger`, deterministic last-write-wins by case-insensitive paycheck name) runs
+server-side and is reused by both clients and the tests. The `ISavedPaycheckStore` abstraction has three
+implementations — on-device JSON (MAUI), circuit memory (Blazor, so anonymous data dies with the tab),
+and EF Core SQLite rows (server). Full design, endpoints, snapshot shape, and limitations are documented
+in **[Accounts & Sync](Accounts-and-Sync.md)**.
 
 ---
 

@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PaycheckCalc is a simple US paycheck calculator (2026 tax tables) with two front-ends — a **.NET MAUI** app (`PaycheckCalc.App`, Android & Windows) and a **Blazor Server** web app (`PaycheckCalc.Blazor`) — both backed by the same UI-agnostic core engine (`PaycheckCalc.Core`) and exercised by an xUnit suite (`PaycheckCalc.Tests`). It takes pay/W-4/state/deduction inputs and computes gross pay, federal/state withholding, FICA, deductions, and net pay. The annual projection (annualized totals, projected YTD, year-end over/under withholding) is shown **only in the Blazor app**; the MAUI app shows per-period results only. There is no annual Form 1040 planner or self-employment module.
 
+Saved paychecks can optionally sync across the two front-ends via a user account. Two more projects support this: `PaycheckCalc.Shared` (wire/storage contracts, JSON serialization, the last-write-wins merge, the typed HTTP client, and an `ISavedPaycheckStore` abstraction) and `PaycheckCalc.Api` (a standalone ASP.NET Core Web API with ASP.NET Core Identity email/password accounts over EF Core SQLite, exposing a `/api/paychecks/sync` endpoint). The MAUI app **also persists saved paychecks locally on device** (works fully offline / without an account); the Blazor app keeps anonymous saved paychecks **only until the browser tab closes** (circuit-scoped memory). See `docs/wiki/Accounts-and-Sync.md`.
+
 Solution: `PaycheckCalc.slnx`. The SDK version is pinned in `global.json` (10.0.x, latestPatch roll-forward). A project wiki lives in `docs/wiki/` and a Mermaid class diagram in `docs/class-diagram.md`.
 
 ## Common commands
@@ -16,10 +18,10 @@ All commands run from the repository root.
 # Restore + build the whole solution (requires the MAUI workload)
 dotnet build
 
-# Build a single project (Core, Blazor, and Tests build without the MAUI workload)
+# Build a single project (Core, Shared, Api, Blazor, and Tests build without the MAUI workload)
 dotnet build PaycheckCalc.Core
 
-# Run all tests
+# Run all tests (transitively builds Shared + Api, which the suite references)
 dotnet test PaycheckCalc.Tests
 
 # Run a single test class or single test
@@ -29,10 +31,15 @@ dotnet test PaycheckCalc.Tests --filter "FullyQualifiedName~OklahomaOw2RoundingT
 # Run the Blazor web app (no MAUI workload needed)
 dotnet run --project PaycheckCalc.Blazor
 
+# Run the sync API (no MAUI workload needed; defaults to http://localhost:5201)
+dotnet run --project PaycheckCalc.Api
+
 # Build / run the MAUI app (requires `dotnet workload install maui` and a target platform)
 dotnet build PaycheckCalc.App
 dotnet run --project PaycheckCalc.App
 ```
+
+`PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are `net10.0` and build on Linux/CI without the MAUI workload. The Blazor app calls the API server-side (so no CORS); for end-to-end account/sync testing run `PaycheckCalc.Api` and `PaycheckCalc.Blazor` together.
 
 `PaycheckCalc.Core` multi-targets `net10.0;net9.0` when the .NET 10 SDK is present, otherwise it falls back to `net9.0` only. `PaycheckCalc.App` targets `net10.0-android` / `net10.0-windows`; `PaycheckCalc.Blazor` and `PaycheckCalc.Tests` are `net10.0` only. CI (`.github/workflows/dotnet.yml`) builds and tests `PaycheckCalc.Tests` on Linux; the MAUI and Blazor apps are not built in CI (`codeql.yml` runs CodeQL scanning separately).
 
@@ -42,10 +49,11 @@ dotnet run --project PaycheckCalc.App
 
 - `PaycheckCalc.Core` is the calculation engine and **must stay free of MAUI / UI dependencies**. All money values use `decimal` — never `double`/`float`.
 - `PaycheckCalc.App` (MAUI) follows MVVM with CommunityToolkit.Mvvm source generators (`[ObservableProperty]`, `[RelayCommand]`). Pages are thin; the shared `CalculatorViewModel` owns state and commands; **mappers** translate between domain types and presentation models (`PaycheckInputMapper`, `ResultCardMapper` → `ResultCardModel`). Folder conventions: `Views`, `ViewModels`, `Models`, `Mappers`, `Helpers`, `Controls`, `Behaviors`, `Services`. No tax math in code-behind, converters, or drawables.
-- The MAUI shell is a two-tab `TabBar`: **Inputs** (`Views/InputsPage.xaml`, four sub-tabs — Pay & Hours, Federal, State, Deductions — each with a Calculate button) and **Results** (`Views/ResultsPage.xaml`, a single per-period summary with the doughnut chart, "Show Your Work" explanation popups, toolbar actions to Print (`Services/Printing`, native print dialog), Export PDF (`Services/Pdf`), and Export CSV (`Services/Csv`, opened in the default CSV app / Excel), and a first-run empty state).
-- `PaycheckCalc.Blazor` is an interactive Blazor Server app (`Components/`): a single calculator page with inputs and results side by side. Inputs mirror the MAUI app (including schema-driven state fields) and add YTD Social Security / Medicare wage fields; results split into **Per Paycheck** and **Annual** (the annual projection is web-only).
+- The MAUI shell is a four-tab `TabBar`: **Inputs** (`Views/InputsPage.xaml`, four sub-tabs — Pay & Hours, Federal, State, Deductions — each with a Calculate button), **Results** (`Views/ResultsPage.xaml`, a single per-period summary with the doughnut chart, "Show Your Work" explanation popups, toolbar actions to Print (`Services/Printing`, native print dialog), Export PDF (`Services/Pdf`), and Export CSV (`Services/Csv`, opened in the default CSV app / Excel), and a first-run empty state), **Paychecks** (`Views/PaychecksPage.xaml`, the saved-paychecks list and A/B comparison), and **Account** (`Views/AccountPage.xaml`, optional sign-in / account creation / sync / server URL).
+- `PaycheckCalc.Blazor` is an interactive Blazor Server app (`Components/`): a single calculator page with inputs and results side by side, plus a full-width "Saved Paychecks & Account" panel below. Inputs mirror the MAUI app (including schema-driven state fields) and add YTD Social Security / Medicare wage fields; results split into **Per Paycheck** and **Annual** (the annual projection is web-only).
 - Both front-ends call `AddPaycheckCalcCore` (in `PaycheckCalc.Core/DependencyInjection/PaycheckCoreServiceCollectionExtensions.cs`) — from `MauiProgram.cs` and the Blazor `Program.cs` respectively — supplying a platform `ITaxDataReader`: the MAUI app reads tax JSON from the app package (`MauiAppPackageTaxDataReader`), the Blazor app from a `TaxData/` folder in the build output (`FileSystemTaxDataReader`).
 - Tax JSON tables live in `PaycheckCalc.Core/Data/` and are content-linked into `PaycheckCalc.Tests/` (`<None Include="..\PaycheckCalc.Core\Data\…" Link="…">`), linked into the Blazor build output as `TaxData\*` in `PaycheckCalc.Blazor.csproj`, and packaged into the MAUI app as `MauiAsset` items in `PaycheckCalc.App.csproj`. **If you rename a JSON file, update every linker entry (Tests, Blazor, App), the loader in `AddPaycheckCalcCore`, and the tests that reference it.**
+- **Sync layering (do not blur):** `PaycheckCalc.Shared` (references Core only) owns the wire/storage contracts (`SavedPaycheckDto`/`SavedPaycheckResultDto`/`SavedPaycheckTombstone`/`SavedPaycheckSet`), the JSON config (`PaycheckJson` + `StateInputValuesJsonConverter`, which keeps the `StateInputValues` bag as real CLR primitives — never `JsonElement`), the deterministic last-write-wins merge (`SavedPaycheckMerger`, keyed by case-insensitive name), the typed `PaycheckApiClient` (with `ITokenStore`/`IApiBaseAddressProvider` abstractions), and the `ISavedPaycheckStore` + `PaycheckSyncService` orchestration. `PaycheckCalc.Api` references Shared and must never reference App/Blazor; Core stays HTTP- and persistence-free. The store has three implementations: `JsonFilePaycheckStore` (MAUI, on-device JSON), `SessionPaycheckStore` (Blazor, circuit memory), and the server's EF Core rows. The merge logic is defined once in Shared and reused by the API and clients.
 
 ### Calculation pipeline
 

@@ -18,16 +18,37 @@ classDiagram
         <<library>>
         UI-agnostic tax engine
     }
+    class Shared["PaycheckCalc.Shared"] {
+        <<library>>
+        Sync contracts, JSON, merge, HTTP client
+    }
     class App["PaycheckCalc.App (MAUI)"] {
         <<head>>
         Android & Windows MVVM
+    }
+    class Blazor["PaycheckCalc.Blazor"] {
+        <<head>>
+        Blazor Server web app
+    }
+    class Api["PaycheckCalc.Api"] {
+        <<service>>
+        Identity accounts + /api/paychecks/sync
     }
     class Tests["PaycheckCalc.Tests"] {
         <<xUnit>>
     }
 
+    Shared ..> Core : ProjectReference
     App ..> Core : ProjectReference
+    App ..> Shared : ProjectReference
+    Blazor ..> Core : ProjectReference
+    Blazor ..> Shared : ProjectReference
+    Api ..> Shared : ProjectReference
     Tests ..> Core : ProjectReference
+    Tests ..> Shared : ProjectReference
+    Tests ..> Api : ProjectReference
+    App ..> Api : HTTP (sync)
+    Blazor ..> Api : HTTP (sync)
 ```
 
 ## Core — paycheck pipeline
