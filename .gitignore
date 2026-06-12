@@ -422,3 +422,9 @@ PaycheckCalc.Blazor/*.db
 PaycheckCalc.Blazor/*.db-journal
 PaycheckCalc.Blazor/*.db-shm
 PaycheckCalc.Blazor/*.db-wal
+
+# SQLite database files created by the sync API at runtime
+PaycheckCalc.Api/*.db
+PaycheckCalc.Api/*.db-journal
+PaycheckCalc.Api/*.db-shm
+PaycheckCalc.Api/*.db-wal
