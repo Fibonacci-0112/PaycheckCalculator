@@ -6,11 +6,14 @@ using PaycheckCalc.App.Models;
 using PaycheckCalc.App.Services.Csv;
 using PaycheckCalc.App.Services.Pdf;
 using PaycheckCalc.App.Services.Printing;
+using PaycheckCalc.App.Services.Sync;
 using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Pay;
 using PaycheckCalc.Core.Tax.Federal;
 using PaycheckCalc.Core.Tax.State;
+using PaycheckCalc.Shared.Snapshots;
+using PaycheckCalc.Shared.Sync;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Globalization;
@@ -38,9 +41,12 @@ public partial class CalculatorViewModel : ObservableObject
     private readonly IPdfExportService _pdfExport;
     private readonly ICsvExportService _csvExport;
     private readonly IPrintService _printService;
+    private readonly ISavedPaycheckStore _store;
+    private readonly ISyncCoordinator _sync;
     private UsState _previousState;
+    private bool _initialized;
 
-    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService)
+    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
     {
         _calc = calc;
         _grossUp = grossUp;
@@ -49,6 +55,9 @@ public partial class CalculatorViewModel : ObservableObject
         _pdfExport = pdfExport;
         _csvExport = csvExport;
         _printService = printService;
+        _store = store;
+        _sync = sync;
+        _sync.SyncCompleted += OnSyncCompleted;
         Frequency = PayFrequency.Biweekly;
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
         OvertimeMultiplier = 1.5m;
@@ -546,11 +555,13 @@ public partial class CalculatorViewModel : ObservableObject
     /// name updates that paycheck in place; otherwise a new entry is added and
     /// auto-selected into the next open comparison slot.
     /// </summary>
-    private void SaveCurrentPaycheck(ResultCardModel card)
+    private void SaveCurrentPaycheck(ResultCardModel card, PaycheckInput input)
     {
         var name = string.IsNullOrWhiteSpace(PaycheckName)
             ? $"Paycheck {Paychecks.Count + 1}"
             : PaycheckName.Trim();
+
+        var snapshot = SavedPaycheckSnapshotMapper.ToDto(name, input, card, DateTimeOffset.UtcNow);
 
         var existing = Paychecks.FirstOrDefault(
             p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
@@ -558,13 +569,14 @@ public partial class CalculatorViewModel : ObservableObject
         if (existing is not null)
         {
             existing.Result = card;
+            existing.Snapshot = snapshot;
             // Refresh the comparison if this paycheck is currently being compared.
             if (SelectedComparisonA == existing || SelectedComparisonB == existing)
                 OnPropertyChanged(nameof(ComparisonRows));
         }
         else
         {
-            var saved = new SavedPaycheckViewModel(name, card);
+            var saved = new SavedPaycheckViewModel(name, card, snapshot);
             Paychecks.Add(saved);
 
             // Auto-fill the first open comparison slot for convenience.
@@ -573,6 +585,87 @@ public partial class CalculatorViewModel : ObservableObject
             else if (SelectedComparisonB is null && saved != SelectedComparisonA)
                 SelectedComparisonB = saved;
         }
+
+        // Persist locally (works without an account) and sync if signed in.
+        PersistAndSync(store => store.UpsertAsync(snapshot));
+    }
+
+    /// <summary>
+    /// Runs a store operation off the UI thread, swallowing persistence errors (local saving is
+    /// best-effort and must never crash the app), then requests a background sync.
+    /// </summary>
+    private void PersistAndSync(Func<ISavedPaycheckStore, Task> operation)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await operation(_store).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort persistence; ignore I/O failures.
+            }
+            _sync.RequestSync();
+        });
+    }
+
+    /// <summary>
+    /// Loads locally stored paychecks on startup and merges them into the in-memory list (skipping any
+    /// names already present), then requests a sync. Idempotent. Call from the UI thread.
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
+        SavedPaycheckSet set;
+        try
+        {
+            set = await _store.LoadAsync().ConfigureAwait(true);
+        }
+        catch
+        {
+            return;
+        }
+
+        foreach (var dto in set.Paychecks)
+        {
+            if (Paychecks.Any(p => string.Equals(p.Name, dto.Name, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            Paychecks.Add(new SavedPaycheckViewModel(dto.Name, SavedPaycheckSnapshotMapper.ToResultCard(dto), dto));
+        }
+
+        SelectedComparisonA ??= Paychecks.FirstOrDefault();
+        if (SelectedComparisonB is null)
+            SelectedComparisonB = Paychecks.FirstOrDefault(p => p != SelectedComparisonA);
+
+        _sync.RequestSync();
+    }
+
+    /// <summary>
+    /// Rebuilds the saved-paychecks list from a server-merged set, preserving the current comparison
+    /// selections by name. Runs on the UI thread (the coordinator marshals the completion event).
+    /// </summary>
+    public void ApplyMergedSnapshots(SavedPaycheckSet? merged)
+    {
+        if (merged is null) return;
+
+        var nameA = SelectedComparisonA?.Name;
+        var nameB = SelectedComparisonB?.Name;
+
+        Paychecks.Clear();
+        foreach (var dto in merged.Paychecks.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
+            Paychecks.Add(new SavedPaycheckViewModel(dto.Name, SavedPaycheckSnapshotMapper.ToResultCard(dto), dto));
+
+        SelectedComparisonA = Paychecks.FirstOrDefault(p => string.Equals(p.Name, nameA, StringComparison.OrdinalIgnoreCase));
+        SelectedComparisonB = Paychecks.FirstOrDefault(p => string.Equals(p.Name, nameB, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OnSyncCompleted(object? sender, SyncOutcome outcome)
+    {
+        if (outcome.Success)
+            ApplyMergedSnapshots(outcome.Merged);
     }
 
     [RelayCommand]
@@ -582,6 +675,10 @@ public partial class CalculatorViewModel : ObservableObject
         Paychecks.Remove(item);
         if (SelectedComparisonA == item) SelectedComparisonA = null;
         if (SelectedComparisonB == item) SelectedComparisonB = null;
+
+        // Record a tombstone (even when anonymous) so the delete propagates on a later sign-in.
+        var name = item.Name;
+        PersistAndSync(store => store.RemoveAsync(name, DateTimeOffset.UtcNow));
     }
 
     [RelayCommand]
@@ -590,6 +687,8 @@ public partial class CalculatorViewModel : ObservableObject
         Paychecks.Clear();
         SelectedComparisonA = null;
         SelectedComparisonB = null;
+
+        PersistAndSync(store => store.ClearAsync(DateTimeOffset.UtcNow));
     }
 
     [RelayCommand]
@@ -637,7 +736,7 @@ public partial class CalculatorViewModel : ObservableObject
         }
 
         // Store the result so multiple paychecks can be kept and compared.
-        SaveCurrentPaycheck(ResultCard);
+        SaveCurrentPaycheck(ResultCard, input);
 
         ExportPdfCommand.NotifyCanExecuteChanged();
         ExportCsvCommand.NotifyCanExecuteChanged();

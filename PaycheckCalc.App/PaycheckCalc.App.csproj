@@ -42,6 +42,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PaycheckCalc.Core\PaycheckCalc.Core.csproj" />
+    <ProjectReference Include="..\PaycheckCalc.Shared\PaycheckCalc.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
