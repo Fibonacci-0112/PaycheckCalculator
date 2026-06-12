@@ -718,3 +718,111 @@ html, body {
     justify-content: flex-end;
     background: #fafbff;
 }
+
+/* ── Saved paychecks & account panel ───────────────────────── */
+.history-panel {
+    margin-top: 16px;
+}
+
+.history-body {
+    display: grid;
+    grid-template-columns: minmax(320px, 2fr) minmax(280px, 1fr);
+    gap: 24px;
+    padding: 18px;
+}
+
+@media (max-width: 820px) {
+    .history-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+.history-subtitle {
+    margin: 0 0 12px;
+    font-size: 0.9em;
+    font-weight: 700;
+    color: #1a237e;
+    letter-spacing: 0.02em;
+}
+
+.account-section {
+    border-left: 1px solid #eceff1;
+    padding-left: 24px;
+}
+
+@media (max-width: 820px) {
+    .account-section {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid #eceff1;
+        padding-top: 16px;
+    }
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #fafbff;
+    border: 1px solid #eceff1;
+    border-radius: 6px;
+}
+
+.history-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.history-name {
+    font-weight: 700;
+    color: #37474f;
+    font-size: 0.92em;
+}
+
+.history-meta {
+    font-size: 0.8em;
+    color: #90a4ae;
+}
+
+.account-email {
+    font-size: 0.9em;
+    color: #37474f;
+    margin: 0 0 12px;
+}
+
+.account-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.account-signin {
+    width: auto;
+    flex: 1;
+}
+
+.account-status {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #e8f5e9;
+    border-radius: 5px;
+    font-size: 0.85em;
+    color: #2e7d32;
+    border-left: 3px solid #4caf50;
+}
+
+.paycheck-name-input {
+    width: 100%;
+    margin-bottom: 8px;
+}

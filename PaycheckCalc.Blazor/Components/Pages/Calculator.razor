@@ -5,6 +5,10 @@
 @inject GrossUpCalculator GrossUpCalc
 @inject StateCalculatorRegistry StateRegistry
 @inject IStateSchemaProvider SchemaProvider
+@inject SessionPaycheckStore Store
+@inject CircuitAccountSession Account
+@inject PaycheckApiClient Api
+@inject PaycheckSyncService Sync
 
 <PageTitle>PaycheckCalc — 2026 US Paycheck Calculator</PageTitle>
 
@@ -252,6 +256,7 @@
         </div><!-- /tab-content -->
 
         <div class="action-bar">
+            <input type="text" class="paycheck-name-input" @bind="_paycheckName" placeholder="Paycheck name (optional)" />
             <button class="btn-calculate" @onclick="Calculate">Calculate</button>
             @if (_calcError != null)
             {
@@ -535,6 +540,75 @@
 
 </div><!-- /calc-layout -->
 
+<!-- ── SAVED PAYCHECKS & ACCOUNT ─────────────────────────────── -->
+<div class="calc-panel history-panel">
+    <div class="panel-header">
+        <h2>Saved Paychecks &amp; Account</h2>
+    </div>
+    <div class="history-body">
+
+        <div class="history-list-section">
+            <h3 class="history-subtitle">This Session</h3>
+            @if (_history.Count == 0)
+            {
+                <p class="no-fields-msg">Calculated paychecks are saved here for this browser session. Sign in to sync them with the mobile app.</p>
+            }
+            else
+            {
+                <div class="history-list">
+                    @foreach (var item in _history)
+                    {
+                        <div class="history-row">
+                            <div class="history-main">
+                                <span class="history-name">@item.Name</span>
+                                <span class="history-meta">@item.Input.State &middot; Net @item.Result.NetPay.ToString("C") &middot; Gross @item.Result.GrossPay.ToString("C")</span>
+                            </div>
+                            <button class="btn-icon btn-danger" @onclick="() => DeletePaycheckAsync(item)" title="Delete">x</button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="account-section">
+            <h3 class="history-subtitle">Account</h3>
+            @if (IsSignedIn)
+            {
+                <p class="account-email">Signed in as <strong>@Account.Email</strong></p>
+                <div class="account-actions">
+                    <button class="btn-secondary" @onclick="SyncNowAsync" disabled="@_busy">Sync now</button>
+                    <button class="btn-secondary" @onclick="LogoutAsync" disabled="@_busy">Sign out</button>
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" @bind="_email" autocomplete="username" />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" @bind="_password" autocomplete="current-password" />
+                </div>
+                <div class="account-actions">
+                    <button class="btn-calculate account-signin" @onclick="LoginAsync" disabled="@_busy">Sign in</button>
+                    <button class="btn-secondary" @onclick="RegisterAsync" disabled="@_busy">Create account</button>
+                </div>
+                <p class="form-note">Optional. Create an account to sync your saved paychecks between this site and the mobile app.</p>
+            }
+            @if (_accountError != null)
+            {
+                <div class="calc-error">@_accountError</div>
+            }
+            @if (_accountStatus != null)
+            {
+                <div class="account-status">@_accountStatus</div>
+            }
+        </div>
+
+    </div><!-- /history-body -->
+</div><!-- /history panel -->
+
 @if (_showModal && _modalExplanation != null)
 {
     <ExplanationModal Explanation="_modalExplanation" OnClose="CloseModal" />
@@ -585,7 +659,21 @@
     private bool _showModal = false;
     private LineExplanation? _modalExplanation;
 
-    protected override void OnInitialized() => LoadStateFields();
+    // Saved paychecks (session) + account
+    private string _paycheckName = "";
+    private List<SavedPaycheckDto> _history = new();
+    private string _email = "";
+    private string _password = "";
+    private string? _accountError;
+    private string? _accountStatus;
+    private bool _busy = false;
+    private bool IsSignedIn => Account.IsSignedIn;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadStateFields();
+        await RefreshHistoryAsync();
+    }
 
     private void LoadStateFields()
     {
@@ -609,7 +697,7 @@
         return new StateInputValues(d);
     }
 
-    private void Calculate()
+    private async Task Calculate()
     {
         _calcError = null;
         _stateErrors.Clear();
@@ -683,6 +771,9 @@
                 _projection = ProjectionCalc.Calculate(input, _result);
             }
             _resultTab = 0;
+
+            // Save a snapshot of exactly what was calculated, and sync it if signed in.
+            await SaveSnapshotAsync(input);
         }
         catch (Exception ex)
         {
@@ -690,6 +781,104 @@
             _result = null;
             _projection = null;
             _grossUpResult = null;
+        }
+    }
+
+    private async Task SaveSnapshotAsync(PaycheckInput input)
+    {
+        if (_result is null) return;
+
+        var isGrossUp = _grossUpResult is not null;
+        var name = string.IsNullOrWhiteSpace(_paycheckName)
+            ? $"Paycheck {_history.Count + 1}"
+            : _paycheckName.Trim();
+
+        var dto = new SavedPaycheckDto
+        {
+            Name = name,
+            UpdatedAtUtc = DateTimeOffset.UtcNow,
+            Input = input,
+            Result = SavedPaycheckResultMapper.FromResult(
+                _result, isGrossUp, isGrossUp ? _grossUpResult!.TargetNetPay : 0m)
+        };
+
+        await Store.UpsertAsync(dto);
+        await RefreshHistoryAsync();
+        if (IsSignedIn) await TrySyncAsync();
+    }
+
+    private async Task RefreshHistoryAsync()
+    {
+        var set = await Store.LoadAsync();
+        _history = set.Paychecks.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private async Task DeletePaycheckAsync(SavedPaycheckDto dto)
+    {
+        await Store.RemoveAsync(dto.Name, DateTimeOffset.UtcNow);
+        await RefreshHistoryAsync();
+        if (IsSignedIn) await TrySyncAsync();
+    }
+
+    private async Task LoginAsync()
+    {
+        _accountError = null;
+        _accountStatus = null;
+        _busy = true;
+        var result = await Api.LoginAsync(_email.Trim(), _password);
+        _busy = false;
+
+        if (result.Success)
+        {
+            Account.Email = _email.Trim();
+            _password = "";
+            await TrySyncAsync();
+        }
+        else
+        {
+            _accountError = result.Error;
+        }
+    }
+
+    private async Task RegisterAsync()
+    {
+        _accountError = null;
+        _accountStatus = null;
+        _busy = true;
+        var result = await Api.RegisterAsync(_email.Trim(), _password);
+        _busy = false;
+
+        if (result.Success)
+            await LoginAsync();
+        else
+            _accountError = result.Error;
+    }
+
+    private async Task LogoutAsync()
+    {
+        await Api.LogoutAsync();
+        Account.Email = null;
+        _accountStatus = "Signed out. Saved paychecks remain for this session only.";
+        _accountError = null;
+    }
+
+    private Task SyncNowAsync() => TrySyncAsync();
+
+    private async Task TrySyncAsync()
+    {
+        _busy = true;
+        var outcome = await Sync.SyncAsync();
+        _busy = false;
+
+        if (outcome.Success)
+        {
+            await RefreshHistoryAsync();
+            _accountStatus = $"Synced {_history.Count} paycheck(s) at {DateTime.Now:t}.";
+            _accountError = null;
+        }
+        else
+        {
+            _accountError = outcome.Error;
         }
     }
 
