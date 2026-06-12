@@ -16,10 +16,13 @@ public static class PaycheckInputMapper
         return new PaycheckInput
         {
             Frequency = vm.Frequency,
+            PayType = vm.PayType,
             HourlyRate = vm.HourlyRate,
             RegularHours = vm.RegularHours,
             OvertimeHours = vm.OvertimeHours,
             OvertimeMultiplier = vm.OvertimeMultiplier,
+            SalaryAmount = vm.SalaryAmount,
+            SalaryBasis = vm.SalaryBasis,
             State = vm.SelectedState,
             StateInputValues = stateValues,
             FederalW4 = new FederalW4Input
