@@ -7,6 +7,9 @@ namespace PaycheckCalc.Core.Explanation;
 public enum ExplanationLineKey
 {
     GrossPay,
+    FederalTaxableIncome,
+    FicaTaxableWages,
+    StateTaxableWages,
     PreTaxDeductions,
     FederalWithholding,
     SocialSecurity,
