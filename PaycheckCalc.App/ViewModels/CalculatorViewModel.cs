@@ -22,9 +22,17 @@ public record PickerItem<T>(T Value, string Text)
 {
     public override string ToString() => Text;
 }
+
+/// <summary>
+/// How the calculator turns inputs into a result: a standard paycheck (gross → net)
+/// or a gross-up (target net → required gross).
+/// </summary>
+public enum CalculationMode { Standard, GrossUp }
+
 public partial class CalculatorViewModel : ObservableObject
 {
     private readonly PayCalculator _calc;
+    private readonly GrossUpCalculator _grossUp;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
     private readonly IPdfExportService _pdfExport;
@@ -32,9 +40,10 @@ public partial class CalculatorViewModel : ObservableObject
     private readonly IPrintService _printService;
     private UsState _previousState;
 
-    public CalculatorViewModel(PayCalculator calc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService)
+    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService)
     {
         _calc = calc;
+        _grossUp = grossUp;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
         _pdfExport = pdfExport;
@@ -44,6 +53,8 @@ public partial class CalculatorViewModel : ObservableObject
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
         OvertimeMultiplier = 1.5m;
         SelectedPayTypePickerItem = PayTypes[0];                 // Hourly
+        SelectedCalculationModePickerItem = CalculationModes[0]; // Standard
+        TargetNetPay = 1000m;
         SelectedGrossPayMethodPickerItem = GrossPayMethods[0];   // Per Year
         SelectedState = UsState.OK;
         _previousState = SelectedState;
@@ -83,6 +94,37 @@ public partial class CalculatorViewModel : ObservableObject
     }
 
     [ObservableProperty] public partial PayFrequency Frequency { get; set; }
+
+    // ── Calculation mode (standard paycheck vs gross-up) ────────
+    public IReadOnlyList<PickerItem<CalculationMode>> CalculationModes { get; } =
+        Enum.GetValues<CalculationMode>()
+            .Select(m => new PickerItem<CalculationMode>(m, EnumDisplay.CalculationMode(m.ToString())))
+            .ToList();
+
+    [ObservableProperty] public partial PickerItem<CalculationMode>? SelectedCalculationModePickerItem { get; set; }
+
+    partial void OnSelectedCalculationModePickerItemChanged(PickerItem<CalculationMode>? value)
+    {
+        if (value != null)
+            CalculationMode = value.Value;
+    }
+
+    [ObservableProperty] public partial CalculationMode CalculationMode { get; set; } = CalculationMode.Standard;
+
+    partial void OnCalculationModeChanged(CalculationMode value)
+    {
+        OnPropertyChanged(nameof(IsStandardMode));
+        OnPropertyChanged(nameof(IsGrossUpMode));
+    }
+
+    /// <summary>True when standard paycheck inputs (pay type, hours/salary) should be shown.</summary>
+    public bool IsStandardMode => CalculationMode == CalculationMode.Standard;
+
+    /// <summary>True when the gross-up target-net input should be shown.</summary>
+    public bool IsGrossUpMode => CalculationMode == CalculationMode.GrossUp;
+
+    /// <summary>Desired net (take-home) pay for the gross-up calculation.</summary>
+    [ObservableProperty] public partial decimal TargetNetPay { get; set; }
 
     // ── Pay type (Hourly vs Salary) ─────────────────────────────
     public IReadOnlyList<PickerItem<PayType>> PayTypes { get; } =
@@ -582,11 +624,17 @@ public partial class CalculatorViewModel : ObservableObject
         // Map ViewModel state → domain input via mapper
         var input = PaycheckInputMapper.Map(this, stateValues);
 
-        // Run domain calculation
-        var domainResult = _calc.Calculate(input);
-
-        // Map domain result → presentation model via mapper
-        ResultCard = ResultCardMapper.Map(domainResult);
+        // Run the calculation for the selected mode and map to the presentation model.
+        if (IsGrossUpMode)
+        {
+            var grossUpResult = _grossUp.Calculate(input, TargetNetPay);
+            ResultCard = ResultCardMapper.MapGrossUp(grossUpResult);
+        }
+        else
+        {
+            var domainResult = _calc.Calculate(input);
+            ResultCard = ResultCardMapper.Map(domainResult);
+        }
 
         // Store the result so multiple paychecks can be kept and compared.
         SaveCurrentPaycheck(ResultCard);

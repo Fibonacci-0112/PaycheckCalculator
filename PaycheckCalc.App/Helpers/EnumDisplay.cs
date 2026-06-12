@@ -28,6 +28,13 @@ public static class EnumDisplay
         _ => SplitPascalCase(name)
     };
 
+    public static string CalculationMode(string name) => name switch
+    {
+        "Standard" => "Standard Paycheck",
+        "GrossUp" => "Gross-Up (net → gross)",
+        _ => SplitPascalCase(name)
+    };
+
     public static string SalaryBasis(string name) => name switch
     {
         "PerYear" => "Per Year",

@@ -31,6 +31,16 @@ public sealed class ResultCardModel
     public decimal TotalTaxes { get; init; }
     public decimal NetPay { get; init; }
 
+    // ── Gross-up (only populated when the result came from a gross-up) ──
+    /// <summary>True when this result was produced by the gross-up calculator.</summary>
+    public bool IsGrossUp { get; init; }
+
+    /// <summary>The desired net (take-home) pay the gross-up targeted.</summary>
+    public decimal TargetNetPay { get; init; }
+
+    /// <summary>Extra gross beyond the target net that covers taxes and deductions (GrossPay − TargetNetPay).</summary>
+    public decimal GrossUpCost { get; init; }
+
     // ── Display helpers (UI-only concerns) ──────────────────
     /// <summary>True when state disability insurance is non-zero and should be shown.</summary>
     public bool ShowStateDisabilityInsurance => StateDisabilityInsurance > 0;

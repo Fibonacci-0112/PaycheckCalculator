@@ -60,6 +60,8 @@ dotnet run --project PaycheckCalc.App
 
 `Pay/AnnualProjectionCalculator.cs` extends a per-period result into the annual projection shown on the Blazor app's Annual results tab (annualized totals, projected YTD by paycheck number, estimated year-end over/under withholding). The `Explanation/` types carry the "Show Your Work" step-by-step breakdowns attached to `PaycheckResult`.
 
+`Pay/GrossUpCalculator.cs` is the inverse of the pipeline: given a target net pay it bisects on gross — treating `PayCalculator.Calculate` as a monotonic forward function and re-running it at every probe so brackets, FICA caps, and percentage deductions stay correct — and returns a `GrossUpResult` (required gross, the per-period `PaycheckResult` at that gross, and the cost). It is wired in `AddPaycheckCalcCore` and surfaced in **both** front-ends via a calculation-mode toggle (unlike the annual projection, which is web-only).
+
 ### Schema-driven state tax architecture
 
 All 50 states plus DC are supported. Every state has a dedicated folder under `PaycheckCalc.Core/Tax/<StateName>/` with its own `IStateWithholdingCalculator` implementation, registered centrally in `StateCalculatorRegistry` (wiring in `AddPaycheckCalcCore`). The state UI is **schema-driven**: each calculator returns `StateFieldDefinition`s from `GetInputSchema()` (backed by `JsonStateSchemaProvider` over `Data/Schemas/*.json`), both UIs bind those dynamically (MAUI via `StateFieldViewModel`), and inputs flow back as `StateInputValues`.

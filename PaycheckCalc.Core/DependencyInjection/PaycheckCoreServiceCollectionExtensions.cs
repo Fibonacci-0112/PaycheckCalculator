@@ -162,8 +162,10 @@ public static class PaycheckCoreServiceCollectionExtensions
 
         services.AddSingleton(stateRegistry);
 
-        services.AddSingleton(new PayCalculator(stateRegistry, fica, irs15t));
+        var payCalculator = new PayCalculator(stateRegistry, fica, irs15t);
+        services.AddSingleton(payCalculator);
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
+        services.AddSingleton(new GrossUpCalculator(payCalculator));
 
         return services;
     }

@@ -5,6 +5,7 @@ A simple US paycheck calculator (2026 tax tables) that computes net pay, tax wit
 ## Features
 
 - **Gross Pay Calculation** — Computes gross pay from hourly rate, regular hours, and overtime hours with a configurable overtime multiplier.
+- **Gross-Up Calculator** — Works the paycheck math backward: enter a desired net (take-home) amount and `GrossUpCalculator` solves for the gross pay that delivers it after federal, FICA, state, and deduction withholding — useful for net bonuses and relocation payments. Available in both apps via a calculation-mode toggle on the Pay tab.
 - **Federal Income Tax** — Implements the IRS Publication 15-T (2026) percentage method for automated payroll systems, supporting all W-4 inputs (filing status, Step 2 checkbox, Step 3 credits, Step 4 adjustments).
 - **FICA Taxes** — Calculates Social Security (6.2%, capped at $184,500), Medicare (1.45%), and Additional Medicare (0.9% above $200,000). Optional YTD Social Security / Medicare wage inputs (exposed in the web UI) handle the wage base cap and Additional Medicare threshold mid-year.
 - **State Income Tax** — Covers all 50 states and DC. Every state ships its own `IStateWithholdingCalculator` implementation under `PaycheckCalc.Core/Tax/<State>/`, registered centrally via `StateCalculatorRegistry`:
@@ -126,6 +127,8 @@ The **PayCalculator** orchestrates the full paycheck calculation pipeline:
 
 Gross pay, taxes, and deductions are rounded individually to two decimal places using `MidpointRounding.AwayFromZero` (round half away from zero). Net pay is computed from the unrounded components and then rounded so the displayed net equals `gross − taxes − deductions` to the cent.
 
+**Gross-up** runs this pipeline in reverse. `GrossUpCalculator` takes a target net amount and binary-searches for the gross that produces it, re-running the full pipeline at every probe so graduated brackets, FICA wage-base caps, and percentage-of-gross deductions are all honored. It reports the required gross, the cost of taxes and deductions covered, and the complete per-period breakdown at the solved gross.
+
 Every step also emits the `Explanation/` records that power the "Show Your Work" breakdowns in both front-ends.
 
 Both front-ends wire the engine up through `AddPaycheckCalcCore` (in `PaycheckCalc.Core/DependencyInjection/`), supplying an `ITaxDataReader` for their platform: the MAUI app reads the tax JSON from the app package (`MauiAppPackageTaxDataReader`), and the Blazor app reads it from a `TaxData/` folder in the build output (`FileSystemTaxDataReader`).
@@ -161,12 +164,12 @@ Notable state-specific details:
 
 A two-tab Shell:
 
-- **Inputs** — Four sub-tabs: Pay & Hours, Federal (W-4), State, and Deductions. The State sub-tab renders each state's input fields dynamically from its schema and surfaces state-specific validation errors. Every sub-tab has a Calculate button.
+- **Inputs** — Four sub-tabs: Pay & Hours, Federal (W-4), State, and Deductions. The Pay & Hours sub-tab has a **Mode** selector that switches between a standard paycheck and a gross-up (enter a desired net pay to find the required gross). The State sub-tab renders each state's input fields dynamically from its schema and surfaces state-specific validation errors. Every sub-tab has a Calculate button.
 - **Results** — A single per-period summary: an income card (gross pay plus federal, FICA, and state taxable income), tax withholdings, deductions, net pay, and the doughnut chart, with tap-for-explanation info icons on each line. An **Export PDF** toolbar button saves the summary as a single-page PDF and opens it in the system PDF viewer. Before the first calculation the page shows a friendly empty state.
 
 ### Blazor web app
 
-A single calculator page with the inputs panel and results panel side by side. Inputs mirror the MAUI app (including dynamic schema-driven state fields) and add YTD Social Security / Medicare wage fields. Results are split into **Per Paycheck** (itemized taxes, deductions, net pay, an SVG doughnut chart, and "Show Your Work" explanation modals) and **Annual** (annualized totals, projected YTD by paycheck number, and estimated year-end over/under withholding).
+A single calculator page with the inputs panel and results panel side by side. Inputs mirror the MAUI app (including dynamic schema-driven state fields and the standard/gross-up calculation-mode selector) and add YTD Social Security / Medicare wage fields. Results are split into **Per Paycheck** (itemized taxes, deductions, net pay, an SVG doughnut chart, and "Show Your Work" explanation modals) and **Annual** (annualized totals, projected YTD by paycheck number, and estimated year-end over/under withholding). In gross-up mode the results lead with a summary card (desired net, taxes & deductions covered, required gross) above the full breakdown.
 
 ## Documentation
 
