@@ -29,8 +29,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IPdfViewerLauncher, PdfViewerLauncher>();
         builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
 
-        // CSV export of paycheck results, offered via the platform share sheet.
-        builder.Services.AddSingleton<IShareLauncher, ShareLauncher>();
+        // CSV export of paycheck results, opened in the default CSV app (Excel).
+        builder.Services.AddSingleton<ICsvViewerLauncher, CsvViewerLauncher>();
         builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
 
         // Direct printing of paycheck results via the platform print system.

@@ -624,8 +624,8 @@ public partial class CalculatorViewModel : ObservableObject
     public bool CanExportCsv => ResultCard is not null;
 
     /// <summary>
-    /// Exports the current per-period results to a CSV file and offers it via the
-    /// platform share sheet.
+    /// Exports the current per-period results to a CSV file and opens it in the
+    /// platform's default CSV application (e.g. Microsoft Excel).
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExportCsv))]
     private async Task ExportCsv()
@@ -635,7 +635,7 @@ public partial class CalculatorViewModel : ObservableObject
 
         try
         {
-            await _csvExport.ExportAndShareAsync(ResultCard);
+            await _csvExport.ExportAndOpenAsync(ResultCard);
         }
         catch (Exception ex)
         {
