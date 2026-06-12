@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.erik.paycheckcalc">
   <application android:allowBackup="true" android:supportsRtl="true" />
   <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="36" />
+  <!-- Required for account sign-in and paycheck sync with the server. -->
+  <uses-permission android:name="android.permission.INTERNET" />
   <!-- Allow the app to detect/launch Adobe Reader and other PDF viewers, plus
        the default CSV/spreadsheet handler, under Android 11+ package visibility
        rules. -->

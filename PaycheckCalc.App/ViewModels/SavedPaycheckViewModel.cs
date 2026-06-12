@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using PaycheckCalc.App.Models;
+using PaycheckCalc.Shared.Snapshots;
 
 namespace PaycheckCalc.App.ViewModels;
 
@@ -11,11 +12,18 @@ namespace PaycheckCalc.App.ViewModels;
 /// </summary>
 public partial class SavedPaycheckViewModel : ObservableObject
 {
-    public SavedPaycheckViewModel(string name, ResultCardModel result)
+    public SavedPaycheckViewModel(string name, ResultCardModel result, SavedPaycheckDto snapshot)
     {
         Name = name;
         Result = result;
+        Snapshot = snapshot;
     }
+
+    /// <summary>
+    /// The serializable snapshot (full input + result numbers) behind this paycheck, used for local
+    /// persistence and account sync. Refreshed in place when the paycheck is recalculated.
+    /// </summary>
+    public SavedPaycheckDto Snapshot { get; set; }
 
     /// <summary>User-facing label, e.g. "Job 1". Unique (case-insensitive) within the collection.</summary>
     public string Name { get; }
