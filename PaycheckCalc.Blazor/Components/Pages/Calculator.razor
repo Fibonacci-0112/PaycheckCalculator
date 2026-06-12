@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject PayCalculator Calc
 @inject AnnualProjectionCalculator ProjectionCalc
+@inject GrossUpCalculator GrossUpCalc
 @inject StateCalculatorRegistry StateRegistry
 @inject IStateSchemaProvider SchemaProvider
 
@@ -36,26 +37,45 @@
                         }
                     </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hourly Rate ($)</label>
-                        <input type="number" @bind="_hourlyRate" min="0" step="0.01" />
-                    </div>
-                    <div class="form-group">
-                        <label>Regular Hours</label>
-                        <input type="number" @bind="_regularHours" min="0" step="0.5" />
-                    </div>
+                <div class="form-group">
+                    <label>Calculation Mode</label>
+                    <select @bind="_mode" @bind:after="OnModeChanged">
+                        <option value="standard">Standard paycheck (gross &rarr; net)</option>
+                        <option value="grossup">Gross-up (net &rarr; required gross)</option>
+                    </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Overtime Hours</label>
-                        <input type="number" @bind="_overtimeHours" min="0" step="0.5" />
+
+                @if (!_grossUpMode)
+                {
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hourly Rate ($)</label>
+                            <input type="number" @bind="_hourlyRate" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>Regular Hours</label>
+                            <input type="number" @bind="_regularHours" min="0" step="0.5" />
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>OT Multiplier</label>
-                        <input type="number" @bind="_overtimeMultiplier" min="1" step="0.25" />
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Overtime Hours</label>
+                            <input type="number" @bind="_overtimeHours" min="0" step="0.5" />
+                        </div>
+                        <div class="form-group">
+                            <label>OT Multiplier</label>
+                            <input type="number" @bind="_overtimeMultiplier" min="1" step="0.25" />
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label>Desired Net Pay &mdash; take-home this period ($)</label>
+                        <input type="number" @bind="_targetNet" min="0" step="0.01" />
+                    </div>
+                    <p class="form-note">Enter the exact take-home amount. Gross-up finds the gross pay that nets it after taxes and deductions &mdash; used for net bonuses and relocation payments.</p>
+                }
                 <div class="form-group">
                     <label>Paycheck # This Year</label>
                     <input type="number" @bind="_paycheckNumber" min="1" max="365" />
@@ -256,15 +276,42 @@
         }
         else
         {
-            <div class="tab-bar">
-                <button class="tab-btn @(_resultTab == 0 ? "active" : "")" @onclick="() => _resultTab = 0">Per Paycheck</button>
-                <button class="tab-btn @(_resultTab == 1 ? "active" : "")" @onclick="() => _resultTab = 1">Annual</button>
-            </div>
+            @if (_grossUpResult == null)
+            {
+                <div class="tab-bar">
+                    <button class="tab-btn @(_resultTab == 0 ? "active" : "")" @onclick="() => _resultTab = 0">Per Paycheck</button>
+                    <button class="tab-btn @(_resultTab == 1 ? "active" : "")" @onclick="() => _resultTab = 1">Annual</button>
+                </div>
+            }
 
-            @if (_resultTab == 0)
+            @if (_resultTab == 0 || _grossUpResult != null)
             {
                 <!-- Period results -->
                 <div class="results-scroll">
+                    @if (_grossUpResult != null)
+                    {
+                        <div class="result-card card-refund">
+                            <div class="result-card-title">Gross-Up Result</div>
+                            <div class="result-row">
+                                <span>Desired Net Pay (take-home)</span>
+                                <span class="result-value">@_grossUpResult.TargetNetPay.ToString("C")</span>
+                            </div>
+                            <div class="result-row">
+                                <span>Taxes &amp; Deductions Covered</span>
+                                <span class="result-value">@_grossUpResult.GrossUpCost.ToString("C")</span>
+                            </div>
+                            <div class="result-row result-net-row">
+                                <span class="net-label">Required Gross Pay</span>
+                                <span class="result-value net-value">@_grossUpResult.GrossUpPay.ToString("C")</span>
+                            </div>
+                            @if (!_grossUpResult.Converged)
+                            {
+                                <div class="result-row">
+                                    <span class="result-value deduction">Could not reach the target net with these inputs.</span>
+                                </div>
+                            }
+                        </div>
+                    }
                     <div class="result-card">
                         <div class="result-card-title">Income</div>
                         <div class="result-row">
@@ -507,6 +554,11 @@
     private decimal _ytdSsWages = 0m;
     private decimal _ytdMedWages = 0m;
 
+    // Calculation mode (standard paycheck vs. gross-up)
+    private string _mode = "standard";
+    private bool _grossUpMode => _mode == "grossup";
+    private decimal _targetNet = 1000m;
+
     // Federal W-4
     private FederalFilingStatus _fedStatus = FederalFilingStatus.SingleOrMarriedSeparately;
     private bool _step2Checked = false;
@@ -526,6 +578,7 @@
     // Results
     private PaycheckResult? _result;
     private AnnualProjection? _projection;
+    private GrossUpResult? _grossUpResult;
     private string? _calcError;
 
     // Modal
@@ -617,8 +670,18 @@
 
         try
         {
-            _result = Calc.Calculate(input);
-            _projection = ProjectionCalc.Calculate(input, _result);
+            if (_grossUpMode)
+            {
+                _grossUpResult = GrossUpCalc.Calculate(input, _targetNet);
+                _result = _grossUpResult.Paycheck;
+                _projection = null;
+            }
+            else
+            {
+                _grossUpResult = null;
+                _result = Calc.Calculate(input);
+                _projection = ProjectionCalc.Calculate(input, _result);
+            }
             _resultTab = 0;
         }
         catch (Exception ex)
@@ -626,7 +689,17 @@
             _calcError = $"Calculation error: {ex.Message}";
             _result = null;
             _projection = null;
+            _grossUpResult = null;
         }
+    }
+
+    private void OnModeChanged()
+    {
+        // Switching modes clears stale results so the panel doesn't mix views.
+        _result = null;
+        _projection = null;
+        _grossUpResult = null;
+        _calcError = null;
     }
 
     private void OpenExplanation(ExplanationLineKey key)

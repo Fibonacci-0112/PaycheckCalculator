@@ -59,6 +59,17 @@
                                     Grid.Column="1" TextColor="Black" />
                         </Grid>
 
+                        <!-- Calculation Mode: Standard vs Gross-Up -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Mode" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                            <Picker ItemsSource="{Binding CalculationModes}" SelectedItem="{Binding SelectedCalculationModePickerItem}"
+                                    Grid.Column="1" TextColor="Black" />
+                        </Grid>
+
+                        <!-- Standard paycheck inputs (Type + Hourly/Salary), hidden in gross-up mode -->
+                        <VerticalStackLayout Spacing="14" IsVisible="{Binding IsStandardMode}">
+
                         <!-- Type: Hourly vs Salary -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Type" Grid.Column="0"
@@ -129,6 +140,24 @@
                                     </Entry.Behaviors>
                                 </Entry>
                             </Grid>
+                        </VerticalStackLayout>
+
+                        </VerticalStackLayout><!-- /standard paycheck inputs -->
+
+                        <!-- Gross-up input (shown when Mode = Gross-Up) -->
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding IsGrossUpMode}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Desired Net Pay" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                <Entry Text="{Binding TargetNetPay}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Label Text="Gross-up finds the gross pay that nets this take-home amount after taxes and deductions."
+                                   TextColor="#9E9E9E" FontSize="11" />
                         </VerticalStackLayout>
 
                         <!-- Paycheck number (for annual projection) -->
