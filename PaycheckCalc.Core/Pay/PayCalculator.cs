@@ -24,8 +24,13 @@ public sealed class PayCalculator
 
     public PaycheckResult Calculate(PaycheckInput input)
     {
-        var gross = (input.RegularHours * input.HourlyRate)
-                 + (input.OvertimeHours * input.HourlyRate * input.OvertimeMultiplier);
+        var payPeriods = PayPeriods.PerYear(input.Frequency);
+        var gross = input.PayType == PayType.Salary
+            ? (input.SalaryBasis == SalaryBasis.PerYear
+                ? input.SalaryAmount / payPeriods
+                : input.SalaryAmount)
+            : (input.RegularHours * input.HourlyRate)
+                + (input.OvertimeHours * input.HourlyRate * input.OvertimeMultiplier);
 
         var preTax = input.Deductions.Where(d => d.Type == DeductionType.PreTax).Sum(d => d.EffectiveAmount(gross));
         var postTax = input.Deductions.Where(d => d.Type == DeductionType.PostTax).Sum(d => d.EffectiveAmount(gross));
@@ -66,6 +71,10 @@ public sealed class PayCalculator
 
         var explanation = BuildExplanation(
             grossPay: RoundMoney(gross),
+            payType: input.PayType,
+            salaryAmount: RoundMoney(input.SalaryAmount),
+            salaryBasis: input.SalaryBasis,
+            payPeriods: payPeriods,
             regularHours: input.RegularHours,
             hourlyRate: input.HourlyRate,
             overtimeHours: input.OvertimeHours,
@@ -108,6 +117,10 @@ public sealed class PayCalculator
 
     private static PaycheckExplanation BuildExplanation(
         decimal grossPay,
+        PayType payType,
+        decimal salaryAmount,
+        SalaryBasis salaryBasis,
+        int payPeriods,
         decimal regularHours,
         decimal hourlyRate,
         decimal overtimeHours,
@@ -129,7 +142,8 @@ public sealed class PayCalculator
     {
         var lines = new List<LineExplanation>
         {
-            BuildGrossExplanation(grossPay, regularHours, hourlyRate, overtimeHours, overtimeMultiplier),
+            BuildGrossExplanation(grossPay, payType, salaryAmount, salaryBasis, payPeriods,
+                regularHours, hourlyRate, overtimeHours, overtimeMultiplier),
             BuildFederalTaxableIncomeExplanation(grossPay, federalPreTaxReducing, federalTaxableIncome),
             BuildFicaTaxableIncomeExplanation(grossPay, ficaPreTaxReducing, ficaTaxableWages),
             BuildStateTaxableIncomeExplanation(
@@ -160,9 +174,15 @@ public sealed class PayCalculator
     }
 
     private static LineExplanation BuildGrossExplanation(
-        decimal grossPay, decimal regularHours, decimal hourlyRate,
+        decimal grossPay, PayType payType, decimal salaryAmount, SalaryBasis salaryBasis, int payPeriods,
+        decimal regularHours, decimal hourlyRate,
         decimal overtimeHours, decimal overtimeMultiplier)
     {
+        if (payType == PayType.Salary)
+        {
+            return BuildSalaryGrossExplanation(grossPay, salaryAmount, salaryBasis, payPeriods);
+        }
+
         var steps = new List<ExplanationStep>
         {
             new("Regular pay",
@@ -186,6 +206,40 @@ public sealed class PayCalculator
             "Total before any deductions or taxes.",
             grossPay,
             $"= {Money(grossPay)}"));
+
+        return new LineExplanation(
+            ExplanationLineKey.GrossPay,
+            "Gross Pay",
+            grossPay,
+            steps);
+    }
+
+    private static LineExplanation BuildSalaryGrossExplanation(
+        decimal grossPay, decimal salaryAmount, SalaryBasis salaryBasis, int payPeriods)
+    {
+        var steps = new List<ExplanationStep>();
+
+        if (salaryBasis == SalaryBasis.PerYear)
+        {
+            steps.Add(new ExplanationStep(
+                "Annual salary",
+                "Your gross salary for the full year, before any deductions or taxes.",
+                salaryAmount,
+                $"= {Money(salaryAmount)}"));
+            steps.Add(new ExplanationStep(
+                $"Divide by pay periods ({payPeriods}/year)",
+                "Annual salary divided by the number of pay periods in the year gives the gross pay for this period.",
+                grossPay,
+                $"{Money(salaryAmount)} ÷ {payPeriods} = {Money(grossPay)}"));
+        }
+        else
+        {
+            steps.Add(new ExplanationStep(
+                "Gross pay per period",
+                "The gross amount entered for a single pay period, before any deductions or taxes.",
+                grossPay,
+                $"= {Money(grossPay)}"));
+        }
 
         return new LineExplanation(
             ExplanationLineKey.GrossPay,

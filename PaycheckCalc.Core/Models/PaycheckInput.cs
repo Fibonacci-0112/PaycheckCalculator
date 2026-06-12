@@ -7,10 +7,27 @@ public sealed class PaycheckInput
 {
     public PayFrequency Frequency { get; init; }
 
+    /// <summary>
+    /// Whether gross pay is specified as an hourly rate × hours (default) or as a salary.
+    /// </summary>
+    public PayType PayType { get; init; } = PayType.Hourly;
+
+    // ── Hourly inputs (used when <see cref="PayType"/> is <see cref="PayType.Hourly"/>) ──
     public decimal HourlyRate { get; init; }
     public decimal RegularHours { get; init; }
     public decimal OvertimeHours { get; init; }
     public decimal OvertimeMultiplier { get; init; } = 1.5m;
+
+    // ── Salary inputs (used when <see cref="PayType"/> is <see cref="PayType.Salary"/>) ──
+    /// <summary>
+    /// The salary amount. Interpreted per <see cref="SalaryBasis"/>: an annual figure
+    /// (<see cref="SalaryBasis.PerYear"/>) or the gross for a single period
+    /// (<see cref="SalaryBasis.PerPeriod"/>). Ignored when <see cref="PayType"/> is hourly.
+    /// </summary>
+    public decimal SalaryAmount { get; init; }
+
+    /// <summary>How <see cref="SalaryAmount"/> maps onto a single pay period.</summary>
+    public SalaryBasis SalaryBasis { get; init; } = SalaryBasis.PerYear;
 
     public UsState State { get; init; } = UsState.OK;
 

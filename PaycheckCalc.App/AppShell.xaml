@@ -21,5 +21,9 @@
             <ShellContent Route="Results"
                           ContentTemplate="{DataTemplate views:ResultsPage}" />
         </Tab>
+        <Tab Title="Paychecks">
+            <ShellContent Route="Paychecks"
+                          ContentTemplate="{DataTemplate views:PaychecksPage}" />
+        </Tab>
     </TabBar>
 </Shell>

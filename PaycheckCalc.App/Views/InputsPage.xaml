@@ -41,54 +41,109 @@
             <VerticalStackLayout Padding="16" Spacing="10">
                 <Border BackgroundColor="White" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16">
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                          ColumnSpacing="12" RowSpacing="14">
-                        <Label Text="Pay Frequency" Grid.Row="0" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
-                        <Picker ItemsSource="{Binding Frequencies}" SelectedItem="{Binding SelectedFrequencyPickerItem}"
-                                Grid.Row="0" Grid.Column="1" TextColor="Black" />
-                        <Label Text="Hourly Rate" Grid.Row="1" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
-                        <Entry Text="{Binding HourlyRate}" Keyboard="Numeric" Grid.Row="1" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
-                            <Entry.Behaviors>
-                                <behaviors:DecimalFormatBehavior IsCurrency="True" />
-                            </Entry.Behaviors>
-                        </Entry>
-                        <Label Text="Regular Hours" Grid.Row="2" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
-                        <Entry Text="{Binding RegularHours}" Keyboard="Numeric" Grid.Row="2" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
-                            <Entry.Behaviors>
-                                <behaviors:DecimalFormatBehavior />
-                            </Entry.Behaviors>
-                        </Entry>
-                        <Label Text="Overtime Hours" Grid.Row="3" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
-                        <Entry Text="{Binding OvertimeHours}" Keyboard="Numeric" Grid.Row="3" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
-                            <Entry.Behaviors>
-                                <behaviors:DecimalFormatBehavior />
-                            </Entry.Behaviors>
-                        </Entry>
-                        <Label Text="OT Multiplier" Grid.Row="4" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
-                        <Entry Text="{Binding OvertimeMultiplier}" Keyboard="Numeric" Grid.Row="4" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
-                            <Entry.Behaviors>
-                                <behaviors:DecimalFormatBehavior />
-                            </Entry.Behaviors>
-                        </Entry>
-                        <Label Text="Paycheck # (this year)" Grid.Row="5" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
-                        <Entry Text="{Binding PaycheckNumber}" Keyboard="Numeric" Grid.Row="5" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2" />
+                    <VerticalStackLayout Spacing="14">
+
+                        <!-- Paycheck name (identifies a saved paycheck for comparison) -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Paycheck Name" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                            <Entry Text="{Binding PaycheckName}" Placeholder="e.g. Job 1"
+                                   Grid.Column="1" TextColor="Black" BackgroundColor="#F2F2F2" />
+                        </Grid>
+
+                        <!-- Pay Frequency -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Pay Frequency" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                            <Picker ItemsSource="{Binding Frequencies}" SelectedItem="{Binding SelectedFrequencyPickerItem}"
+                                    Grid.Column="1" TextColor="Black" />
+                        </Grid>
+
+                        <!-- Type: Hourly vs Salary -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Type" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                            <Picker ItemsSource="{Binding PayTypes}" SelectedItem="{Binding SelectedPayTypePickerItem}"
+                                    Grid.Column="1" TextColor="Black" />
+                        </Grid>
+
+                        <!-- Hourly inputs (shown when Type = Hourly) -->
+                        <VerticalStackLayout Spacing="14" IsVisible="{Binding IsHourly}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Pay Rate" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                                <Entry Text="{Binding HourlyRate}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Regular Hours" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                                <Entry Text="{Binding RegularHours}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Overtime Hours" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                                <Entry Text="{Binding OvertimeHours}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="OT Multiplier" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                                <Entry Text="{Binding OvertimeMultiplier}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                        </VerticalStackLayout>
+
+                        <!-- Salary inputs (shown when Type = Salary) -->
+                        <VerticalStackLayout Spacing="14" IsVisible="{Binding IsSalary}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Gross Pay Method" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                                <Picker ItemsSource="{Binding GrossPayMethods}" SelectedItem="{Binding SelectedGrossPayMethodPickerItem}"
+                                        Grid.Column="1" TextColor="Black" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="{Binding SalaryAmountLabel}" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                                <Entry Text="{Binding SalaryAmount}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                        </VerticalStackLayout>
+
+                        <!-- Paycheck number (for annual projection) -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Paycheck # (this year)" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="14" />
+                            <Entry Text="{Binding PaycheckNumber}" Keyboard="Numeric" Grid.Column="1"
+                                   TextColor="Black" BackgroundColor="#F2F2F2" />
+                        </Grid>
+
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
-                                Grid.Row="6" Grid.ColumnSpan="2"
                                 BackgroundColor="#333333" TextColor="White"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
-                    </Grid>
+                    </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>
         </ScrollView>

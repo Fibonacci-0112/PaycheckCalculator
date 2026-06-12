@@ -37,6 +37,8 @@ public partial class CalculatorViewModel : ObservableObject
         Frequency = PayFrequency.Biweekly;
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
         OvertimeMultiplier = 1.5m;
+        SelectedPayTypePickerItem = PayTypes[0];                 // Hourly
+        SelectedGrossPayMethodPickerItem = GrossPayMethods[0];   // Per Year
         SelectedState = UsState.OK;
         _previousState = SelectedState;
         SelectedStatePickerItem = StatePickerItems.FirstOrDefault(s => s.Value == SelectedState);
@@ -47,6 +49,9 @@ public partial class CalculatorViewModel : ObservableObject
 
         // Keep computed deduction totals in sync with the collection
         Deductions.CollectionChanged += OnDeductionsCollectionChanged;
+
+        // Keep saved-paycheck computed flags in sync with the collection
+        Paychecks.CollectionChanged += OnPaychecksCollectionChanged;
     }
 
     public ObservableCollection<PickerItem<FederalFilingStatus>> FederalStatuses { get; } = new(
@@ -73,10 +78,65 @@ public partial class CalculatorViewModel : ObservableObject
 
     [ObservableProperty] public partial PayFrequency Frequency { get; set; }
 
+    // ── Pay type (Hourly vs Salary) ─────────────────────────────
+    public IReadOnlyList<PickerItem<PayType>> PayTypes { get; } =
+        Enum.GetValues<PayType>()
+            .Select(t => new PickerItem<PayType>(t, EnumDisplay.PayType(t.ToString())))
+            .ToList();
+
+    [ObservableProperty] public partial PickerItem<PayType>? SelectedPayTypePickerItem { get; set; }
+
+    partial void OnSelectedPayTypePickerItemChanged(PickerItem<PayType>? value)
+    {
+        if (value != null)
+            PayType = value.Value;
+    }
+
+    [ObservableProperty] public partial PayType PayType { get; set; } = PayType.Hourly;
+
+    partial void OnPayTypeChanged(PayType value)
+    {
+        OnPropertyChanged(nameof(IsHourly));
+        OnPropertyChanged(nameof(IsSalary));
+    }
+
+    /// <summary>True when hourly inputs (pay rate / hours) should be shown.</summary>
+    public bool IsHourly => PayType == PayType.Hourly;
+
+    /// <summary>True when salary inputs (gross pay method / amount) should be shown.</summary>
+    public bool IsSalary => PayType == PayType.Salary;
+
+    // ── Hourly inputs ───────────────────────────────────────────
     [ObservableProperty] public partial decimal HourlyRate { get; set; }
     [ObservableProperty] public partial decimal RegularHours { get; set; }
     [ObservableProperty] public partial decimal OvertimeHours { get; set; }
     [ObservableProperty] public partial decimal OvertimeMultiplier { get; set; }
+
+    // ── Salary inputs ───────────────────────────────────────────
+    [ObservableProperty] public partial decimal SalaryAmount { get; set; }
+
+    public IReadOnlyList<PickerItem<SalaryBasis>> GrossPayMethods { get; } =
+        Enum.GetValues<SalaryBasis>()
+            .Select(b => new PickerItem<SalaryBasis>(b, EnumDisplay.SalaryBasis(b.ToString())))
+            .ToList();
+
+    [ObservableProperty] public partial PickerItem<SalaryBasis>? SelectedGrossPayMethodPickerItem { get; set; }
+
+    partial void OnSelectedGrossPayMethodPickerItemChanged(PickerItem<SalaryBasis>? value)
+    {
+        if (value != null)
+            SalaryBasis = value.Value;
+    }
+
+    [ObservableProperty] public partial SalaryBasis SalaryBasis { get; set; } = SalaryBasis.PerYear;
+
+    partial void OnSalaryBasisChanged(SalaryBasis value)
+    {
+        OnPropertyChanged(nameof(SalaryAmountLabel));
+    }
+
+    /// <summary>Label for the salary amount entry, adapting to the chosen gross pay method.</summary>
+    public string SalaryAmountLabel => SalaryBasis == SalaryBasis.PerYear ? "Annual Salary" : "Gross Pay Per Period";
 
     /// <summary>
     /// 1-based paycheck number within the current year for annual projections.
@@ -347,6 +407,143 @@ public partial class CalculatorViewModel : ObservableObject
             .Select(s => new PickerItem<UsState>(s, EnumDisplay.UsStateName(s.ToString())))
             .ToList();
 
+    // ── Saved paychecks & comparison ────────────────────────────
+
+    /// <summary>
+    /// Optional name for the paycheck being calculated (e.g. "Job 1"). When blank,
+    /// a default "Paycheck N" name is generated. Calculating with an existing name
+    /// updates that saved paycheck in place.
+    /// </summary>
+    [ObservableProperty] public partial string PaycheckName { get; set; } = "";
+
+    /// <summary>All calculated paychecks, stored for review and comparison.</summary>
+    public ObservableCollection<SavedPaycheckViewModel> Paychecks { get; } = new();
+
+    /// <summary>True once at least one paycheck has been saved.</summary>
+    public bool HasPaychecks => Paychecks.Count > 0;
+
+    /// <summary>True before any paycheck has been saved; drives the empty state.</summary>
+    public bool ShowNoPaychecks => Paychecks.Count == 0;
+
+    /// <summary>True with exactly one saved paycheck — prompts the user to add another to compare.</summary>
+    public bool ShowCompareHint => Paychecks.Count == 1;
+
+    /// <summary>True once two or more paychecks exist and a comparison can be shown.</summary>
+    public bool CanCompare => Paychecks.Count >= 2;
+
+    private void OnPaychecksCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(HasPaychecks));
+        OnPropertyChanged(nameof(ShowNoPaychecks));
+        OnPropertyChanged(nameof(ShowCompareHint));
+        OnPropertyChanged(nameof(CanCompare));
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasComparison))]
+    [NotifyPropertyChangedFor(nameof(ComparisonRows))]
+    [NotifyPropertyChangedFor(nameof(ComparisonNameA))]
+    public partial SavedPaycheckViewModel? SelectedComparisonA { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasComparison))]
+    [NotifyPropertyChangedFor(nameof(ComparisonRows))]
+    [NotifyPropertyChangedFor(nameof(ComparisonNameB))]
+    public partial SavedPaycheckViewModel? SelectedComparisonB { get; set; }
+
+    /// <summary>True when both comparison slots are filled.</summary>
+    public bool HasComparison => SelectedComparisonA is not null && SelectedComparisonB is not null;
+
+    public string ComparisonNameA => SelectedComparisonA?.Name ?? "A";
+    public string ComparisonNameB => SelectedComparisonB?.Name ?? "B";
+
+    /// <summary>Per-metric comparison of the two selected paychecks (empty until both are chosen).</summary>
+    public IReadOnlyList<ComparisonRow> ComparisonRows => BuildComparisonRows();
+
+    private IReadOnlyList<ComparisonRow> BuildComparisonRows()
+    {
+        var a = SelectedComparisonA?.Result;
+        var b = SelectedComparisonB?.Result;
+        if (a is null || b is null)
+            return Array.Empty<ComparisonRow>();
+
+        var rows = new List<ComparisonRow>
+        {
+            new ComparisonRow("Gross Pay", a.GrossPay, b.GrossPay),
+            new ComparisonRow("Federal Tax", a.FederalWithholding, b.FederalWithholding),
+            new ComparisonRow("Social Security", a.SocialSecurityWithholding, b.SocialSecurityWithholding),
+            new ComparisonRow("Medicare",
+                a.MedicareWithholding + a.AdditionalMedicareWithholding,
+                b.MedicareWithholding + b.AdditionalMedicareWithholding),
+            new ComparisonRow("State Income Tax", a.StateWithholding, b.StateWithholding),
+        };
+
+        if (a.StateDisabilityInsurance > 0m || b.StateDisabilityInsurance > 0m)
+            rows.Add(new ComparisonRow("State Disability", a.StateDisabilityInsurance, b.StateDisabilityInsurance));
+
+        if (a.PreTaxDeductions > 0m || b.PreTaxDeductions > 0m)
+            rows.Add(new ComparisonRow("Pre-Tax Deductions", a.PreTaxDeductions, b.PreTaxDeductions));
+
+        if (a.PostTaxDeductions > 0m || b.PostTaxDeductions > 0m)
+            rows.Add(new ComparisonRow("Post-Tax Deductions", a.PostTaxDeductions, b.PostTaxDeductions));
+
+        rows.Add(new ComparisonRow("Total Taxes", a.TotalTaxes, b.TotalTaxes));
+        rows.Add(new ComparisonRow("Net Pay", a.NetPay, b.NetPay, highlight: true));
+
+        return rows;
+    }
+
+    /// <summary>
+    /// Stores the just-computed result as a saved paycheck. Re-using an existing
+    /// name updates that paycheck in place; otherwise a new entry is added and
+    /// auto-selected into the next open comparison slot.
+    /// </summary>
+    private void SaveCurrentPaycheck(ResultCardModel card)
+    {
+        var name = string.IsNullOrWhiteSpace(PaycheckName)
+            ? $"Paycheck {Paychecks.Count + 1}"
+            : PaycheckName.Trim();
+
+        var existing = Paychecks.FirstOrDefault(
+            p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+
+        if (existing is not null)
+        {
+            existing.Result = card;
+            // Refresh the comparison if this paycheck is currently being compared.
+            if (SelectedComparisonA == existing || SelectedComparisonB == existing)
+                OnPropertyChanged(nameof(ComparisonRows));
+        }
+        else
+        {
+            var saved = new SavedPaycheckViewModel(name, card);
+            Paychecks.Add(saved);
+
+            // Auto-fill the first open comparison slot for convenience.
+            if (SelectedComparisonA is null)
+                SelectedComparisonA = saved;
+            else if (SelectedComparisonB is null && saved != SelectedComparisonA)
+                SelectedComparisonB = saved;
+        }
+    }
+
+    [RelayCommand]
+    private void RemovePaycheck(SavedPaycheckViewModel? item)
+    {
+        if (item is null) return;
+        Paychecks.Remove(item);
+        if (SelectedComparisonA == item) SelectedComparisonA = null;
+        if (SelectedComparisonB == item) SelectedComparisonB = null;
+    }
+
+    [RelayCommand]
+    private void ClearPaychecks()
+    {
+        Paychecks.Clear();
+        SelectedComparisonA = null;
+        SelectedComparisonB = null;
+    }
+
     [RelayCommand]
     private void Calculate()
     {
@@ -384,6 +581,9 @@ public partial class CalculatorViewModel : ObservableObject
 
         // Map domain result → presentation model via mapper
         ResultCard = ResultCardMapper.Map(domainResult);
+
+        // Store the result so multiple paychecks can be kept and compared.
+        SaveCurrentPaycheck(ResultCard);
 
         ExportPdfCommand.NotifyCanExecuteChanged();
     }

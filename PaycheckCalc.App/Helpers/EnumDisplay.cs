@@ -21,6 +21,20 @@ public static class EnumDisplay
         _ => SplitPascalCase(name)
     };
 
+    public static string PayType(string name) => name switch
+    {
+        "Hourly" => "Hourly",
+        "Salary" => "Salary",
+        _ => SplitPascalCase(name)
+    };
+
+    public static string SalaryBasis(string name) => name switch
+    {
+        "PerYear" => "Per Year",
+        "PerPeriod" => "Pay Per Period",
+        _ => SplitPascalCase(name)
+    };
+
     public static string FederalFilingStatus(string name) => name switch
     {
         "SingleOrMarriedSeparately" => "Single, Married Filing Separately",
