@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 using PaycheckCalc.App.Helpers;
 using PaycheckCalc.App.Mappers;
 using PaycheckCalc.App.Models;
+using PaycheckCalc.App.Services.Csv;
 using PaycheckCalc.App.Services.Pdf;
+using PaycheckCalc.App.Services.Printing;
 using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Pay;
@@ -26,14 +28,18 @@ public partial class CalculatorViewModel : ObservableObject
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
     private readonly IPdfExportService _pdfExport;
+    private readonly ICsvExportService _csvExport;
+    private readonly IPrintService _printService;
     private UsState _previousState;
 
-    public CalculatorViewModel(PayCalculator calc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport)
+    public CalculatorViewModel(PayCalculator calc, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService)
     {
         _calc = calc;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
         _pdfExport = pdfExport;
+        _csvExport = csvExport;
+        _printService = printService;
         Frequency = PayFrequency.Biweekly;
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
         OvertimeMultiplier = 1.5m;
@@ -586,6 +592,8 @@ public partial class CalculatorViewModel : ObservableObject
         SaveCurrentPaycheck(ResultCard);
 
         ExportPdfCommand.NotifyCanExecuteChanged();
+        ExportCsvCommand.NotifyCanExecuteChanged();
+        PrintCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>True once a paycheck has been calculated and can be exported.</summary>
@@ -609,6 +617,51 @@ public partial class CalculatorViewModel : ObservableObject
         {
             if (Shell.Current is not null)
                 await Shell.Current.DisplayAlert("Export PDF", $"Could not export the PDF: {ex.Message}", "OK");
+        }
+    }
+
+    /// <summary>True once a paycheck has been calculated and can be exported.</summary>
+    public bool CanExportCsv => ResultCard is not null;
+
+    /// <summary>
+    /// Exports the current per-period results to a CSV file and offers it via the
+    /// platform share sheet.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExportCsv))]
+    private async Task ExportCsv()
+    {
+        if (ResultCard is null)
+            return;
+
+        try
+        {
+            await _csvExport.ExportAndShareAsync(ResultCard);
+        }
+        catch (Exception ex)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlert("Export CSV", $"Could not export the CSV: {ex.Message}", "OK");
+        }
+    }
+
+    /// <summary>True once a paycheck has been calculated and can be printed.</summary>
+    public bool CanPrint => ResultCard is not null;
+
+    /// <summary>Sends the current per-period results to the platform print system.</summary>
+    [RelayCommand(CanExecute = nameof(CanPrint))]
+    private async Task Print()
+    {
+        if (ResultCard is null)
+            return;
+
+        try
+        {
+            await _printService.PrintAsync(ResultCard);
+        }
+        catch (Exception ex)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlert("Print", $"Could not print the results: {ex.Message}", "OK");
         }
     }
 }

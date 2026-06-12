@@ -8,9 +8,15 @@
              BackgroundColor="#F5F5F5">
 
     <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Print"
+                     Command="{Binding PrintCommand}"
+                     AutomationProperties.Name="Print results" />
         <ToolbarItem Text="Export PDF"
                      Command="{Binding ExportPdfCommand}"
                      AutomationProperties.Name="Export results to PDF" />
+        <ToolbarItem Text="Export CSV"
+                     Command="{Binding ExportCsvCommand}"
+                     AutomationProperties.Name="Export results to CSV" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>

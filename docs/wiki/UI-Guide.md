@@ -83,6 +83,14 @@ Additional features:
 - **"Show Your Work" Explanations** — Tap the ⓘ icon next to a line (or the Net Pay card) for a step-by-step breakdown of how that amount was computed, including formulas and source references.
 - **Doughnut Chart** — Visual breakdown of gross pay by category (federal tax, state tax, SS, Medicare, net pay).
 
+#### Export & Print
+
+The Results page toolbar exposes three actions, each enabled once a paycheck has been calculated:
+
+- **Print** — Renders the summary and opens the native print dialog (Android print framework / Windows default PDF handler). Backed by `Services/Printing`.
+- **Export PDF** — Writes a single-page PDF and opens it in a viewer (preferring Adobe Reader/Acrobat). Backed by `Services/Pdf`.
+- **Export CSV** — Writes a CSV of the per-period breakdown (Income, Taxes, Deductions, Summary) and offers it through the platform share sheet so it can be opened in a spreadsheet, emailed, or saved. Amounts are plain decimals for clean spreadsheet import. Backed by `Services/Csv`.
+
 ### Annual Tab
 
 Displays annualized projections computed by `AnnualProjectionCalculator`:
