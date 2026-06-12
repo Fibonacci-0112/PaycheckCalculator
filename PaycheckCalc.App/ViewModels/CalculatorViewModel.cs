@@ -258,9 +258,17 @@ public partial class CalculatorViewModel : ObservableObject
 
     partial void OnResultCardChanged(ResultCardModel? value)
     {
+        OnPropertyChanged(nameof(HasResult));
+        OnPropertyChanged(nameof(ShowEmptyState));
         OnPropertyChanged(nameof(ShowDeductions));
         OnPropertyChanged(nameof(ShowBothDeductions));
     }
+
+    /// <summary>True once a paycheck has been calculated, so the results can be shown.</summary>
+    public bool HasResult => ResultCard is not null;
+
+    /// <summary>True before any calculation has run; drives the Results-page placeholder.</summary>
+    public bool ShowEmptyState => ResultCard is null;
 
     /// <summary>True when the result has any pre-tax or post-tax deductions to display.</summary>
     public bool ShowDeductions =>
