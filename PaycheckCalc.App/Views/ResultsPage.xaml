@@ -5,7 +5,7 @@
              xmlns:helpers="clr-namespace:PaycheckCalc.App.Helpers"
              x:Class="PaycheckCalc.App.Views.ResultsPage"
              Title="Results"
-             BackgroundColor="#F0F4FF">
+             BackgroundColor="#F5F5F5">
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Export PDF"
@@ -20,7 +20,7 @@
     <Grid RowDefinitions="Auto,*">
 
         <!-- Page Header -->
-        <Grid Grid.Row="0" BackgroundColor="#1565C0" Padding="16,20,16,20">
+        <Grid Grid.Row="0" BackgroundColor="#333333" Padding="16,20,16,20">
             <Label Text="Your Paycheck Summary"
                    TextColor="White"
                    FontSize="22"
@@ -28,7 +28,7 @@
                    HorizontalTextAlignment="Center" />
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" IsVisible="{Binding HasResult}">
             <VerticalStackLayout Padding="16" Spacing="12">
 
                 <!-- ═══════════════════════════════════════════════════ -->
@@ -42,7 +42,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="Gross Pay" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Gross Pay is calculated">
                                 <Label.GestureRecognizers>
@@ -58,7 +58,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="Federal Taxable Income" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Federal Taxable Income is calculated">
                                 <Label.GestureRecognizers>
@@ -74,7 +74,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="FICA Taxable Income" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how FICA Taxable Income is calculated">
                                 <Label.GestureRecognizers>
@@ -90,7 +90,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="State Taxable Income" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how State Taxable Income is calculated">
                                 <Label.GestureRecognizers>
@@ -118,7 +118,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="Federal Tax" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Federal Tax is calculated">
                                 <Label.GestureRecognizers>
@@ -134,7 +134,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="Social Security Tax" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Social Security is calculated">
                                 <Label.GestureRecognizers>
@@ -150,7 +150,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="Medicare Tax" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Medicare is calculated">
                                 <Label.GestureRecognizers>
@@ -166,7 +166,7 @@
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="State Income Tax" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how State Income Tax is calculated">
                                 <Label.GestureRecognizers>
@@ -185,7 +185,7 @@
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10"
                               IsVisible="{Binding ResultCard.StateDisabilityInsurance, Converter={StaticResource GreaterThanZeroConverter}}">
                             <Label Text="{Binding ResultCard.StateDisabilityInsuranceLabel}" TextColor="#37474F" FontSize="15" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#1976D2"
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
                                    FontSize="16" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how State Disability is calculated">
                                 <Label.GestureRecognizers>
@@ -266,6 +266,20 @@
 
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- Empty / first-run state: shown until a paycheck has been calculated -->
+        <VerticalStackLayout Grid.Row="1"
+                             IsVisible="{Binding ShowEmptyState}"
+                             VerticalOptions="Center" HorizontalOptions="Center"
+                             Padding="32" Spacing="10">
+            <Label Text="No paycheck calculated yet"
+                   FontSize="18" FontAttributes="Bold"
+                   TextColor="#424242"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="Enter your pay details on the Inputs tab and tap Calculate to see your paycheck breakdown here."
+                   FontSize="14" TextColor="#9E9E9E"
+                   HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
 
     </Grid>
 
