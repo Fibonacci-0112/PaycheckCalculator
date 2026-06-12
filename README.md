@@ -1,22 +1,23 @@
 # PaycheckCalc
 
-A simple **.NET MAUI** paycheck calculator (Android & Windows) that computes net pay, tax withholdings, and deductions for all 50 US states plus DC using 2026 tax tables. The UI is two tabs — enter your pay details on **Inputs**, see the breakdown on **Results** — backed by a UI-agnostic core calculation library.
+A simple US paycheck calculator (2026 tax tables) that computes net pay, tax withholdings, and deductions for all 50 US states plus DC. It ships two front-ends — a **.NET MAUI** app (Android & Windows) and a **Blazor Server** web app — both backed by the same UI-agnostic core calculation library, `PaycheckCalc.Core`.
 
 ## Features
 
 - **Gross Pay Calculation** — Computes gross pay from hourly rate, regular hours, and overtime hours with a configurable overtime multiplier.
 - **Federal Income Tax** — Implements the IRS Publication 15-T (2026) percentage method for automated payroll systems, supporting all W-4 inputs (filing status, Step 2 checkbox, Step 3 credits, Step 4 adjustments).
-- **FICA Taxes** — Calculates Social Security (6.2%, capped at $184,500), Medicare (1.45%), and Additional Medicare (0.9% above $200,000).
+- **FICA Taxes** — Calculates Social Security (6.2%, capped at $184,500), Medicare (1.45%), and Additional Medicare (0.9% above $200,000). Optional YTD Social Security / Medicare wage inputs (exposed in the web UI) handle the wage base cap and Additional Medicare threshold mid-year.
 - **State Income Tax** — Covers all 50 states and DC. Every state ships its own `IStateWithholdingCalculator` implementation under `PaycheckCalc.Core/Tax/<State>/`, registered centrally via `StateCalculatorRegistry`:
   - **9 no-income-tax states** — AK, FL, NV, NH, SD, TN, TX, WA, WY. Most use the shared `NoIncomeTaxWithholdingAdapter`; WA has a dedicated calculator for the WA Cares Fund (0.58% LTC premium with opt-out), and WY has its own dedicated (empty-schema) calculator.
   - **Flat-rate state** — Pennsylvania (3.07%).
   - **All other states** — Each implements its own withholding rules (W-4 / state-specific certificate, standard deductions, allowances / exemptions, graduated brackets or flat rate, and state-specific credits). Examples include Alabama (graduated + dependents + federal deduction), Arkansas (DFA formula method), California (Method B, EDD DE 44 withholding tables + SDI), Colorado (flat 4.4% + DR 0004 Table 1 allowance + FMLI), Connecticut (TPG-211 table-driven withholding + PFMLI), Delaware (DE W-4, 7 graduated brackets + $110 personal credit), Georgia (flat 5.19% per HB 111 + G-4 allowances and dependent deductions), Illinois (flat 4.95% + IL-W-4 allowances), Ohio (IT-4 exemptions + two-bracket formula), Oklahoma (OW-2), Oregon (OR-W-4 with per-allowance tax credit), Utah (flat 4.5% with phase-out allowance credit), Virginia (VA-4), Wisconsin (WT-4), West Virginia (IT-104), and the remaining states that use an annualized graduated-bracket approach with state-specific deductions and allowances.
 - **State Disability / Family Leave Insurance** — California SDI, Colorado FMLI (0.044%), Connecticut PFMLI, and the Washington WA Cares Fund (0.58% LTC premium) are computed alongside state withholding with dynamic labels on the results screen.
-- **Pre-Tax & Post-Tax Deductions** — Supports configurable deductions that reduce taxable wages.
+- **Pre-Tax & Post-Tax Deductions** — Supports configurable deductions as fixed dollar amounts or a percentage of gross, with per-deduction control over which wage bases (federal, state, FICA) a pre-tax deduction reduces.
 - **Dynamic State Inputs** — Each state declares its own input schema (filing status, allowances, dependents, extra withholding), and the UI renders fields dynamically.
-- **Annual Projection** — Estimates annualized gross, taxes, and net pay; tracks current paycheck number and remaining pay periods, and projects year-end over/under withholding.
-- **"Show Your Work" Explanations** — Tap the info icon next to any result line for a step-by-step breakdown of how that number was computed.
-- **Results Visualization** — Doughnut chart breakdown of gross pay by category (federal tax, state tax, Social Security, Medicare, net pay).
+- **"Show Your Work" Explanations** — Every result line — gross pay, federal/FICA/state taxable income, each tax, state disability, and net pay — carries a step-by-step breakdown of how the number was computed, opened from the info icon next to the line.
+- **Results Visualization** — Doughnut chart breakdown of gross pay (net pay, federal tax, Social Security, Medicare, state income tax, state disability insurance, and deductions) with percentage labels formatted to two decimal places.
+- **PDF Export (MAUI app)** — Exports the per-period results to a single-page Letter-size PDF via a built-in minimal PDF writer (no external PDF packages) and opens it in the system PDF viewer.
+- **Annual Projection (web app)** — `AnnualProjectionCalculator` in Core annualizes a paycheck, projects YTD totals by paycheck number, and estimates year-end over/under withholding; the Blazor app shows it on the Annual results tab. The MAUI app shows per-period results only.
 - **Multiple Pay Frequencies** — Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, and Daily.
 
 ## Project Structure
@@ -26,49 +27,59 @@ PaycheckCalc.slnx
 ├── PaycheckCalc.App/          # .NET MAUI frontend (Android & Windows)
 │   ├── Views/                 # XAML pages (Inputs, Results)
 │   ├── ViewModels/            # MVVM view models (Calculator, StateField, DeductionItem)
-│   ├── Mappers/               # Domain-to-UI mappers (PaycheckInput, ResultCard, AnnualProjection)
-│   ├── Models/                # UI presentation models (ResultCardModel, AnnualProjectionModel)
+│   ├── Mappers/               # Domain-to-UI mappers (PaycheckInputMapper, ResultCardMapper)
+│   ├── Models/                # UI presentation models (ResultCardModel)
 │   ├── Controls/              # Custom controls (DoughnutChartDrawable)
 │   ├── Behaviors/             # Input formatting behaviors
 │   ├── Helpers/               # Enum display helpers and XAML value converters
 │   ├── Services/              # MauiAppPackageTaxDataReader (tax JSON loading)
+│   │   └── Pdf/               # Single-page PDF export: renderer, minimal PDF writer,
+│   │                          #   and platform PDF viewer launcher
 │   └── MauiProgram.cs         # DI configuration & app startup
+├── PaycheckCalc.Blazor/       # Blazor Server web frontend
+│   ├── Components/
+│   │   ├── Pages/             # Calculator page (inputs and results side by side)
+│   │   └── Shared/            # DoughnutChart (SVG), ExplanationModal
+│   ├── Services/              # FileSystemTaxDataReader (tax JSON loading from TaxData/)
+│   └── Program.cs             # DI configuration & app startup
 ├── PaycheckCalc.Core/         # Business logic (no UI dependencies)
-│   ├── Models/                # PaycheckInput/Result, Enums, Deduction, AnnualProjection
+│   ├── Models/                # PaycheckInput/Result, Enums, UsState, Deduction, AnnualProjection
 │   ├── Pay/                   # PayCalculator (main orchestrator), AnnualProjectionCalculator
 │   ├── Explanation/           # "Show Your Work" engine (PaycheckExplanation, LineExplanation,
 │   │                          #   ExplanationStep, ExplanationLineKey) — step-by-step
 │   │                          #   walkthroughs of every line on a paycheck
+│   ├── DependencyInjection/   # AddPaycheckCalcCore + ITaxDataReader abstraction
 │   ├── Data/                  # JSON tax tables (IRS 15-T, OK OW-2, CA Method B, AR,
 │   │                          #   CO DR 0004, CT TPG-211)
-│   │   └── Schemas/           # One JSON file per state (al.json … wy.json) declaring that
+│   │   └── Schemas/           # One JSON file per state (ak.json … wy.json) declaring that
 │   │                          #   state's input schema for the schema-driven UI
 │   └── Tax/
 │       ├── Federal/           # IRS 15-T percentage calculator
 │       ├── Fica/              # Social Security & Medicare calculator
-│       ├── State/             # State tax interfaces, registry, generic percentage-method adapter,
+│       ├── State/             # State tax interfaces, registry, schema provider, shared
+│       │                      #   explanation steps, generic percentage-method adapter,
 │       │                      #   and no-income-tax adapter
 │       └── <State>/           # One folder per state (Alabama, Arizona, … Wyoming)
 │                              #   each containing a dedicated IStateWithholdingCalculator
 │                              #   implementation for that state's withholding rules
 ├── PaycheckCalc.Tests/        # xUnit test suite
-└── docs/                      # Class diagrams and documentation
+└── docs/                      # Wiki and class diagrams
 ```
 
 ## Technology Stack
 
 | Component | Technology |
 |---|---|
-| **Framework** | .NET 10 — MAUI (PaycheckCalc.App) |
-| **Target Platforms** | Android, Windows 10+ |
-| **UI Pattern** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) |
+| **Frameworks** | .NET 10 — MAUI (PaycheckCalc.App), ASP.NET Core Blazor Server (PaycheckCalc.Blazor) |
+| **Target Platforms** | Android, Windows 10+, web browser |
+| **UI Patterns** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MAUI); interactive server-rendered Razor components (Blazor) |
 | **Test Framework** | xUnit 2.9.3 |
 | **Tax Data** | JSON-based IRS 15-T and state tax bracket tables (2026) |
 
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/) — the solution targets `net10.0` (see `global.json` for the pinned SDK version and roll-forward settings)
-- .NET MAUI workload (only required for the MAUI App project):
+- .NET MAUI workload (only required for the MAUI App project; the Blazor, Core, and Tests projects build without it):
   ```bash
   dotnet workload install maui
   ```
@@ -85,6 +96,12 @@ dotnet build PaycheckCalc.Core
 
 ```bash
 dotnet test PaycheckCalc.Tests
+```
+
+### Run the Web App
+
+```bash
+dotnet run --project PaycheckCalc.Blazor
 ```
 
 ### Run the MAUI App
@@ -109,9 +126,13 @@ The **PayCalculator** orchestrates the full paycheck calculation pipeline:
 
 Gross pay, taxes, and deductions are rounded individually to two decimal places using `MidpointRounding.AwayFromZero` (round half away from zero). Net pay is computed from the unrounded components and then rounded so the displayed net equals `gross − taxes − deductions` to the cent.
 
+Every step also emits the `Explanation/` records that power the "Show Your Work" breakdowns in both front-ends.
+
+Both front-ends wire the engine up through `AddPaycheckCalcCore` (in `PaycheckCalc.Core/DependencyInjection/`), supplying an `ITaxDataReader` for their platform: the MAUI app reads the tax JSON from the app package (`MauiAppPackageTaxDataReader`), and the Blazor app reads it from a `TaxData/` folder in the build output (`FileSystemTaxDataReader`).
+
 ## State Tax Coverage
 
-All 50 states and the District of Columbia are supported. The architecture uses a plugin-based registry where each state implements `IStateWithholdingCalculator` and is registered centrally in `StateCalculatorRegistry` (see `MauiProgram.cs`). Every state has a dedicated calculator under `PaycheckCalc.Core/Tax/<State>/`; the shared `NoIncomeTaxWithholdingAdapter` is used only for the plain no-income-tax states, and the generic `PercentageMethodWithholdingAdapter` is retained for tests and potential future use but is not wired to any production state.
+All 50 states and the District of Columbia are supported. The architecture uses a plugin-based registry where each state implements `IStateWithholdingCalculator` and is registered centrally in `StateCalculatorRegistry` (see `AddPaycheckCalcCore` in `PaycheckCoreServiceCollectionExtensions.cs`, called from both `MauiProgram.cs` and the Blazor `Program.cs`). Every state has a dedicated calculator under `PaycheckCalc.Core/Tax/<State>/`; the shared `NoIncomeTaxWithholdingAdapter` is used only for the plain no-income-tax states, and the generic `PercentageMethodWithholdingAdapter` is retained for tests and potential future use but is not wired to any production state.
 
 | Category | States |
 |---|---|
@@ -136,10 +157,16 @@ Notable state-specific details:
 
 ## UI Overview
 
-The app is a single two-tab Shell:
+### MAUI app
 
-- **Inputs** — A four-section form for Pay & Hours, Federal W-4, State, and Deductions. The State section renders each state's input fields dynamically from its schema. Every section has a Calculate button.
-- **Results** — Two sub-tabs: **Period** (per-paycheck itemized taxes, deductions, net pay, and a doughnut chart, with tap-for-explanation info icons on each line) and **Annual** (annualized projections, current paycheck number, and estimated year-end over/under withholding).
+A two-tab Shell:
+
+- **Inputs** — Four sub-tabs: Pay & Hours, Federal (W-4), State, and Deductions. The State sub-tab renders each state's input fields dynamically from its schema and surfaces state-specific validation errors. Every sub-tab has a Calculate button.
+- **Results** — A single per-period summary: an income card (gross pay plus federal, FICA, and state taxable income), tax withholdings, deductions, net pay, and the doughnut chart, with tap-for-explanation info icons on each line. An **Export PDF** toolbar button saves the summary as a single-page PDF and opens it in the system PDF viewer. Before the first calculation the page shows a friendly empty state.
+
+### Blazor web app
+
+A single calculator page with the inputs panel and results panel side by side. Inputs mirror the MAUI app (including dynamic schema-driven state fields) and add YTD Social Security / Medicare wage fields. Results are split into **Per Paycheck** (itemized taxes, deductions, net pay, an SVG doughnut chart, and "Show Your Work" explanation modals) and **Annual** (annualized totals, projected YTD by paycheck number, and estimated year-end over/under withholding).
 
 ## Documentation
 
