@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using PaycheckCalc.App.Services;
+using PaycheckCalc.App.Services.Csv;
 using PaycheckCalc.App.Services.Pdf;
+using PaycheckCalc.App.Services.Printing;
 using PaycheckCalc.App.ViewModels;
 using PaycheckCalc.App.Views;
 using PaycheckCalc.Core.DependencyInjection;
@@ -26,6 +28,14 @@ public static class MauiProgram
         // PDF export of paycheck results + chart, opened in Adobe Reader/Acrobat.
         builder.Services.AddSingleton<IPdfViewerLauncher, PdfViewerLauncher>();
         builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
+
+        // CSV export of paycheck results, offered via the platform share sheet.
+        builder.Services.AddSingleton<IShareLauncher, ShareLauncher>();
+        builder.Services.AddSingleton<ICsvExportService, CsvExportService>();
+
+        // Direct printing of paycheck results via the platform print system.
+        builder.Services.AddSingleton<IPrintLauncher, PrintLauncher>();
+        builder.Services.AddSingleton<IPrintService, PrintService>();
 
         builder.Services.AddSingleton<CalculatorViewModel>();
         builder.Services.AddSingleton<InputsPage>();
