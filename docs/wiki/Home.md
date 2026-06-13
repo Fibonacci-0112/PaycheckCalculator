@@ -45,7 +45,7 @@ PaycheckCalc computes net pay, tax withholdings, and deductions for all 50 US st
 
 | Component | Technology |
 |---|---|
-| Framework | .NET 10 — MAUI |
+| Framework | .NET 11 — MAUI |
 | Target Platforms | Android, Windows 10+ |
 | UI Pattern | MVVM with CommunityToolkit.Mvvm |
 | Test Framework | xUnit 2.9.3 |

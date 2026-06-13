@@ -8,7 +8,7 @@ PaycheckCalc is a simple US paycheck calculator (2026 tax tables) with two front
 
 Saved paychecks can optionally sync across the two front-ends via a user account. Two more projects support this: `PaycheckCalc.Shared` (wire/storage contracts, JSON serialization, the last-write-wins merge, the typed HTTP client, and an `ISavedPaycheckStore` abstraction) and `PaycheckCalc.Api` (a standalone ASP.NET Core Web API with ASP.NET Core Identity email/password accounts over EF Core SQLite, exposing a `/api/paychecks/sync` endpoint). The MAUI app **also persists saved paychecks locally on device** (works fully offline / without an account); the Blazor app keeps anonymous saved paychecks **only until the browser tab closes** (circuit-scoped memory). See `docs/wiki/Accounts-and-Sync.md`.
 
-Solution: `PaycheckCalc.slnx`. The SDK version is pinned in `global.json` (10.0.x, latestPatch roll-forward). A project wiki lives in `docs/wiki/` and a Mermaid class diagram in `docs/class-diagram.md`.
+Solution: `PaycheckCalc.slnx`. The SDK version is pinned in `global.json` (11.0.100-preview.5.26302.115, latestPatch roll-forward, prerelease allowed). A project wiki lives in `docs/wiki/` and a Mermaid class diagram in `docs/class-diagram.md`.
 
 ## Common commands
 
@@ -39,9 +39,9 @@ dotnet build PaycheckCalc.App
 dotnet run --project PaycheckCalc.App
 ```
 
-`PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are `net10.0` and build on Linux/CI without the MAUI workload. The Blazor app calls the API server-side (so no CORS); for end-to-end account/sync testing run `PaycheckCalc.Api` and `PaycheckCalc.Blazor` together.
+`PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are `net11.0` and build on Linux/CI without the MAUI workload. The Blazor app calls the API server-side (so no CORS); for end-to-end account/sync testing run `PaycheckCalc.Api` and `PaycheckCalc.Blazor` together.
 
-`PaycheckCalc.Core` multi-targets `net10.0;net9.0` when the .NET 10 SDK is present, otherwise it falls back to `net9.0` only. `PaycheckCalc.App` targets `net10.0-android` / `net10.0-windows`; `PaycheckCalc.Blazor` and `PaycheckCalc.Tests` are `net10.0` only. CI (`.github/workflows/dotnet.yml`) builds and tests `PaycheckCalc.Tests` on Linux; the MAUI and Blazor apps are not built in CI (`codeql.yml` runs CodeQL scanning separately).
+`PaycheckCalc.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is present, otherwise it falls back to `net9.0` only. `PaycheckCalc.App` targets `net11.0-android` / `net11.0-windows`; `PaycheckCalc.Blazor` and `PaycheckCalc.Tests` are `net11.0` only. CI (`.github/workflows/dotnet.yml`) builds and tests `PaycheckCalc.Tests` on Linux; the MAUI and Blazor apps are not built in CI (`codeql.yml` runs CodeQL scanning separately).
 
 ## Architecture
 

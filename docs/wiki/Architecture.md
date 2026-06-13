@@ -42,7 +42,7 @@ PaycheckCalc.slnx
 ```
 
 `PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are
-`net10.0` and build without the MAUI workload. See **[Accounts & Sync](Accounts-and-Sync.md)** for the
+`net11.0` and build without the MAUI workload. See **[Accounts & Sync](Accounts-and-Sync.md)** for the
 account/sync design.
 
 ---
