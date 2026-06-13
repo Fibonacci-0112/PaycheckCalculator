@@ -22,6 +22,12 @@
     <ProjectReference Include="..\PaycheckCalc.Core\PaycheckCalc.Core.csproj" />
     <ProjectReference Include="..\PaycheckCalc.Shared\PaycheckCalc.Shared.csproj" />
     <ProjectReference Include="..\PaycheckCalc.Api\PaycheckCalc.Api.csproj" />
+    <!-- Referenced for the Blazor export renderers (CSV/PDF), which build on Linux/CI without the MAUI
+         workload. Aliased to 'blazor' so the web host's top-level Program type stays out of the global
+         namespace and does not collide with PaycheckCalc.Api's Program (used by SyncApiTest). -->
+    <ProjectReference Include="..\PaycheckCalc.Blazor\PaycheckCalc.Blazor.csproj">
+      <Aliases>blazor</Aliases>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

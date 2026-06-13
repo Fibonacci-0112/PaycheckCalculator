@@ -91,6 +91,8 @@ The Results page toolbar exposes three actions, each enabled once a paycheck has
 - **Export PDF** — Writes a single-page PDF and opens it in a viewer (preferring Adobe Reader/Acrobat). Backed by `Services/Pdf`.
 - **Export CSV** — Writes a CSV of the per-period breakdown (Income, Taxes, Deductions, Summary) and opens it in the platform's default CSV application (Microsoft Excel on Windows, or the chosen default spreadsheet app on Android). Amounts are plain decimals for clean spreadsheet import. Backed by `Services/Csv`.
 
+> **Web app:** The Blazor results panel offers the same three actions. **Export CSV** and **Export PDF** download the per-period breakdown via the browser (rendered by `PaycheckCalc.Blazor/Services/Export/`, matching the MAUI format), and **Print** opens the browser print dialog using a `@media print` stylesheet that isolates the results — so it prints whichever tab (Per Paycheck or Annual) is on screen.
+
 ### Annual Tab
 
 Displays annualized projections computed by `AnnualProjectionCalculator`:

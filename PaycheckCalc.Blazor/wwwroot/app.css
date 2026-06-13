@@ -826,3 +826,61 @@ html, body {
     width: 100%;
     margin-bottom: 8px;
 }
+
+/* ── Results header actions (export / print) ───────────────── */
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.results-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-export {
+    padding: 4px 11px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 4px;
+    font-size: 0.76em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-export:hover { background: rgba(255,255,255,0.28); }
+.btn-export:active { background: rgba(255,255,255,0.36); }
+
+/* ── Print ─────────────────────────────────────────────────── */
+@media print {
+    /* Hide site chrome and everything but the results panel. */
+    .site-header,
+    .site-footer,
+    .no-print,
+    .btn-info { display: none !important; }
+
+    /* The inputs panel and the saved-paychecks/account panel are .calc-panel
+       elements without .results-outer — hide both, leaving only the results. */
+    .calc-panel:not(.results-outer) { display: none !important; }
+
+    /* Let the results panel flow down the page as a plain document. */
+    .site-main { padding: 0 !important; }
+    .calc-layout { display: block !important; }
+    .calc-panel { box-shadow: none !important; }
+    .results-outer { border-radius: 0 !important; }
+    .results-scroll { overflow: visible !important; }
+
+    /* The dark header background isn't printed by default, which would leave
+       white-on-white text — give it dark text on white for the printout. */
+    .results-outer .panel-header {
+        background: #fff !important;
+        color: #1a237e !important;
+        border-bottom: 2px solid #1a237e;
+        padding: 0 0 6px;
+    }
+}
