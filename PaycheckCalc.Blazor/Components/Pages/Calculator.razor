@@ -1,6 +1,7 @@
 @page "/"
 @rendermode InteractiveServer
 @using System.Text
+@using PaycheckCalc.Blazor.Models
 @using PaycheckCalc.Blazor.Services.Export
 @inject IJSRuntime JS
 @inject PayCalculator Calc
@@ -579,6 +580,61 @@
                     }
                 </div>
             }
+
+            @if (_history.Count >= 2)
+            {
+                <div class="compare-block">
+                    <h3 class="history-subtitle compare-title">Compare A / B</h3>
+                    <div class="compare-selectors">
+                        <div class="form-group">
+                            <label>Paycheck A</label>
+                            <select @bind="_compareAName">
+                                @foreach (var p in _history)
+                                {
+                                    <option value="@p.Name">@p.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Paycheck B</label>
+                            <select @bind="_compareBName">
+                                @foreach (var p in _history)
+                                {
+                                    <option value="@p.Name">@p.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @{
+                        var comparisonRows = BuildComparisonRows();
+                    }
+                    @if (comparisonRows.Count > 0)
+                    {
+                        <table class="compare-table">
+                            <thead>
+                                <tr>
+                                    <th class="compare-metric">Metric</th>
+                                    <th class="compare-num">@_compareAName</th>
+                                    <th class="compare-num">@_compareBName</th>
+                                    <th class="compare-num">&Delta;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in comparisonRows)
+                                {
+                                    <tr class="@(row.Highlight ? "compare-row-highlight" : "")">
+                                        <td class="compare-metric">@row.Label</td>
+                                        <td class="compare-num">@row.ValueADisplay</td>
+                                        <td class="compare-num">@row.ValueBDisplay</td>
+                                        <td class="compare-num compare-delta">@row.DifferenceDisplay</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            }
         </div>
 
         <div class="account-section">
@@ -822,6 +878,32 @@
     {
         var set = await Store.LoadAsync();
         _history = set.Paychecks.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        EnsureComparisonSelections();
+    }
+
+    // ── A/B comparison (session saved paychecks) ─────────────────
+    private string? _compareAName;
+    private string? _compareBName;
+
+    private IReadOnlyList<ComparisonRow> BuildComparisonRows()
+    {
+        var a = _history.FirstOrDefault(h => string.Equals(h.Name, _compareAName, StringComparison.OrdinalIgnoreCase))?.Result;
+        var b = _history.FirstOrDefault(h => string.Equals(h.Name, _compareBName, StringComparison.OrdinalIgnoreCase))?.Result;
+        if (a is null || b is null) return Array.Empty<ComparisonRow>();
+        return PaycheckComparison.BuildRows(a, b);
+    }
+
+    // Keep the A/B selections valid as paychecks are added, renamed, or deleted:
+    // default each to a sensible entry when unset or no longer present, while
+    // preserving a selection the user made (even if they pick the same one twice).
+    private void EnsureComparisonSelections()
+    {
+        var names = _history.Select(h => h.Name).ToList();
+        if (_compareAName is null || !names.Contains(_compareAName, StringComparer.OrdinalIgnoreCase))
+            _compareAName = names.ElementAtOrDefault(0);
+        if (_compareBName is null || !names.Contains(_compareBName, StringComparer.OrdinalIgnoreCase))
+            _compareBName = names.FirstOrDefault(n => !string.Equals(n, _compareAName, StringComparison.OrdinalIgnoreCase))
+                            ?? names.ElementAtOrDefault(0);
     }
 
     private async Task DeletePaycheckAsync(SavedPaycheckDto dto)
