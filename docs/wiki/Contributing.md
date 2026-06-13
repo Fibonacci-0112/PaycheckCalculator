@@ -6,7 +6,7 @@ This page covers the development workflow, testing expectations, and coding conv
 
 ## Development Workflow
 
-1. **Clone the repository** and ensure the .NET 10 SDK (pinned in `global.json`) is installed.
+1. **Clone the repository** and ensure the .NET 11 SDK (preview, pinned in `global.json`) is installed.
 2. **Build the Core library** to verify your environment:
    ```bash
    dotnet build PaycheckCalc.Core

@@ -6,14 +6,14 @@ This page covers everything you need to build, test, and run PaycheckCalc.
 
 ## Prerequisites
 
-- **[.NET 10 SDK](https://dotnet.microsoft.com/)** — the SDK version is pinned in [`global.json`](../../global.json).
+- **[.NET 11 SDK](https://dotnet.microsoft.com/)** (preview) — the SDK version is pinned in [`global.json`](../../global.json).
 - **.NET MAUI workload** (required only for the MAUI App project):
   ```bash
   dotnet workload install maui
   ```
 - **Android SDK** or **Windows 10+ SDK** — depending on your MAUI target platform.
 
-`PaycheckCalc.Core` and `PaycheckCalc.Tests` do **not** require the MAUI workload and can be built and tested on any OS supported by the .NET 10 SDK.
+`PaycheckCalc.Core` and `PaycheckCalc.Tests` do **not** require the MAUI workload and can be built and tested on any OS supported by the .NET 11 SDK.
 
 ---
 
@@ -71,13 +71,13 @@ dotnet run --project PaycheckCalc.App
 You can deploy to a connected device or emulator:
 
 ```bash
-dotnet build PaycheckCalc.App -t:Run -f net10.0-android
+dotnet build PaycheckCalc.App -t:Run -f net11.0-android
 ```
 
 #### Windows
 
 ```bash
-dotnet build PaycheckCalc.App -t:Run -f net10.0-windows10.0.19041.0
+dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
 ```
 
 ---

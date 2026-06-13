@@ -71,7 +71,7 @@ PaycheckCalc.slnx
 
 | Component | Technology |
 |---|---|
-| **Frameworks** | .NET 10 — MAUI (PaycheckCalc.App), ASP.NET Core Blazor Server (PaycheckCalc.Blazor) |
+| **Frameworks** | .NET 11 — MAUI (PaycheckCalc.App), ASP.NET Core Blazor Server (PaycheckCalc.Blazor) |
 | **Target Platforms** | Android, Windows 10+, web browser |
 | **UI Patterns** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MAUI); interactive server-rendered Razor components (Blazor) |
 | **Test Framework** | xUnit 2.9.3 |
@@ -79,7 +79,7 @@ PaycheckCalc.slnx
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/) — the solution targets `net10.0` (see `global.json` for the pinned SDK version and roll-forward settings)
+- [.NET 11 SDK](https://dotnet.microsoft.com/) (preview) — the solution targets `net11.0` (see `global.json` for the pinned SDK version and roll-forward settings)
 - .NET MAUI workload (only required for the MAUI App project; the Blazor, Core, and Tests projects build without it):
   ```bash
   dotnet workload install maui

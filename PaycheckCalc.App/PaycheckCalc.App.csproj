@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net11.0-android;net11.0-windows10.0.19041.0</TargetFrameworks>
     <UseMaui>true</UseMaui>
     <LangVersion>preview</LangVersion>
     <SingleProject>true</SingleProject>
@@ -15,7 +15,7 @@
 	<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net11.0-windows10.0.19041.0'">
     <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
 
@@ -36,8 +36,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
-	<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.71" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0-preview.5.26302.115" />
+	<PackageReference Include="Microsoft.Maui.Controls" Version="11.0.0-preview.5.26304.4" />
   </ItemGroup>
 
   <ItemGroup>
