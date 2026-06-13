@@ -129,6 +129,8 @@ public sealed class AnnualProjectionCalculator
         PayFrequency.Semiannual => 2,
         PayFrequency.Annual => 1,
         PayFrequency.Daily => 260,
+        PayFrequency.Weekly53 => 53,
+        PayFrequency.Biweekly27 => 27,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
 

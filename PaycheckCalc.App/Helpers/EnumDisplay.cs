@@ -18,6 +18,8 @@ public static class EnumDisplay
         "Biweekly" => "Bi-Weekly",
         "Semimonthly" => "Semi-Monthly",
         "Semiannual" => "Semi-Annual",
+        "Weekly53" => "Weekly 53",
+        "Biweekly27" => "Bi-Weekly 27",
         _ => SplitPascalCase(name)
     };
 

@@ -314,6 +314,8 @@ public sealed class AnnualProjectionCalculatorTest
     [InlineData(PayFrequency.Semiannual, 2)]
     [InlineData(PayFrequency.Annual, 1)]
     [InlineData(PayFrequency.Daily, 260)]
+    [InlineData(PayFrequency.Weekly53, 53)]
+    [InlineData(PayFrequency.Biweekly27, 27)]
     public void AllFrequencies_ProduceValidProjections(PayFrequency freq, int expectedPeriods)
     {
         var (projection, result) = RunProjection(

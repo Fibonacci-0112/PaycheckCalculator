@@ -221,6 +221,8 @@ public sealed class Irs15TPercentageCalculator
         PayFrequency.Semiannual => 2m,
         PayFrequency.Annual => 1m,
         PayFrequency.Daily => 260m,
+        PayFrequency.Weekly53 => 53m,
+        PayFrequency.Biweekly27 => 27m,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
 }
