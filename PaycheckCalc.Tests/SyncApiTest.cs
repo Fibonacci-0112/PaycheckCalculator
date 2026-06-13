@@ -4,8 +4,10 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using PaycheckCalc.Api.Data;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 using PaycheckCalc.Shared.Json;
@@ -183,9 +185,10 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
     private sealed record TokenResponse(string TokenType, string AccessToken, int ExpiresIn, string RefreshToken);
 
     /// <summary>
-    /// Runs the real API against a shared in-memory SQLite database. The connection string points at a
-    /// named in-memory database and one connection is held open for the factory's lifetime so the schema
-    /// (created by the app's startup <c>EnsureCreated</c>) persists across request-scoped contexts.
+    /// Runs the real API against a shared in-memory SQLite database, overriding the production
+    /// PostgreSQL provider so the suite requires no database server. One connection is held open for
+    /// the factory's lifetime so the schema (created by the app's startup <c>EnsureCreated</c>)
+    /// persists across request-scoped contexts.
     /// </summary>
     public sealed class ApiFactory : WebApplicationFactory<Program>
     {
@@ -197,12 +200,13 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
             _keepAlive = new SqliteConnection(_connectionString);
             _keepAlive.Open();
 
-            builder.ConfigureAppConfiguration((_, config) =>
+            // Production wires PostgreSQL; swap in shared in-memory SQLite so tests run without a server.
+            builder.ConfigureServices(services =>
             {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Sync"] = _connectionString
-                });
+                services.RemoveAll<DbContextOptions>();
+                services.RemoveAll<DbContextOptions<SyncDbContext>>();
+                services.RemoveAll<IDbContextOptionsConfiguration<SyncDbContext>>();
+                services.AddDbContext<SyncDbContext>(options => options.UseSqlite(_connectionString));
             });
         }
 
