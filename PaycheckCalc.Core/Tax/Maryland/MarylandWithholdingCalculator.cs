@@ -166,7 +166,7 @@ public sealed class MarylandWithholdingCalculator : IStateWithholdingCalculator
         var taxableWages = Math.Max(0m,
             context.GrossWages - context.PreTaxDeductionsReducingStateWages);
 
-        int periods = GetPayPeriods(context.PayPeriod);
+        int periods = context.PayPeriodsPerYear;
 
         // Step 2: Annualize wages.
         var annualWages = taxableWages * periods;
@@ -307,18 +307,4 @@ public sealed class MarylandWithholdingCalculator : IStateWithholdingCalculator
         return tax;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────
-
-    private static int GetPayPeriods(PayFrequency frequency) => frequency switch
-    {
-        PayFrequency.Daily       => 260,
-        PayFrequency.Weekly      => 52,
-        PayFrequency.Biweekly   => 26,
-        PayFrequency.Semimonthly => 24,
-        PayFrequency.Monthly     => 12,
-        PayFrequency.Quarterly   => 4,
-        PayFrequency.Semiannual  => 2,
-        PayFrequency.Annual      => 1,
-        _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
-    };
 }

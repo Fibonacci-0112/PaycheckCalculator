@@ -41,7 +41,7 @@ public sealed class IowaWithholdingCalculator : IStateWithholdingCalculator
         var taxableWages = Math.Max(0m,
             context.GrossWages - context.PreTaxDeductionsReducingStateWages);
 
-        int periods = GetPayPeriods(context.PayPeriod);
+        int periods = context.PayPeriodsPerYear;
 
         // Steps 2–3: Annualize and apply the flat rate.
         decimal annualTax = taxableWages * periods * FlatRate;
@@ -59,16 +59,4 @@ public sealed class IowaWithholdingCalculator : IStateWithholdingCalculator
         };
     }
 
-    private static int GetPayPeriods(PayFrequency frequency) => frequency switch
-    {
-        PayFrequency.Daily => 260,
-        PayFrequency.Weekly => 52,
-        PayFrequency.Biweekly => 26,
-        PayFrequency.Semimonthly => 24,
-        PayFrequency.Monthly => 12,
-        PayFrequency.Quarterly => 4,
-        PayFrequency.Semiannual => 2,
-        PayFrequency.Annual => 1,
-        _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
-    };
 }

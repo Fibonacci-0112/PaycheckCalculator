@@ -24,7 +24,7 @@ public sealed class PayCalculator
 
     public PaycheckResult Calculate(PaycheckInput input)
     {
-        var payPeriods = PayPeriods.PerYear(input.Frequency);
+        var payPeriods = PayPeriods.PerYear(input.Frequency, input.PayDate);
         var gross = input.PayType == PayType.Salary
             ? (input.SalaryBasis == SalaryBasis.PerYear
                 ? input.SalaryAmount / payPeriods
@@ -51,7 +51,7 @@ public sealed class PayCalculator
         // ReducesFederalTaxableWages = true reduce it.
         var fedPreTax = input.Deductions.Where(d => d.Type == DeductionType.PreTax && d.ReducesFederalTaxableWages).Sum(d => d.EffectiveAmount(gross));
         var fedTaxable = Math.Max(0m, gross - fedPreTax);
-        var fedDetail = _fed.CalculateWithExplanation(fedTaxable, input.Frequency, input.FederalW4);
+        var fedDetail = _fed.CalculateWithExplanation(fedTaxable, input.Frequency, input.FederalW4, payPeriods);
         var federal = fedDetail.Withholding;
 
         var calc = _stateRegistry.GetCalculator(input.State);
@@ -61,7 +61,10 @@ public sealed class PayCalculator
             input.Frequency,
             Year: 2026,
             PreTaxDeductionsReducingStateWages: preTaxState,
-            FederalWithholdingPerPeriod: RoundMoney(federal));
+            FederalWithholdingPerPeriod: RoundMoney(federal))
+        {
+            PayPeriodsPerYear = payPeriods
+        };
         var stateValues = input.StateInputValues ?? new StateInputValues();
         var stateResult = calc.Calculate(context, stateValues);
 

@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:behaviors="clr-namespace:PaycheckCalc.App.Behaviors"
+             xmlns:controls="clr-namespace:PaycheckCalc.App.Controls"
              x:Class="PaycheckCalc.App.Views.InputsPage"
              Title="Inputs"
              BackgroundColor="#F5F5F5">
@@ -58,6 +59,14 @@
                             <Picker ItemsSource="{Binding Frequencies}" SelectedItem="{Binding SelectedFrequencyPickerItem}"
                                     Grid.Column="1" TextColor="Black" />
                         </Grid>
+
+                        <!-- Pay Date — anchors the pay-period schedule (e.g. detects 53-week / 27-biweekly years) -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Pay Date" TextColor="#424242" FontSize="12" />
+                            <controls:CalendarView SelectedDate="{Binding PayDate}" />
+                            <Label Text="The date of an upcoming paycheck. For weekly/biweekly pay this determines whether the year has an extra (53rd/27th) paycheck, which affects tax withholding."
+                                   TextColor="#9E9E9E" FontSize="11" />
+                        </VerticalStackLayout>
 
                         <!-- Calculation Mode: Standard vs Gross-Up -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">

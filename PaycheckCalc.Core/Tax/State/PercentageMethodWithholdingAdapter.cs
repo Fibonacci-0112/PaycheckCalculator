@@ -39,6 +39,7 @@ public sealed class PercentageMethodWithholdingAdapter : IStateWithholdingCalcul
         {
             GrossWages = context.GrossWages,
             Frequency = context.PayPeriod,
+            PayPeriodsPerYear = context.PayPeriodsPerYear,
             FilingStatus = filingStatus,
             Allowances = values.GetValueOrDefault("Allowances", 0),
             AdditionalWithholding = values.GetValueOrDefault("AdditionalWithholding", 0m),

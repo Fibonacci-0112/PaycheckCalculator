@@ -16,6 +16,7 @@ public static class PaycheckInputMapper
         return new PaycheckInput
         {
             Frequency = vm.Frequency,
+            PayDate = vm.PayDate,
             PayType = vm.PayType,
             HourlyRate = vm.HourlyRate,
             RegularHours = vm.RegularHours,
