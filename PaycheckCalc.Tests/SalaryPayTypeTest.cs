@@ -27,6 +27,8 @@ public sealed class SalaryPayTypeTest
     [InlineData(PayFrequency.Semiannual, 2)]
     [InlineData(PayFrequency.Annual, 1)]
     [InlineData(PayFrequency.Daily, 260)]
+    [InlineData(PayFrequency.Weekly53, 53)]
+    [InlineData(PayFrequency.Biweekly27, 27)]
     public void PayPeriods_PerYear_ReturnsExpected(PayFrequency frequency, int expected)
     {
         Assert.Equal(expected, PayPeriods.PerYear(frequency));
