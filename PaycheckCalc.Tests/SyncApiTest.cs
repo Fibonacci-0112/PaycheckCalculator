@@ -4,8 +4,9 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PaycheckCalc.Api.Data;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 using PaycheckCalc.Shared.Json;
@@ -183,9 +184,10 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
     private sealed record TokenResponse(string TokenType, string AccessToken, int ExpiresIn, string RefreshToken);
 
     /// <summary>
-    /// Runs the real API against a shared in-memory SQLite database. The connection string points at a
-    /// named in-memory database and one connection is held open for the factory's lifetime so the schema
-    /// (created by the app's startup <c>EnsureCreated</c>) persists across request-scoped contexts.
+    /// Runs the real API against a shared in-memory SQLite database, overriding the production
+    /// PostgreSQL provider so the suite requires no database server. One connection is held open for
+    /// the factory's lifetime so the schema (created by the app's startup <c>EnsureCreated</c>)
+    /// persists across request-scoped contexts.
     /// </summary>
     public sealed class ApiFactory : WebApplicationFactory<Program>
     {
@@ -197,12 +199,20 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
             _keepAlive = new SqliteConnection(_connectionString);
             _keepAlive.Open();
 
-            builder.ConfigureAppConfiguration((_, config) =>
+            // Production wires PostgreSQL; drop every EF registration bound to SyncDbContext (the
+            // options and any provider configuration) so only the in-memory SQLite override remains.
+            builder.ConfigureServices(services =>
             {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
+                foreach (var descriptor in services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions)
+                        || (d.ServiceType.IsGenericType
+                            && d.ServiceType.GetGenericArguments().Contains(typeof(SyncDbContext))))
+                    .ToList())
                 {
-                    ["ConnectionStrings:Sync"] = _connectionString
-                });
+                    services.Remove(descriptor);
+                }
+
+                services.AddDbContext<SyncDbContext>(options => options.UseSqlite(_connectionString));
             });
         }
 

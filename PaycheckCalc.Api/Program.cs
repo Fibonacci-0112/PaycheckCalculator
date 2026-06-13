@@ -7,7 +7,7 @@ using PaycheckCalc.Shared.Json;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<SyncDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Sync") ?? "Data Source=paycheckcalc-sync.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Sync") ?? "Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres"));
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
