@@ -1,5 +1,8 @@
 @page "/"
 @rendermode InteractiveServer
+@using System.Text
+@using PaycheckCalc.Blazor.Services.Export
+@inject IJSRuntime JS
 @inject PayCalculator Calc
 @inject AnnualProjectionCalculator ProjectionCalc
 @inject GrossUpCalculator GrossUpCalc
@@ -273,8 +276,16 @@
 
     <!-- ── RESULTS PANEL ─────────────────────────────────────── -->
     <div class="calc-panel results-outer">
-        <div class="panel-header">
+        <div class="panel-header results-header">
             <h2>Results</h2>
+            @if (_result != null)
+            {
+                <div class="results-actions no-print">
+                    <button class="btn-export" @onclick="ExportCsvAsync" title="Download per-paycheck results as CSV">CSV</button>
+                    <button class="btn-export" @onclick="ExportPdfAsync" title="Download per-paycheck results as PDF">PDF</button>
+                    <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
+                </div>
+            }
         </div>
 
         @if (_result == null)
@@ -288,7 +299,7 @@
         {
             @if (_grossUpResult == null)
             {
-                <div class="tab-bar">
+                <div class="tab-bar no-print">
                     <button class="tab-btn @(_resultTab == 0 ? "active" : "")" @onclick="() => _resultTab = 0">Per Paycheck</button>
                     <button class="tab-btn @(_resultTab == 1 ? "active" : "")" @onclick="() => _resultTab = 1">Annual</button>
                 </div>
@@ -906,6 +917,31 @@
     }
 
     private void CloseModal() => _showModal = false;
+
+    // ── Export / print ──────────────────────────────────────────
+    // CSV and PDF export the per-paycheck results (mirroring the mobile app).
+    // Print uses the browser's print dialog with a print stylesheet, so it
+    // captures whichever results tab (Per Paycheck or Annual) is on screen.
+    private async Task ExportCsvAsync()
+    {
+        if (_result is null) return;
+        var csv = PaycheckCsvRenderer.Render(_result, _result.State.ToString());
+        var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(csv));
+        await JS.InvokeVoidAsync("paycheckExport.downloadFile", ExportFileName("csv"), "text/csv", base64);
+    }
+
+    private async Task ExportPdfAsync()
+    {
+        if (_result is null) return;
+        var bytes = PaycheckPdfRenderer.Render(_result, _result.State.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("paycheckExport.downloadFile", ExportFileName("pdf"), "application/pdf", base64);
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("paycheckExport.print");
+
+    private static string ExportFileName(string extension) =>
+        $"Paycheck-Summary-{DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture)}.{extension}";
 
     private void AddDeduction() => _deductions.Add(new DeductionVm());
     private void RemoveDeduction(DeductionVm d) => _deductions.Remove(d);
