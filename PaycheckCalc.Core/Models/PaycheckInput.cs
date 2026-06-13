@@ -29,6 +29,14 @@ public sealed class PaycheckInput
     /// <summary>How <see cref="SalaryAmount"/> maps onto a single pay period.</summary>
     public SalaryBasis SalaryBasis { get; init; } = SalaryBasis.PerYear;
 
+    /// <summary>
+    /// The date of a paycheck on this schedule, used as an anchor to resolve the
+    /// actual number of pay periods in the year (e.g. a weekly schedule can land on
+    /// 53 paychecks, biweekly on 27, depending on the anchor date and leap years).
+    /// Null falls back to the fixed <see cref="PayPeriods.PerYear(PayFrequency)"/> table.
+    /// </summary>
+    public DateOnly? PayDate { get; init; }
+
     public UsState State { get; init; } = UsState.OK;
 
     /// <summary>

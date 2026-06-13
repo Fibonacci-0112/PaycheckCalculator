@@ -22,8 +22,9 @@ public sealed class Irs15TPercentageCalculator
     public decimal CalculateWithholding(
         decimal taxableWagesThisPeriod,
         PayFrequency frequency,
-        FederalW4Input w4)
-        => CalculateWithExplanation(taxableWagesThisPeriod, frequency, w4).Withholding;
+        FederalW4Input w4,
+        int? payPeriodsPerYear = null)
+        => CalculateWithExplanation(taxableWagesThisPeriod, frequency, w4, payPeriodsPerYear).Withholding;
 
     /// <summary>
     /// Computes federal withholding and also produces a step-by-step
@@ -33,7 +34,8 @@ public sealed class Irs15TPercentageCalculator
     public (decimal Withholding, LineExplanation Explanation) CalculateWithExplanation(
         decimal taxableWagesThisPeriod,
         PayFrequency frequency,
-        FederalW4Input w4)
+        FederalW4Input w4,
+        int? payPeriodsPerYear = null)
     {
         var steps = new List<ExplanationStep>();
 
@@ -52,7 +54,9 @@ public sealed class Irs15TPercentageCalculator
             return (0m, BuildExplanation(0m, steps));
         }
 
-        var payPeriods = PayPeriodsPerYear(frequency);
+        // Use the caller-resolved pay-period count (which accounts for 53-week / 27-biweekly
+        // years) when supplied, otherwise fall back to the fixed per-frequency count.
+        var payPeriods = payPeriodsPerYear ?? PayPeriodsPerYear(frequency);
 
         // Worksheet 1A, Step 1 (annualize wages)
         var annualWage = taxableWagesThisPeriod * payPeriods;
