@@ -138,7 +138,7 @@ public sealed class GeorgiaWithholdingCalculator : IStateWithholdingCalculator
             };
         }
 
-        int periods = context.PayPeriodsPerYear;
+        int periods = GetPayPeriods(context.PayPeriod);
 
         // Step 2: Annualize wages.
         var annualWages = taxableWages * periods;
@@ -172,4 +172,18 @@ public sealed class GeorgiaWithholdingCalculator : IStateWithholdingCalculator
         };
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────
+
+    private static int GetPayPeriods(PayFrequency frequency) => frequency switch
+    {
+        PayFrequency.Daily => 260,
+        PayFrequency.Weekly => 52,
+        PayFrequency.Biweekly => 26,
+        PayFrequency.Semimonthly => 24,
+        PayFrequency.Monthly => 12,
+        PayFrequency.Quarterly => 4,
+        PayFrequency.Semiannual => 2,
+        PayFrequency.Annual => 1,
+        _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
+    };
 }

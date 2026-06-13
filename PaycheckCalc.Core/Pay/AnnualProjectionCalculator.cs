@@ -27,7 +27,7 @@ public sealed class AnnualProjectionCalculator
     /// <param name="result">The computed per-period paycheck result.</param>
     public AnnualProjection Calculate(PaycheckInput input, PaycheckResult result)
     {
-        int periods = PayPeriods.PerYear(input.Frequency, input.PayDate);
+        int periods = PayPeriodsPerYear(input.Frequency);
         int paycheckNum = Math.Clamp(input.PaycheckNumber, 1, periods);
         int remaining = periods - paycheckNum;
 
@@ -118,6 +118,19 @@ public sealed class AnnualProjectionCalculator
         decimal addlMedicare = Math.Max(0m, annualFicaWages - _fica.AdditionalMedicareEmployerThreshold) * FicaCalculator.AdditionalMedicareRate;
         return R(ss + medicare + addlMedicare);
     }
+
+    private static int PayPeriodsPerYear(PayFrequency frequency) => frequency switch
+    {
+        PayFrequency.Weekly => 52,
+        PayFrequency.Biweekly => 26,
+        PayFrequency.Semimonthly => 24,
+        PayFrequency.Monthly => 12,
+        PayFrequency.Quarterly => 4,
+        PayFrequency.Semiannual => 2,
+        PayFrequency.Annual => 1,
+        PayFrequency.Daily => 260,
+        _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
+    };
 
     private static decimal R(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
 }

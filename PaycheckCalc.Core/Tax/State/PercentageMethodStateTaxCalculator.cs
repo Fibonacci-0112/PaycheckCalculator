@@ -68,7 +68,7 @@ public sealed class PercentageMethodStateTaxCalculator
     {
         var taxableWages = Math.Max(0m, input.GrossWages - input.PreTaxDeductionsReducingStateWages);
 
-        int periods = input.PayPeriodsPerYear ?? GetPayPeriods(input.Frequency);
+        int periods = GetPayPeriods(input.Frequency);
         var annualWages = taxableWages * periods;
 
         var stdDed = input.FilingStatus == FilingStatus.Married
