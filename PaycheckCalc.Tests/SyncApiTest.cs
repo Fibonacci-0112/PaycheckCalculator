@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using PaycheckCalc.Api.Data;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
@@ -200,12 +199,19 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
             _keepAlive = new SqliteConnection(_connectionString);
             _keepAlive.Open();
 
-            // Production wires PostgreSQL; swap in shared in-memory SQLite so tests run without a server.
+            // Production wires PostgreSQL; drop every EF registration bound to SyncDbContext (the
+            // options and any provider configuration) so only the in-memory SQLite override remains.
             builder.ConfigureServices(services =>
             {
-                services.RemoveAll<DbContextOptions>();
-                services.RemoveAll<DbContextOptions<SyncDbContext>>();
-                services.RemoveAll<IDbContextOptionsConfiguration<SyncDbContext>>();
+                foreach (var descriptor in services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions)
+                        || (d.ServiceType.IsGenericType
+                            && d.ServiceType.GetGenericArguments().Contains(typeof(SyncDbContext))))
+                    .ToList())
+                {
+                    services.Remove(descriptor);
+                }
+
                 services.AddDbContext<SyncDbContext>(options => options.UseSqlite(_connectionString));
             });
         }
