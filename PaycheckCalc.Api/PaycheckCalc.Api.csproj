@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="11.0.0-preview.5.26302.115" />
+    <!-- EF Core family pinned to preview.4.26230.115 to match Npgsql's exact
+         Microsoft.EntityFrameworkCore constraint (its latest prerelease, preview.4,
+         hard-pins EF Core preview.4). The whole EF graph must share one version. -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="11.0.0-preview.4.26230.115" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0-preview.4" />
   </ItemGroup>
 
