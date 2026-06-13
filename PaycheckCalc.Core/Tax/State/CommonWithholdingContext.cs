@@ -1,5 +1,4 @@
 using PaycheckCalc.Core.Models;
-using PaycheckCalc.Core.Pay;
 
 namespace PaycheckCalc.Core.Tax.State;
 
@@ -37,20 +36,4 @@ public sealed record CommonWithholdingContext
     /// from gross income when calculating state taxable wages.
     /// </summary>
     decimal FederalWithholdingPerPeriod = 0m
-)
-{
-    private readonly int? _payPeriodsPerYear;
-
-    /// <summary>
-    /// Number of pay periods in the year — the annualization factor every state calculator
-    /// must use. When set (by the pay pipeline) it is resolved against the anchor pay date
-    /// via <see cref="PayPeriods.PerYear(PayFrequency, System.DateOnly?)"/>, so it can be 53
-    /// (weekly) or 27 (biweekly) in years that land an extra paycheck. When not set, it falls
-    /// back to the fixed per-frequency count for <see cref="PayPeriod"/>.
-    /// </summary>
-    public int PayPeriodsPerYear
-    {
-        get => _payPeriodsPerYear ?? PayPeriods.PerYear(PayPeriod);
-        init => _payPeriodsPerYear = value;
-    }
-}
+);

@@ -45,11 +45,6 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Pay Date</label>
-                    <input type="date" @bind="_payDate" />
-                    <p class="form-note">The date of an upcoming paycheck. For weekly/biweekly pay this determines whether the year has an extra (53rd/27th) paycheck, which affects tax withholding.</p>
-                </div>
-                <div class="form-group">
                     <label>Calculation Mode</label>
                     <select @bind="_mode" @bind:after="OnModeChanged">
                         <option value="standard">Standard paycheck (gross &rarr; net)</option>
@@ -636,7 +631,6 @@
 
     // Pay & Hours
     private PayFrequency _frequency = PayFrequency.Biweekly;
-    private DateOnly _payDate = DateOnly.FromDateTime(DateTime.Today);
     private decimal _hourlyRate = 20m;
     private decimal _regularHours = 80m;
     private decimal _overtimeHours = 0m;
@@ -752,7 +746,6 @@
         var input = new PaycheckInput
         {
             Frequency = _frequency,
-            PayDate = _payDate,
             HourlyRate = _hourlyRate,
             RegularHours = _regularHours,
             OvertimeHours = _overtimeHours,

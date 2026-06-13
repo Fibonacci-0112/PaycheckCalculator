@@ -60,7 +60,6 @@ public partial class CalculatorViewModel : ObservableObject
         _sync.SyncCompleted += OnSyncCompleted;
         Frequency = PayFrequency.Biweekly;
         SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == Frequency);
-        PayDate = DateOnly.FromDateTime(DateTime.Today);
         OvertimeMultiplier = 1.5m;
         SelectedPayTypePickerItem = PayTypes[0];                 // Hourly
         SelectedCalculationModePickerItem = CalculationModes[0]; // Standard
@@ -104,12 +103,6 @@ public partial class CalculatorViewModel : ObservableObject
     }
 
     [ObservableProperty] public partial PayFrequency Frequency { get; set; }
-
-    /// <summary>
-    /// Anchor date of a paycheck on this schedule. Used to resolve the actual number of
-    /// pay periods in the year (e.g. 53 weekly / 27 biweekly in some years).
-    /// </summary>
-    [ObservableProperty] public partial DateOnly PayDate { get; set; }
 
     // ── Calculation mode (standard paycheck vs gross-up) ────────
     public IReadOnlyList<PickerItem<CalculationMode>> CalculationModes { get; } =
