@@ -19,10 +19,16 @@ builder.Services.ConfigureHttpJsonOptions(options => PaycheckJson.AddConverters(
 
 var app = builder.Build();
 
-// Greenfield store: create the schema on startup rather than running migrations.
+// Production (PostgreSQL) applies EF Core migrations so the schema can evolve as new tables/columns
+// are added. The integration tests swap in SQLite, which the Npgsql-targeted migrations don't apply
+// to, so that path builds the schema directly from the model via EnsureCreated instead.
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<SyncDbContext>().Database.EnsureCreated();
+    var db = scope.ServiceProvider.GetRequiredService<SyncDbContext>();
+    if (db.Database.IsNpgsql())
+        db.Database.Migrate();
+    else
+        db.Database.EnsureCreated();
 }
 
 // Email + password register/login/refresh, etc.
