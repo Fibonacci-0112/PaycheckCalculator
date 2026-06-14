@@ -36,6 +36,7 @@ public partial class CalculatorViewModel : ObservableObject
 {
     private readonly PayCalculator _calc;
     private readonly GrossUpCalculator _grossUp;
+    private readonly AnnualProjectionCalculator _annual;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
     private readonly IPdfExportService _pdfExport;
@@ -46,10 +47,11 @@ public partial class CalculatorViewModel : ObservableObject
     private UsState _previousState;
     private bool _initialized;
 
-    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
+    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
     {
         _calc = calc;
         _grossUp = grossUp;
+        _annual = annual;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
         _pdfExport = pdfExport;
@@ -379,7 +381,58 @@ public partial class CalculatorViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowEmptyState));
         OnPropertyChanged(nameof(ShowDeductions));
         OnPropertyChanged(nameof(ShowBothDeductions));
+        OnPropertyChanged(nameof(ShowResultTabs));
     }
+
+    /// <summary>
+    /// Annual projection for the current result, shown on the Results page's Annual sub-tab.
+    /// Null for gross-up results (the annual projection applies to standard paychecks only,
+    /// mirroring the Blazor app).
+    /// </summary>
+    [ObservableProperty] public partial AnnualProjectionModel? Projection { get; set; }
+
+    partial void OnProjectionChanged(AnnualProjectionModel? value)
+    {
+        OnPropertyChanged(nameof(HasAnnual));
+        OnPropertyChanged(nameof(ShowResultTabs));
+        OnPropertyChanged(nameof(IsPerPeriodTabVisible));
+        OnPropertyChanged(nameof(IsAnnualTabVisible));
+    }
+
+    /// <summary>True when an annual projection is available (standard, non-gross-up result).</summary>
+    public bool HasAnnual => Projection is not null;
+
+    /// <summary>True when the Per Paycheck / Annual sub-tab switcher should be shown.</summary>
+    public bool ShowResultTabs => HasResult && HasAnnual;
+
+    /// <summary>Selected results sub-tab: 0 = Per Paycheck, 1 = Annual.</summary>
+    [ObservableProperty] public partial int SelectedResultTab { get; set; }
+
+    partial void OnSelectedResultTabChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsPerPeriodTabVisible));
+        OnPropertyChanged(nameof(IsAnnualTabVisible));
+        OnPropertyChanged(nameof(IsPerPeriodTabActive));
+        OnPropertyChanged(nameof(IsAnnualTabActive));
+    }
+
+    /// <summary>True when the per-period results should be shown (default, or whenever there is no annual tab).</summary>
+    public bool IsPerPeriodTabVisible => SelectedResultTab == 0 || !HasAnnual;
+
+    /// <summary>True when the annual projection should be shown.</summary>
+    public bool IsAnnualTabVisible => SelectedResultTab == 1 && HasAnnual;
+
+    /// <summary>True when the Per Paycheck tab is the active selection (drives tab button styling).</summary>
+    public bool IsPerPeriodTabActive => SelectedResultTab == 0;
+
+    /// <summary>True when the Annual tab is the active selection (drives tab button styling).</summary>
+    public bool IsAnnualTabActive => SelectedResultTab == 1;
+
+    [RelayCommand]
+    private void ShowPerPeriodTab() => SelectedResultTab = 0;
+
+    [RelayCommand]
+    private void ShowAnnualTab() => SelectedResultTab = 1;
 
     /// <summary>True once a paycheck has been calculated, so the results can be shown.</summary>
     public bool HasResult => ResultCard is not null;
@@ -691,6 +744,109 @@ public partial class CalculatorViewModel : ObservableObject
         PersistAndSync(store => store.ClearAsync(DateTimeOffset.UtcNow));
     }
 
+    /// <summary>
+    /// Loads a saved paycheck's stored <see cref="PaycheckInput"/> back into the calculator form
+    /// and switches to the Inputs tab so the user can review or tweak it. The paycheck's name is
+    /// restored too, so re-calculating updates that saved entry in place. Saved gross-up paychecks
+    /// reload as a standard paycheck (the snapshot stores the resolved forward input).
+    /// </summary>
+    [RelayCommand]
+    private async Task LoadPaycheck(SavedPaycheckViewModel? item)
+    {
+        if (item is null) return;
+        var input = item.Snapshot.Input;
+
+        // Restore the name identity so a later Calculate upserts this same paycheck.
+        PaycheckName = item.Name;
+
+        // Reload as a standard paycheck and restore the pay basics via their picker items
+        // (setting the picker cascades to the underlying value and updates the visible selection).
+        SelectedCalculationModePickerItem = CalculationModes.FirstOrDefault(m => m.Value == CalculationMode.Standard);
+        SelectedFrequencyPickerItem = Frequencies.FirstOrDefault(f => f.Value == input.Frequency);
+        SelectedPayTypePickerItem = PayTypes.FirstOrDefault(t => t.Value == input.PayType);
+        SelectedGrossPayMethodPickerItem = GrossPayMethods.FirstOrDefault(b => b.Value == input.SalaryBasis);
+
+        HourlyRate = input.HourlyRate;
+        RegularHours = input.RegularHours;
+        OvertimeHours = input.OvertimeHours;
+        OvertimeMultiplier = input.OvertimeMultiplier;
+        SalaryAmount = input.SalaryAmount;
+        PaycheckNumber = input.PaycheckNumber;
+
+        // Federal W-4
+        SelectedFederalPickerItem = FederalStatuses.FirstOrDefault(s => s.Value == input.FederalW4.FilingStatus);
+        FederalStep2Checked = input.FederalW4.Step2Checked;
+        FederalStep3Credits = input.FederalW4.Step3TaxCredits;
+        FederalStep4aOtherIncome = input.FederalW4.Step4aOtherIncome;
+        FederalStep4bDeductions = input.FederalW4.Step4bDeductions;
+        FederalStep4cExtraWithholding = input.FederalW4.Step4cExtraWithholding;
+
+        // State — setting SelectedState rebuilds the dynamic StateFields from the schema (with
+        // defaults); then overwrite each field from the stored values.
+        SelectedState = input.State;
+        ApplyStateInputValues(input.StateInputValues);
+
+        // Deductions — rebuild the editable list from the stored deductions.
+        Deductions.Clear();
+        foreach (var d in input.Deductions)
+            Deductions.Add(ToDeductionItem(d));
+
+        // Surface the populated form. Navigation is best-effort — the form is already
+        // loaded, so a routing hiccup must not surface as a command failure.
+        try
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.GoToAsync("//Inputs");
+        }
+        catch
+        {
+            // Ignore navigation failures; the inputs are populated regardless.
+        }
+    }
+
+    /// <summary>Writes stored state field values onto the currently built <see cref="StateFields"/>.</summary>
+    private void ApplyStateInputValues(StateInputValues? values)
+    {
+        if (values is null) return;
+        foreach (var field in StateFields)
+        {
+            if (!values.TryGetValue(field.Key, out var raw) || raw is null)
+                continue;
+
+            switch (field.Definition.FieldType)
+            {
+                case StateFieldType.Picker:
+                    field.SelectedOption = raw.ToString();
+                    break;
+                case StateFieldType.Toggle:
+                    field.BoolValue = raw is bool b
+                        ? b
+                        : bool.TryParse(raw.ToString(), out var parsed) && parsed;
+                    break;
+                default:
+                    field.StringValue = raw.ToString() ?? "";
+                    break;
+            }
+        }
+    }
+
+    /// <summary>Rebuilds an editable deduction row from a stored domain <see cref="Deduction"/>.</summary>
+    private static DeductionItemViewModel ToDeductionItem(Deduction d)
+    {
+        var item = new DeductionItemViewModel
+        {
+            Name = d.Name,
+            Amount = d.Amount,
+            AmountType = d.AmountType,
+            ReducesFederalTaxableWages = d.ReducesFederalTaxableWages,
+            ReducesStateTaxableWages = d.ReducesStateTaxableWages,
+            ReducesFicaWages = d.ReducesFicaWages
+        };
+        item.SelectedDeductionTypePickerItem =
+            item.DeductionTypeItems.FirstOrDefault(t => t.Value == d.Type);
+        return item;
+    }
+
     [RelayCommand]
     private void Calculate()
     {
@@ -728,12 +884,18 @@ public partial class CalculatorViewModel : ObservableObject
         {
             var grossUpResult = _grossUp.Calculate(input, TargetNetPay);
             ResultCard = ResultCardMapper.MapGrossUp(grossUpResult);
+            // The annual projection applies to standard paychecks only.
+            Projection = null;
         }
         else
         {
             var domainResult = _calc.Calculate(input);
             ResultCard = ResultCardMapper.Map(domainResult);
+            Projection = AnnualProjectionMapper.Map(_annual.Calculate(input, domainResult));
         }
+
+        // Always land on the Per Paycheck sub-tab after a recalculation.
+        SelectedResultTab = 0;
 
         // Store the result so multiple paychecks can be kept and compared.
         SaveCurrentPaycheck(ResultCard, input);

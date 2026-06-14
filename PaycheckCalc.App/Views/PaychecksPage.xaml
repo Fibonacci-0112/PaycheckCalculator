@@ -43,7 +43,7 @@
                         <DataTemplate>
                             <Border BackgroundColor="White" StrokeThickness="0"
                                     StrokeShape="RoundRectangle 10" Padding="14,12">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
                                     <VerticalStackLayout Grid.Column="0" Spacing="2">
                                         <Label Text="{Binding Name}" TextColor="#37474F"
                                                FontSize="14" FontAttributes="Bold" />
@@ -56,9 +56,16 @@
                                         <Label Text="{Binding GrossPay, StringFormat='gross {0:C}'}"
                                                TextColor="#9E9E9E" FontSize="10" HorizontalTextAlignment="End" />
                                     </VerticalStackLayout>
-                                    <Button Grid.Column="2" Text="✕" FontSize="12" Padding="8,2"
+                                    <Button Grid.Column="2" Text="Load" FontSize="12" Padding="12,2"
+                                            BackgroundColor="#1565C0" TextColor="White" CornerRadius="4"
+                                            VerticalOptions="Center"
+                                            AutomationProperties.Name="Load this paycheck into the form"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadPaycheckCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    <Button Grid.Column="3" Text="✕" FontSize="12" Padding="8,2"
                                             BackgroundColor="#EF5350" TextColor="White" CornerRadius="4"
                                             VerticalOptions="Center"
+                                            AutomationProperties.Name="Delete this paycheck"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemovePaycheckCommand}"
                                             CommandParameter="{Binding .}" />
                                 </Grid>
