@@ -1,7 +1,5 @@
-using System.Globalization;
 using Microsoft.Maui.Storage;
-using PaycheckCalc.App.Models;
-using PaycheckCalc.App.Services.Pdf;
+using PaycheckCalc.App.Helpers;
 
 namespace PaycheckCalc.App.Services.Printing;
 
@@ -13,20 +11,18 @@ public sealed class PrintService : IPrintService
     public PrintService(IPrintLauncher launcher) => _launcher = launcher;
 
     /// <inheritdoc />
-    public async Task PrintAsync(ResultCardModel result)
+    public async Task PrintAsync(byte[] pdfBytes, string jobName)
     {
-        ArgumentNullException.ThrowIfNull(result);
-
-        // Reuse the PDF layout so the printed page matches the exported PDF.
-        var pdfBytes = PaycheckPdfRenderer.Render(result);
+        ArgumentNullException.ThrowIfNull(pdfBytes);
 
         var directory = Path.Combine(FileSystem.CacheDirectory, "sharing-root");
         Directory.CreateDirectory(directory);
 
-        var fileName = $"Paycheck-Print-{DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.pdf";
+        var fileName = $"{FileNameSanitizer.Sanitize(jobName, "Paycheck-Print")}.pdf";
         var path = Path.Combine(directory, fileName);
         await File.WriteAllBytesAsync(path, pdfBytes);
 
-        await _launcher.PrintAsync(path, "Paycheck Summary");
+        var title = string.IsNullOrWhiteSpace(jobName) ? "Paycheck Summary" : jobName.Trim();
+        await _launcher.PrintAsync(path, title);
     }
 }

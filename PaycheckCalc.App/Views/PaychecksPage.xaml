@@ -142,6 +142,21 @@
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
                         </VerticalStackLayout>
+
+                        <!-- Export the A/B comparison table on its own -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10"
+                              IsVisible="{Binding HasComparison}">
+                            <Button Grid.Column="0" Text="Export PDF"
+                                    Command="{Binding ExportComparisonPdfCommand}"
+                                    BackgroundColor="#1565C0" TextColor="White"
+                                    FontSize="12" Padding="0,6" CornerRadius="6"
+                                    AutomationProperties.Name="Export comparison to PDF" />
+                            <Button Grid.Column="1" Text="Export CSV"
+                                    Command="{Binding ExportComparisonCsvCommand}"
+                                    BackgroundColor="#1565C0" TextColor="White"
+                                    FontSize="12" Padding="0,6" CornerRadius="6"
+                                    AutomationProperties.Name="Export comparison to CSV" />
+                        </Grid>
                     </VerticalStackLayout>
                 </Border>
 

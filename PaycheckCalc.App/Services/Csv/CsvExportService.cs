@@ -1,7 +1,6 @@
-using System.Globalization;
 using System.Text;
 using Microsoft.Maui.Storage;
-using PaycheckCalc.App.Models;
+using PaycheckCalc.App.Helpers;
 
 namespace PaycheckCalc.App.Services.Csv;
 
@@ -13,18 +12,16 @@ public sealed class CsvExportService : ICsvExportService
     public CsvExportService(ICsvViewerLauncher launcher) => _launcher = launcher;
 
     /// <inheritdoc />
-    public async Task<string> ExportAndOpenAsync(ResultCardModel result)
+    public async Task<string> ExportAndOpenAsync(string csv, string baseFileName)
     {
-        ArgumentNullException.ThrowIfNull(result);
-
-        var csv = PaycheckCsvRenderer.Render(result);
+        ArgumentNullException.ThrowIfNull(csv);
 
         // Write under the same "sharing-root" cache sub-directory the PDF export
         // uses, as recommended for Android FileProvider sharing.
         var directory = Path.Combine(FileSystem.CacheDirectory, "sharing-root");
         Directory.CreateDirectory(directory);
 
-        var fileName = $"Paycheck-Summary-{DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.csv";
+        var fileName = $"{FileNameSanitizer.Sanitize(baseFileName)}.csv";
         var path = Path.Combine(directory, fileName);
 
         // UTF-8 without a BOM; the content is ASCII in practice.

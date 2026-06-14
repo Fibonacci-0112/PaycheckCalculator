@@ -1,6 +1,5 @@
-using System.Globalization;
 using Microsoft.Maui.Storage;
-using PaycheckCalc.App.Models;
+using PaycheckCalc.App.Helpers;
 
 namespace PaycheckCalc.App.Services.Pdf;
 
@@ -12,18 +11,16 @@ public sealed class PdfExportService : IPdfExportService
     public PdfExportService(IPdfViewerLauncher launcher) => _launcher = launcher;
 
     /// <inheritdoc />
-    public async Task<string> ExportAndOpenAsync(ResultCardModel result)
+    public async Task<string> ExportAndOpenAsync(byte[] pdfBytes, string baseFileName)
     {
-        ArgumentNullException.ThrowIfNull(result);
-
-        var pdfBytes = PaycheckPdfRenderer.Render(result);
+        ArgumentNullException.ThrowIfNull(pdfBytes);
 
         // Write under a dedicated "sharing-root" sub-directory of the cache, as
         // recommended for Android FileProvider sharing.
         var directory = Path.Combine(FileSystem.CacheDirectory, "sharing-root");
         Directory.CreateDirectory(directory);
 
-        var fileName = $"Paycheck-Summary-{DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.pdf";
+        var fileName = $"{FileNameSanitizer.Sanitize(baseFileName)}.pdf";
         var path = Path.Combine(directory, fileName);
         await File.WriteAllBytesAsync(path, pdfBytes);
 

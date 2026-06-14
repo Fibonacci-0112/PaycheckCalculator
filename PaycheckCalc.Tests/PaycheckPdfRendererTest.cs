@@ -1,5 +1,6 @@
 extern alias blazor;
 using System.Text;
+using blazor::PaycheckCalc.Blazor.Models;
 using blazor::PaycheckCalc.Blazor.Services.Export;
 using PaycheckCalc.Core.Models;
 using Xunit;
@@ -112,5 +113,83 @@ public sealed class PaycheckPdfRendererTest
 
         Assert.Contains("CA SDI", text);
         Assert.Contains("$18.50", text);
+    }
+
+    // ── Annual projection + comparison extensions ────────────────
+
+    private static AnnualProjection SampleProjection(decimal overUnder = 250.00m) => new()
+    {
+        PayPeriodsPerYear = 26,
+        CurrentPaycheckNumber = 3,
+        RemainingPaychecks = 23,
+        AnnualizedGrossPay = 52000.00m,
+        AnnualizedFederalWithholding = 4680.00m,
+        AnnualizedStateWithholding = 1950.00m,
+        AnnualizedFica = 3978.00m,
+        AnnualizedNetPay = 37492.00m,
+        ProjectedYtdGrossPay = 6000.00m,
+        ProjectedYtdNetPay = 4326.00m,
+        EstimatedTotalLiability = 10608.00m,
+        AnnualizedTotalWithholding = 10858.00m,
+        OverUnderWithholding = overUnder
+    };
+
+    private static IReadOnlyList<ComparisonRow> SampleComparison() => new[]
+    {
+        new ComparisonRow("Gross Pay", 2000.00m, 2200.00m),
+        new ComparisonRow("Net Pay", 1453.47m, 1600.00m, highlight: true),
+    };
+
+    [Fact]
+    public void Render_WithoutExtras_OmitsAnnualAndComparison()
+    {
+        var text = AsText(PaycheckPdfRenderer.Render(SampleResult(), "CA"));
+
+        Assert.DoesNotContain("ANNUALIZED AMOUNTS", text);
+        Assert.DoesNotContain("PAYCHECK COMPARISON", text);
+    }
+
+    [Fact]
+    public void Render_WithAnnualProjection_IncludesAnnualSectionsAndRefund()
+    {
+        var text = AsText(PaycheckPdfRenderer.Render(SampleResult(), "CA", SampleProjection(overUnder: 250.00m)));
+
+        // Parentheses in PDF text are escaped (\( \)), so assert the unparenthesized prefix.
+        Assert.Contains("ANNUALIZED AMOUNTS", text);
+        Assert.Contains("PROJECTED YEAR-TO-DATE - PAYCHECK 3 OF 26", text);
+        Assert.Contains("YEAR-END ESTIMATE", text);
+        Assert.Contains("Estimated Refund", text);
+        Assert.Contains("$52,000.00", text);
+    }
+
+    [Fact]
+    public void Render_WithUnderWithholding_ShowsAmountOwed()
+    {
+        var text = AsText(PaycheckPdfRenderer.Render(SampleResult(), "CA", SampleProjection(overUnder: -125.00m)));
+
+        Assert.Contains("Estimated Amount Owed", text);
+        Assert.DoesNotContain("Estimated Refund", text);
+    }
+
+    [Fact]
+    public void Render_WithComparison_IncludesComparisonSection()
+    {
+        var text = AsText(PaycheckPdfRenderer.Render(SampleResult(), "CA", annual: null,
+            comparison: SampleComparison(), comparisonNameA: "Job A", comparisonNameB: "Job B"));
+
+        Assert.Contains("PAYCHECK COMPARISON", text);
+        Assert.Contains("Metric", text);
+        Assert.Contains("Diff", text);
+    }
+
+    [Fact]
+    public void RenderComparison_ProducesStandaloneComparisonSheet()
+    {
+        var text = AsText(PaycheckPdfRenderer.RenderComparison(SampleComparison(), "Job A", "Job B"));
+
+        Assert.StartsWith("%PDF-1.5", text);
+        Assert.Contains("Paycheck Comparison", text);
+        Assert.Contains("PAYCHECK COMPARISON", text);
+        Assert.Contains("Gross Pay", text);
     }
 }

@@ -1,14 +1,16 @@
 using System.Globalization;
 using System.Text;
+using PaycheckCalc.Blazor.Models;
 using PaycheckCalc.Core.Models;
 
 namespace PaycheckCalc.Blazor.Services.Export;
 
 /// <summary>
-/// Lays out the per-period paycheck results onto a single Letter-size page and
-/// produces the PDF bytes. Pure presentation: it consumes the domain
-/// <see cref="PaycheckResult"/> the Results panel binds to. The page shows an
-/// INCOME section, a TAXES section, and the resulting net pay.
+/// Lays out the paycheck results onto one or more Letter-size pages and produces
+/// the PDF bytes. Pure presentation: it consumes the domain <see cref="PaycheckResult"/>
+/// the Results panel binds to, optionally followed by the <see cref="AnnualProjection"/>
+/// (when present) and an A/B <see cref="ComparisonRow"/> table. A standalone
+/// comparison sheet is available via <see cref="RenderComparison"/>.
 /// </summary>
 /// <remarks>
 /// This is the Blazor counterpart to the MAUI app's PDF export. It reads the
@@ -23,20 +25,21 @@ public static class PaycheckPdfRenderer
     private static readonly Rgb Red = Rgb.Hex("#C62828");
     private static readonly Rgb Green = Rgb.Hex("#2E7D32");
 
-    /// <summary>Renders the per-period results to single-page PDF bytes.</summary>
+    /// <summary>Renders the per-period results — plus optional annual projection and A/B comparison — to PDF bytes.</summary>
     /// <param name="result">The calculated per-period paycheck.</param>
     /// <param name="stateLabel">Human-readable state label (e.g. the USPS code "CA"); omitted from the title when empty.</param>
-    public static byte[] Render(PaycheckResult result, string stateLabel)
+    /// <param name="annual">Optional annual projection appended after the per-period section.</param>
+    /// <param name="comparison">Optional A/B comparison rows appended after the annual section.</param>
+    /// <param name="comparisonNameA">Heading for the comparison's first column.</param>
+    /// <param name="comparisonNameB">Heading for the comparison's second column.</param>
+    public static byte[] Render(PaycheckResult result, string stateLabel,
+        AnnualProjection? annual = null,
+        IReadOnlyList<ComparisonRow>? comparison = null,
+        string comparisonNameA = "Paycheck A", string comparisonNameB = "Paycheck B")
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        var doc = new PdfDocument();
-        int catalogId = doc.Reserve();
-        int pagesId = doc.Reserve();
-        int helvetica = doc.Reserve();
-        int helveticaBold = doc.Reserve();
-
-        var layout = new PdfLayout(doc, pagesId, helvetica, helveticaBold);
+        var (doc, layout, catalogId) = NewDocument();
 
         var title = string.IsNullOrEmpty(stateLabel)
             ? "Paycheck Summary"
@@ -46,6 +49,41 @@ public static class PaycheckPdfRenderer
         // keep page text within ASCII — use a plain "|" separator, not a bullet.
         layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  |  2026 tax tables");
 
+        WritePerPeriod(layout, result);
+        if (annual is not null)
+            WriteAnnual(layout, annual);
+        if (comparison is { Count: > 0 })
+            WriteComparison(layout, comparison, comparisonNameA, comparisonNameB);
+
+        layout.Finish(catalogId);
+        return doc.Build(catalogId);
+    }
+
+    /// <summary>Renders a standalone A/B comparison sheet to PDF bytes.</summary>
+    public static byte[] RenderComparison(IReadOnlyList<ComparisonRow> comparison, string nameA, string nameB)
+    {
+        ArgumentNullException.ThrowIfNull(comparison);
+
+        var (doc, layout, catalogId) = NewDocument();
+        layout.BeginPage("Paycheck Comparison");
+        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  |  2026 tax tables");
+        WriteComparison(layout, comparison, nameA, nameB);
+        layout.Finish(catalogId);
+        return doc.Build(catalogId);
+    }
+
+    private static (PdfDocument doc, PdfLayout layout, int catalogId) NewDocument()
+    {
+        var doc = new PdfDocument();
+        int catalogId = doc.Reserve();
+        int pagesId = doc.Reserve();
+        int helvetica = doc.Reserve();
+        int helveticaBold = doc.Reserve();
+        return (doc, new PdfLayout(doc, pagesId, helvetica, helveticaBold), catalogId);
+    }
+
+    private static void WritePerPeriod(PdfLayout layout, PaycheckResult result)
+    {
         layout.SectionHeader("Income");
         layout.Row("Gross Pay", Money(result.GrossPay), TextDark, bold: true);
         layout.Row("Federal Taxable Income", Money(result.FederalTaxableIncome), TextDark);
@@ -61,10 +99,52 @@ public static class PaycheckPdfRenderer
             layout.Row(result.StateDisabilityInsuranceLabel, Money(result.StateDisabilityInsurance), Red);
 
         layout.Banner("NET PAY", Money(result.NetPay), Green);
-
-        layout.Finish(catalogId);
-        return doc.Build(catalogId);
     }
+
+    private static void WriteAnnual(PdfLayout layout, AnnualProjection a)
+    {
+        layout.SectionHeader($"Annualized Amounts ({a.PayPeriodsPerYear} pay periods/year)");
+        layout.Row("Gross Pay", Money(a.AnnualizedGrossPay), TextDark, bold: true);
+        if (a.AnnualizedPreTaxDeductions > 0m)
+            layout.Row("Pre-Tax Deductions", Money(a.AnnualizedPreTaxDeductions), TextDark);
+        layout.Row("Federal Withholding", Money(a.AnnualizedFederalWithholding), Red);
+        layout.Row("State Withholding", Money(a.AnnualizedStateWithholding), Red);
+        layout.Row("FICA (SS + Medicare)", Money(a.AnnualizedFica), Red);
+        layout.Row("Net Pay", Money(a.AnnualizedNetPay), Green, bold: true);
+
+        layout.SectionHeader($"Projected Year-to-Date - Paycheck {a.CurrentPaycheckNumber} of {a.PayPeriodsPerYear}");
+        layout.Row("Remaining Paychecks", a.RemainingPaychecks.ToString(CultureInfo.InvariantCulture), TextDark);
+        layout.Row("Projected YTD Gross Pay", Money(a.ProjectedYtdGrossPay), TextDark);
+        layout.Row("Projected YTD Federal Withholding", Money(a.ProjectedYtdFederalWithholding), Red);
+        layout.Row("Projected YTD State Withholding", Money(a.ProjectedYtdStateWithholding), Red);
+        layout.Row("Projected YTD FICA", Money(a.ProjectedYtdFica), Red);
+        layout.Row("Projected YTD Net Pay", Money(a.ProjectedYtdNetPay), Green);
+
+        layout.SectionHeader("Year-End Estimate");
+        layout.Row("Est. Annual Federal Tax Liability", Money(a.EstimatedAnnualFederalLiability), TextDark);
+        layout.Row("Est. Annual FICA Liability", Money(a.EstimatedAnnualFicaLiability), TextDark);
+        layout.Row("Estimated Total Liability", Money(a.EstimatedTotalLiability), TextDark, bold: true);
+        layout.Row("Annualized Total Withholding", Money(a.AnnualizedTotalWithholding), TextDark, bold: true);
+        if (a.OverUnderWithholding > 0m)
+            layout.Row("Estimated Refund", Money(a.OverUnderWithholding), Green, bold: true);
+        else if (a.OverUnderWithholding < 0m)
+            layout.Row("Estimated Amount Owed", Money(Math.Abs(a.OverUnderWithholding)), Red, bold: true);
+        else
+            layout.Row("Estimated Balance", Money(0m), TextDark, bold: true);
+    }
+
+    private static void WriteComparison(PdfLayout layout, IReadOnlyList<ComparisonRow> rows, string nameA, string nameB)
+    {
+        layout.SectionHeader("Paycheck Comparison");
+        layout.CompareHeader(nameA, nameB);
+        foreach (var r in rows)
+            layout.CompareRow(r.Label, r.ValueADisplay, r.ValueBDisplay, AsciiDiff(r), r.Highlight);
+    }
+
+    // The PDF content stream is ASCII; ComparisonRow.DifferenceDisplay uses a U+2212
+    // minus sign, so build an ASCII-safe signed value for the difference column.
+    private static string AsciiDiff(ComparisonRow r) =>
+        (r.Difference >= 0 ? "+" : "-") + Math.Abs(r.Difference).ToString("C", Usd);
 
     private static string Money(decimal value) => value.ToString("C", Usd);
 }
@@ -95,6 +175,11 @@ internal sealed class PdfLayout
     private const double ContentLeft = Margin;
     private const double ContentRight = PageWidth - Margin;
     private const double ContentWidth = ContentRight - ContentLeft;
+
+    // Right edges of the two named value columns in a comparison table (the third,
+    // the difference, is right-aligned to ContentRight).
+    private const double CompareColA = ContentLeft + ContentWidth * 0.62;
+    private const double CompareColB = ContentLeft + ContentWidth * 0.81;
 
     private static readonly Rgb HeaderBlue = Rgb.Hex("#1565C0");
     private static readonly Rgb Gray = Rgb.Hex("#78909C");
@@ -165,6 +250,34 @@ internal sealed class PdfLayout
         FillRect(ContentLeft, _y + 4, ContentWidth, 0.6, Divider);
     }
 
+    /// <summary>Header row for a comparison table: "Metric | A | B | Diff".</summary>
+    public void CompareHeader(string colA, string colB)
+    {
+        const double rowHeight = 20;
+        EnsureSpace(rowHeight);
+        double baseline = _y - 14;
+        Text(ContentLeft, baseline, "Metric", bold: true, size: 10, color: Gray);
+        RightText(CompareColA, baseline, Clip(colA), bold: true, size: 10, color: Gray);
+        RightText(CompareColB, baseline, Clip(colB), bold: true, size: 10, color: Gray);
+        RightText(ContentRight, baseline, "Diff", bold: true, size: 10, color: Gray);
+        _y -= rowHeight;
+        FillRect(ContentLeft, _y + 4, ContentWidth, 0.6, Divider);
+    }
+
+    /// <summary>One metric row of a comparison table.</summary>
+    public void CompareRow(string label, string a, string b, string diff, bool emphasize = false)
+    {
+        const double rowHeight = 21;
+        EnsureSpace(rowHeight);
+        double baseline = _y - 14;
+        Text(ContentLeft, baseline, label, bold: emphasize, size: 11, color: LabelDark);
+        RightText(CompareColA, baseline, a, bold: emphasize, size: 11, color: LabelDark);
+        RightText(CompareColB, baseline, b, bold: emphasize, size: 11, color: LabelDark);
+        RightText(ContentRight, baseline, diff, bold: false, size: 11, color: Gray);
+        _y -= rowHeight;
+        FillRect(ContentLeft, _y + 4, ContentWidth, 0.6, Divider);
+    }
+
     public void Banner(string label, string value, Rgb background)
     {
         const double height = 58;
@@ -230,6 +343,12 @@ internal sealed class PdfLayout
             .Append("ET\n");
     }
 
+    private void RightText(double rightEdge, double baseline, string text, bool bold, double size, Rgb color)
+    {
+        double w = MeasureNumeric(text, size);
+        Text(rightEdge - w, baseline, text, bold, size, color);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────
 
     private static string Num(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
@@ -239,6 +358,9 @@ internal sealed class PdfLayout
 
     private static string Escape(string s) =>
         s.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
+
+    /// <summary>Clips an overly long column heading so it doesn't collide with the next column.</summary>
+    private static string Clip(string s) => s.Length <= 16 ? s : s.Substring(0, 15) + ".";
 
     /// <summary>Accurate Helvetica/Helvetica-Bold width for the glyphs used in currency values.</summary>
     private static double MeasureNumeric(string text, double size)
