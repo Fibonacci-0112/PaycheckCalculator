@@ -6,8 +6,9 @@ namespace PaycheckCalc.Api.Data;
 
 /// <summary>
 /// EF Core context backing both ASP.NET Core Identity (users, tokens) and the per-user saved
-/// paychecks. Schema is created at startup via <c>EnsureCreated</c> (no migrations) — adequate for a
-/// greenfield single-table-plus-identity store; schema changes would require recreating the database.
+/// paychecks. On PostgreSQL the schema is managed by EF Core migrations applied at startup (see
+/// <c>Program.cs</c>), so it can evolve as new tables/columns are added; the SQLite-backed integration
+/// tests build the schema directly from the model via <c>EnsureCreated</c>.
 /// </summary>
 public sealed class SyncDbContext(DbContextOptions<SyncDbContext> options) : IdentityDbContext<IdentityUser>(options)
 {
