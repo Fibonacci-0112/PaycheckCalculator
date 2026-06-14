@@ -18,7 +18,7 @@ A simple US paycheck calculator (2026 tax tables) that computes net pay, tax wit
 - **"Show Your Work" Explanations** — Every result line — gross pay, federal/FICA/state taxable income, each tax, state disability, and net pay — carries a step-by-step breakdown of how the number was computed, opened from the info icon next to the line.
 - **Results Visualization** — Doughnut chart breakdown of gross pay (net pay, federal tax, Social Security, Medicare, state income tax, state disability insurance, and deductions) with percentage labels formatted to two decimal places.
 - **PDF Export (MAUI app)** — Exports the per-period results to a single-page Letter-size PDF via a built-in minimal PDF writer (no external PDF packages) and opens it in the system PDF viewer.
-- **Annual Projection (web app)** — `AnnualProjectionCalculator` in Core annualizes a paycheck, projects YTD totals by paycheck number, and estimates year-end over/under withholding; the Blazor app shows it on the Annual results tab. The MAUI app shows per-period results only.
+- **Annual Projection** — `AnnualProjectionCalculator` in Core annualizes a paycheck, projects YTD totals by paycheck number, and estimates year-end over/under withholding; both the Blazor and MAUI apps show it on a Per Paycheck / Annual sub-tab of the results.
 - **Multiple Pay Frequencies** — Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, and Daily.
 
 ## Project Structure

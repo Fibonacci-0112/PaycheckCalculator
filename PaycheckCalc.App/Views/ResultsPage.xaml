@@ -23,7 +23,7 @@
         <helpers:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- Page Header -->
         <Grid Grid.Row="0" BackgroundColor="#333333" Padding="16,14,16,14">
@@ -34,8 +34,46 @@
                    HorizontalTextAlignment="Center" />
         </Grid>
 
-        <ScrollView Grid.Row="1" IsVisible="{Binding HasResult}">
-            <VerticalStackLayout Padding="16" Spacing="12">
+        <!-- Per Paycheck / Annual sub-tab switcher (annual projection is standard-mode only) -->
+        <Grid Grid.Row="1" BackgroundColor="White" Padding="12,8" ColumnSpacing="8"
+              ColumnDefinitions="*,*" IsVisible="{Binding ShowResultTabs}">
+            <Button Grid.Column="0" Text="Per Paycheck"
+                    Command="{Binding ShowPerPeriodTabCommand}"
+                    FontSize="13" CornerRadius="8" Padding="0,6" HeightRequest="40"
+                    AutomationProperties.Name="Show per-paycheck results">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsPerPeriodTabActive}" Value="True">
+                        <Setter Property="BackgroundColor" Value="#2E7D32" />
+                        <Setter Property="TextColor" Value="White" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsPerPeriodTabActive}" Value="False">
+                        <Setter Property="BackgroundColor" Value="#ECECEC" />
+                        <Setter Property="TextColor" Value="#37474F" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Grid.Column="1" Text="Annual"
+                    Command="{Binding ShowAnnualTabCommand}"
+                    FontSize="13" CornerRadius="8" Padding="0,6" HeightRequest="40"
+                    AutomationProperties.Name="Show annual projection">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsAnnualTabActive}" Value="True">
+                        <Setter Property="BackgroundColor" Value="#2E7D32" />
+                        <Setter Property="TextColor" Value="White" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsAnnualTabActive}" Value="False">
+                        <Setter Property="BackgroundColor" Value="#ECECEC" />
+                        <Setter Property="TextColor" Value="#37474F" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+        </Grid>
+
+        <ScrollView Grid.Row="2" IsVisible="{Binding HasResult}">
+            <VerticalStackLayout>
+
+            <!-- ════════ PER PAYCHECK ════════ -->
+            <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding IsPerPeriodTabVisible}">
 
                 <!-- Gross-Up summary (only shown for gross-up results) -->
                 <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
@@ -302,10 +340,217 @@
                 </Border>
 
             </VerticalStackLayout>
+            <!-- /PER PAYCHECK -->
+
+            <!-- ════════ ANNUAL PROJECTION ════════ -->
+            <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding IsAnnualTabVisible}">
+
+                <!-- Annualized amounts -->
+                <Label Text="ANNUALIZED AMOUNTS" TextColor="#78909C"
+                       FontSize="10" FontAttributes="Bold" Margin="4,0,0,0" />
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                    <VerticalStackLayout Spacing="0">
+
+                        <Label Text="{Binding Projection.PayPeriodsPerYear, StringFormat='{0} pay periods per year'}"
+                               TextColor="#9E9E9E" FontSize="11" Margin="0,6,0,2" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Gross Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.AnnualizedGrossPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0"
+                                 IsVisible="{Binding Projection.ShowAnnualizedPreTaxDeductions}" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10"
+                              IsVisible="{Binding Projection.ShowAnnualizedPreTaxDeductions}">
+                            <Label Text="Pre-Tax Deductions" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.AnnualizedPreTaxDeductions, StringFormat='-{0:C}'}"
+                                   Grid.Column="1" TextColor="#5D4037" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Federal Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.AnnualizedFederalWithholding, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="State Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.AnnualizedStateWithholding, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="FICA (SS + Medicare)" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.AnnualizedFica, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Annual Net Pay -->
+                <Border BackgroundColor="#2E7D32" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16" Padding="20,18">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="ANNUALIZED NET PAY" TextColor="#A5D6A7"
+                               FontSize="11" FontAttributes="Bold"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="{Binding Projection.AnnualizedNetPay, StringFormat='{0:C}'}"
+                               TextColor="White" FontAttributes="Bold" FontSize="32"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Projected year-to-date -->
+                <Label Text="{Binding Projection.PaycheckProgressLabel, StringFormat='PROJECTED YEAR-TO-DATE — {0}'}"
+                       TextColor="#78909C" FontSize="10" FontAttributes="Bold" Margin="4,4,0,0" />
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                    <VerticalStackLayout Spacing="0">
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Remaining Paychecks" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.RemainingPaychecks}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Projected YTD Gross Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.ProjectedYtdGrossPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Projected YTD Federal Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.ProjectedYtdFederalWithholding, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Projected YTD State Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.ProjectedYtdStateWithholding, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Projected YTD FICA" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.ProjectedYtdFica, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Projected YTD Net Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.ProjectedYtdNetPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#2E7D32" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Year-end estimate -->
+                <Label Text="YEAR-END ESTIMATE" TextColor="#78909C"
+                       FontSize="10" FontAttributes="Bold" Margin="4,4,0,0" />
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                    <VerticalStackLayout Spacing="0">
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Est. Annual Federal Tax Liability" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.EstimatedAnnualFederalLiability, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Est. Annual FICA Liability" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.EstimatedAnnualFicaLiability, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Estimated Total Liability" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.EstimatedTotalLiability, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,10">
+                            <Label Text="Annualized Total Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.AnnualizedTotalWithholding, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+
+                        <!-- Estimated refund (over-withheld) -->
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,12"
+                              IsVisible="{Binding Projection.IsRefund}">
+                            <Label Text="Estimated Refund" TextColor="#2E7D32" FontSize="14"
+                                   FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#2E7D32" FontAttributes="Bold"
+                                   FontSize="15" VerticalTextAlignment="Center" />
+                        </Grid>
+
+                        <!-- Estimated amount owed (under-withheld) -->
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,12"
+                              IsVisible="{Binding Projection.IsOwe}">
+                            <Label Text="Estimated Amount Owed" TextColor="#C62828" FontSize="14"
+                                   FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   FontSize="15" VerticalTextAlignment="Center" />
+                        </Grid>
+
+                        <!-- Balanced -->
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,12"
+                              IsVisible="{Binding Projection.IsBalanced}">
+                            <Label Text="Estimated Balance" TextColor="#37474F" FontSize="14"
+                                   FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="15" VerticalTextAlignment="Center" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="Annual figures are estimates that project this single paycheck across the year. They assume the same pay and withholding every period."
+                       TextColor="#9E9E9E" FontSize="11" FontAttributes="Italic" Margin="4,0,0,4" />
+
+            </VerticalStackLayout>
+            <!-- /ANNUAL PROJECTION -->
+
+            </VerticalStackLayout>
         </ScrollView>
 
         <!-- Empty / first-run state: shown until a paycheck has been calculated -->
-        <VerticalStackLayout Grid.Row="1"
+        <VerticalStackLayout Grid.Row="2"
                              IsVisible="{Binding ShowEmptyState}"
                              VerticalOptions="Center" HorizontalOptions="Center"
                              Padding="32" Spacing="10">
