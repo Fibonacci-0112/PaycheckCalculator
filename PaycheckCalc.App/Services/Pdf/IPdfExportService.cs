@@ -1,16 +1,17 @@
-using PaycheckCalc.App.Models;
-
 namespace PaycheckCalc.App.Services.Pdf;
 
 /// <summary>
-/// Exports the current per-period paycheck results to a single-page PDF on disk
-/// and opens it for viewing.
+/// Writes a rendered PDF to a shareable location on disk and opens it for viewing.
+/// The caller renders the bytes (via <see cref="PaycheckPdfRenderer"/>) so it can
+/// choose what to include — per-period results, the annual projection, and/or an
+/// A/B comparison.
 /// </summary>
 public interface IPdfExportService
 {
     /// <summary>
-    /// Builds the PDF, writes it to a shareable location, and launches it in a
-    /// PDF viewer (preferring Adobe Reader/Acrobat). Returns the file path.
+    /// Writes <paramref name="pdfBytes"/> to a shareable location named after
+    /// <paramref name="baseFileName"/> (sanitized; <c>.pdf</c> appended) and launches it
+    /// in a PDF viewer (preferring Adobe Reader/Acrobat). Returns the file path.
     /// </summary>
-    Task<string> ExportAndOpenAsync(ResultCardModel result);
+    Task<string> ExportAndOpenAsync(byte[] pdfBytes, string baseFileName);
 }

@@ -900,17 +900,29 @@ public partial class CalculatorViewModel : ObservableObject
         // Store the result so multiple paychecks can be kept and compared.
         SaveCurrentPaycheck(ResultCard, input);
 
+        // Prefill the export file name from the paycheck name (the user can edit it).
+        ExportFileName = PaycheckName.Trim();
+
         ExportPdfCommand.NotifyCanExecuteChanged();
         ExportCsvCommand.NotifyCanExecuteChanged();
         PrintCommand.NotifyCanExecuteChanged();
     }
 
+    /// <summary>
+    /// Editable base file name for exports, prefilled from the paycheck name on each
+    /// calculation. Blank falls back to "Paycheck-Summary" at export time.
+    /// </summary>
+    [ObservableProperty] public partial string ExportFileName { get; set; } = "";
+
+    /// <summary>Comparison rows to append to the main export, or null when no A/B pair is selected.</summary>
+    private IReadOnlyList<ComparisonRow>? ComparisonForExport() => HasComparison ? ComparisonRows : null;
+
     /// <summary>True once a paycheck has been calculated and can be exported.</summary>
     public bool CanExportPdf => ResultCard is not null;
 
     /// <summary>
-    /// Exports the current per-period results to a single-page PDF and opens it
-    /// in Adobe Reader/Acrobat.
+    /// Exports the current results to a PDF and opens it in Adobe Reader/Acrobat. Includes the
+    /// annual projection and, when an A/B pair is selected, the comparison table.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExportPdf))]
     private async Task ExportPdf()
@@ -920,7 +932,8 @@ public partial class CalculatorViewModel : ObservableObject
 
         try
         {
-            await _pdfExport.ExportAndOpenAsync(ResultCard);
+            var bytes = PaycheckPdfRenderer.Render(ResultCard, Projection, ComparisonForExport(), ComparisonNameA, ComparisonNameB);
+            await _pdfExport.ExportAndOpenAsync(bytes, ExportFileName);
         }
         catch (Exception ex)
         {
@@ -933,8 +946,8 @@ public partial class CalculatorViewModel : ObservableObject
     public bool CanExportCsv => ResultCard is not null;
 
     /// <summary>
-    /// Exports the current per-period results to a CSV file and opens it in the
-    /// platform's default CSV application (e.g. Microsoft Excel).
+    /// Exports the current results to CSV and opens it in the platform's default CSV application.
+    /// Includes the annual projection and, when selected, the comparison table.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExportCsv))]
     private async Task ExportCsv()
@@ -944,7 +957,8 @@ public partial class CalculatorViewModel : ObservableObject
 
         try
         {
-            await _csvExport.ExportAndOpenAsync(ResultCard);
+            var csv = PaycheckCsvRenderer.Render(ResultCard, Projection, ComparisonForExport(), ComparisonNameA, ComparisonNameB);
+            await _csvExport.ExportAndOpenAsync(csv, ExportFileName);
         }
         catch (Exception ex)
         {
@@ -956,7 +970,7 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>True once a paycheck has been calculated and can be printed.</summary>
     public bool CanPrint => ResultCard is not null;
 
-    /// <summary>Sends the current per-period results to the platform print system.</summary>
+    /// <summary>Sends the current results (with annual projection and any comparison) to the print system.</summary>
     [RelayCommand(CanExecute = nameof(CanPrint))]
     private async Task Print()
     {
@@ -965,12 +979,67 @@ public partial class CalculatorViewModel : ObservableObject
 
         try
         {
-            await _printService.PrintAsync(ResultCard);
+            var bytes = PaycheckPdfRenderer.Render(ResultCard, Projection, ComparisonForExport(), ComparisonNameA, ComparisonNameB);
+            await _printService.PrintAsync(bytes, ExportFileName);
         }
         catch (Exception ex)
         {
             if (Shell.Current is not null)
                 await Shell.Current.DisplayAlert("Print", $"Could not print the results: {ex.Message}", "OK");
+        }
+    }
+
+    // ── Dedicated A/B comparison export ─────────────────────────
+
+    /// <summary>True when two paychecks are selected and the comparison can be exported on its own.</summary>
+    public bool CanExportComparison => HasComparison;
+
+    partial void OnSelectedComparisonAChanged(SavedPaycheckViewModel? value) => RefreshComparisonExportState();
+    partial void OnSelectedComparisonBChanged(SavedPaycheckViewModel? value) => RefreshComparisonExportState();
+
+    private void RefreshComparisonExportState()
+    {
+        ExportComparisonPdfCommand.NotifyCanExecuteChanged();
+        ExportComparisonCsvCommand.NotifyCanExecuteChanged();
+    }
+
+    private string ComparisonExportFileName() => $"Comparison-{ComparisonNameA}-vs-{ComparisonNameB}";
+
+    /// <summary>Exports just the A/B comparison table to a standalone PDF.</summary>
+    [RelayCommand(CanExecute = nameof(CanExportComparison))]
+    private async Task ExportComparisonPdf()
+    {
+        if (!HasComparison)
+            return;
+
+        try
+        {
+            var bytes = PaycheckPdfRenderer.RenderComparison(ComparisonRows, ComparisonNameA, ComparisonNameB);
+            await _pdfExport.ExportAndOpenAsync(bytes, ComparisonExportFileName());
+        }
+        catch (Exception ex)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlert("Export Comparison", $"Could not export the comparison PDF: {ex.Message}", "OK");
+        }
+    }
+
+    /// <summary>Exports just the A/B comparison table to a standalone CSV.</summary>
+    [RelayCommand(CanExecute = nameof(CanExportComparison))]
+    private async Task ExportComparisonCsv()
+    {
+        if (!HasComparison)
+            return;
+
+        try
+        {
+            var csv = PaycheckCsvRenderer.RenderComparison(ComparisonRows, ComparisonNameA, ComparisonNameB);
+            await _csvExport.ExportAndOpenAsync(csv, ComparisonExportFileName());
+        }
+        catch (Exception ex)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.DisplayAlert("Export Comparison", $"Could not export the comparison CSV: {ex.Message}", "OK");
         }
     }
 }

@@ -1,16 +1,16 @@
-using PaycheckCalc.App.Models;
-
 namespace PaycheckCalc.App.Services.Printing;
 
 /// <summary>
-/// Sends the current per-period paycheck results to the platform print system.
+/// Sends a rendered paycheck document to the platform print system. The caller
+/// renders the PDF bytes (via <see cref="Pdf.PaycheckPdfRenderer"/>) so the printed
+/// page matches the exported PDF.
 /// </summary>
 public interface IPrintService
 {
     /// <summary>
-    /// Renders the results to a single-page document and hands it to the
-    /// platform print framework (the Android print dialog or the Windows default
-    /// print handler).
+    /// Hands <paramref name="pdfBytes"/> to the platform print framework (the Android
+    /// print dialog or the Windows default print handler), using <paramref name="jobName"/>
+    /// as the print job title.
     /// </summary>
-    Task PrintAsync(ResultCardModel result);
+    Task PrintAsync(byte[] pdfBytes, string jobName);
 }

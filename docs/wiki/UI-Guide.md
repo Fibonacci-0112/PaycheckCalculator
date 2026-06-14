@@ -85,13 +85,17 @@ Additional features:
 
 #### Export & Print
 
-The Results page toolbar exposes three actions, each enabled once a paycheck has been calculated:
+The Results page toolbar exposes three actions, each enabled once a paycheck has been calculated. An **export file-name box** (prefilled from the paycheck name on each calculation, and editable) names the exported file; blank falls back to `Paycheck-Summary`. Every export covers the **per-period breakdown plus the annual projection** (annualized amounts, projected YTD, and the year-end estimate), and **appends the A/B comparison table when two saved paychecks are selected** on the Paychecks page.
 
 - **Print** — Renders the summary and opens the native print dialog (Android print framework / Windows default PDF handler). Backed by `Services/Printing`.
-- **Export PDF** — Writes a single-page PDF and opens it in a viewer (preferring Adobe Reader/Acrobat). Backed by `Services/Pdf`.
-- **Export CSV** — Writes a CSV of the per-period breakdown (Income, Taxes, Deductions, Summary) and opens it in the platform's default CSV application (Microsoft Excel on Windows, or the chosen default spreadsheet app on Android). Amounts are plain decimals for clean spreadsheet import. Backed by `Services/Csv`.
+- **Export PDF** — Writes a PDF (one or more Letter-size pages) and opens it in a viewer (preferring Adobe Reader/Acrobat). Backed by `Services/Pdf`.
+- **Export CSV** — Writes a CSV of the breakdown (Income, Taxes, Deductions, Summary, Annualized, Projected YTD, Year-End Estimate, and any comparison) and opens it in the platform's default CSV application (Microsoft Excel on Windows, or the chosen default spreadsheet app on Android). Amounts are plain decimals for clean spreadsheet import. Backed by `Services/Csv`.
 
-> **Web app:** The Blazor results panel offers the same three actions. **Export CSV** and **Export PDF** download the per-period breakdown via the browser (rendered by `PaycheckCalc.Blazor/Services/Export/`, matching the MAUI format), and **Print** opens the browser print dialog using a `@media print` stylesheet that isolates the results — so it prints whichever tab (Per Paycheck or Annual) is on screen.
+The Paychecks page's A/B comparison card also has its own **Export PDF / Export CSV** buttons that export the comparison table on its own (`RenderComparison`).
+
+> **Note on layering:** the renderers (`PaycheckPdfRenderer` / `PaycheckCsvRenderer`) take the already-built `ResultCardModel`, the optional `AnnualProjectionModel`, and optional `ComparisonRow`s and return bytes/text; the export services (`Services/Pdf`, `Services/Csv`, `Services/Printing`) just persist those bytes under the chosen file name and hand them to the platform launcher.
+
+> **Web app:** The Blazor results panel offers the same three actions plus the same editable file-name box. **Export CSV** and **Export PDF** download the breakdown (per-period + annual projection, with the comparison appended when an A/B pair is selected) via the browser (rendered by `PaycheckCalc.Blazor/Services/Export/`, matching the MAUI format), and **Print** opens the browser print dialog using a `@media print` stylesheet that isolates the results — so it prints whichever tab (Per Paycheck or Annual) is on screen. The Compare A/B panel has its own CSV/PDF buttons for a comparison-only export.
 
 ### Annual Tab
 

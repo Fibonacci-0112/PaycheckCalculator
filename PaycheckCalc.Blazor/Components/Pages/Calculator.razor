@@ -277,8 +277,10 @@
             @if (_result != null)
             {
                 <div class="results-actions no-print">
-                    <button class="btn-export" @onclick="ExportCsvAsync" title="Download per-paycheck results as CSV">CSV</button>
-                    <button class="btn-export" @onclick="ExportPdfAsync" title="Download per-paycheck results as PDF">PDF</button>
+                    <input type="text" class="export-name-input" @bind="_exportFileName"
+                           placeholder="File name" title="Name for exported files" aria-label="Export file name" />
+                    <button class="btn-export" @onclick="ExportCsvAsync" title="Download results (with annual projection) as CSV">CSV</button>
+                    <button class="btn-export" @onclick="ExportPdfAsync" title="Download results (with annual projection) as PDF">PDF</button>
                     <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
                 </div>
             }
@@ -632,6 +634,10 @@
                                 }
                             </tbody>
                         </table>
+                        <div class="results-actions compare-actions no-print">
+                            <button class="btn-export" @onclick="() => ExportComparisonCsvAsync(comparisonRows)" title="Download the A/B comparison as CSV">CSV</button>
+                            <button class="btn-export" @onclick="() => ExportComparisonPdfAsync(comparisonRows)" title="Download the A/B comparison as PDF">PDF</button>
+                        </div>
                     }
                 </div>
             }
@@ -728,6 +734,7 @@
 
     // Saved paychecks (session) + account
     private string _paycheckName = "";
+    private string _exportFileName = "";
     private List<SavedPaycheckDto> _history = new();
     private string _email = "";
     private string _password = "";
@@ -838,6 +845,9 @@
                 _projection = ProjectionCalc.Calculate(input, _result);
             }
             _resultTab = 0;
+
+            // Prefill the export file name from the paycheck name (the user can edit it).
+            _exportFileName = _paycheckName.Trim();
 
             // Save a snapshot of exactly what was calculated, and sync it if signed in.
             await SaveSnapshotAsync(input);
@@ -994,13 +1004,16 @@
     private void CloseModal() => _showModal = false;
 
     // ── Export / print ──────────────────────────────────────────
-    // CSV and PDF export the per-paycheck results (mirroring the mobile app).
-    // Print uses the browser's print dialog with a print stylesheet, so it
+    // CSV and PDF export the per-paycheck results plus the annual projection, and
+    // append the A/B comparison when two paychecks are selected (mirroring the mobile
+    // app). Print uses the browser's print dialog with a print stylesheet, so it
     // captures whichever results tab (Per Paycheck or Annual) is on screen.
     private async Task ExportCsvAsync()
     {
         if (_result is null) return;
-        var csv = PaycheckCsvRenderer.Render(_result, _result.State.ToString());
+        var comparison = BuildComparisonRows();
+        var csv = PaycheckCsvRenderer.Render(_result, _result.State.ToString(), _projection,
+            comparison.Count > 0 ? comparison : null, _compareAName ?? "Paycheck A", _compareBName ?? "Paycheck B");
         var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(csv));
         await JS.InvokeVoidAsync("paycheckExport.downloadFile", ExportFileName("csv"), "text/csv", base64);
     }
@@ -1008,15 +1021,48 @@
     private async Task ExportPdfAsync()
     {
         if (_result is null) return;
-        var bytes = PaycheckPdfRenderer.Render(_result, _result.State.ToString());
+        var comparison = BuildComparisonRows();
+        var bytes = PaycheckPdfRenderer.Render(_result, _result.State.ToString(), _projection,
+            comparison.Count > 0 ? comparison : null, _compareAName ?? "Paycheck A", _compareBName ?? "Paycheck B");
         var base64 = Convert.ToBase64String(bytes);
         await JS.InvokeVoidAsync("paycheckExport.downloadFile", ExportFileName("pdf"), "application/pdf", base64);
     }
 
     private async Task PrintAsync() => await JS.InvokeVoidAsync("paycheckExport.print");
 
-    private static string ExportFileName(string extension) =>
-        $"Paycheck-Summary-{DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture)}.{extension}";
+    // Dedicated A/B comparison export (the comparison table on its own).
+    private async Task ExportComparisonCsvAsync(IReadOnlyList<ComparisonRow> rows)
+    {
+        if (rows.Count == 0) return;
+        var csv = PaycheckCsvRenderer.RenderComparison(rows, _compareAName ?? "Paycheck A", _compareBName ?? "Paycheck B");
+        var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(csv));
+        await JS.InvokeVoidAsync("paycheckExport.downloadFile", ComparisonFileName("csv"), "text/csv", base64);
+    }
+
+    private async Task ExportComparisonPdfAsync(IReadOnlyList<ComparisonRow> rows)
+    {
+        if (rows.Count == 0) return;
+        var bytes = PaycheckPdfRenderer.RenderComparison(rows, _compareAName ?? "Paycheck A", _compareBName ?? "Paycheck B");
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("paycheckExport.downloadFile", ComparisonFileName("pdf"), "application/pdf", base64);
+    }
+
+    private string ExportFileName(string extension) => $"{Sanitize(_exportFileName, "Paycheck-Summary")}.{extension}";
+
+    private string ComparisonFileName(string extension) =>
+        $"{Sanitize($"Comparison-{_compareAName}-vs-{_compareBName}", "Comparison")}.{extension}";
+
+    /// <summary>Turns a user-supplied label into a file-system-safe base name.</summary>
+    private static string Sanitize(string? baseName, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(baseName)) return fallback;
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        var sb = new StringBuilder(baseName.Length);
+        foreach (var ch in baseName.Trim())
+            sb.Append(Array.IndexOf(invalid, ch) >= 0 ? '-' : ch);
+        var cleaned = sb.ToString().Trim();
+        return string.IsNullOrEmpty(cleaned) ? fallback : cleaned;
+    }
 
     private void AddDeduction() => _deductions.Add(new DeductionVm());
     private void RemoveDeduction(DeductionVm d) => _deductions.Remove(d);

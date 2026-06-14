@@ -856,6 +856,32 @@ html, body {
 .btn-export:hover { background: rgba(255,255,255,0.28); }
 .btn-export:active { background: rgba(255,255,255,0.36); }
 
+/* Editable export file name, shown alongside the export buttons in the dark header. */
+.export-name-input {
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.95);
+    color: #263238;
+    font-size: 0.78em;
+    width: 150px;
+    max-width: 40vw;
+}
+
+/* Comparison export buttons sit on a light panel, so override the header palette. */
+.compare-actions {
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.compare-actions .btn-export {
+    background: #1565c0;
+    border-color: #1565c0;
+    color: #fff;
+}
+.compare-actions .btn-export:hover { background: #1257a8; }
+.compare-actions .btn-export:active { background: #0f4e96; }
+
 /* ── Print ─────────────────────────────────────────────────── */
 @media print {
     /* Hide site chrome and everything but the results panel. */

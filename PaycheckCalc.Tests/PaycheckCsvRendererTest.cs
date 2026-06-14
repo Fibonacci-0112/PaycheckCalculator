@@ -1,4 +1,5 @@
 extern alias blazor;
+using blazor::PaycheckCalc.Blazor.Models;
 using blazor::PaycheckCalc.Blazor.Services.Export;
 using PaycheckCalc.Core.Models;
 using Xunit;
@@ -166,5 +167,88 @@ public sealed class PaycheckCsvRendererTest
 
         Assert.Contains("Deductions,Post-Tax Deductions,40.00\r\n", csv);
         Assert.DoesNotContain("Pre-Tax Deductions", csv);
+    }
+
+    // ── Annual projection + comparison extensions ────────────────
+
+    //   Annualized at 26 periods, current paycheck #3, 23 remaining.
+    private static AnnualProjection SampleProjection() => new()
+    {
+        PayPeriodsPerYear = 26,
+        CurrentPaycheckNumber = 3,
+        RemainingPaychecks = 23,
+        AnnualizedGrossPay = 52000.00m,
+        AnnualizedPreTaxDeductions = 3900.00m,
+        AnnualizedFederalWithholding = 4680.00m,
+        AnnualizedStateWithholding = 1950.00m,
+        AnnualizedFica = 3978.00m,
+        AnnualizedNetPay = 37492.00m,
+        ProjectedYtdGrossPay = 6000.00m,
+        ProjectedYtdFederalWithholding = 540.00m,
+        ProjectedYtdStateWithholding = 225.00m,
+        ProjectedYtdFica = 459.00m,
+        ProjectedYtdNetPay = 4326.00m,
+        EstimatedAnnualFederalLiability = 4680.00m,
+        EstimatedAnnualFicaLiability = 3978.00m,
+        EstimatedTotalLiability = 10608.00m,
+        AnnualizedTotalWithholding = 10608.00m,
+        OverUnderWithholding = 250.00m
+    };
+
+    private static IReadOnlyList<ComparisonRow> SampleComparison() => new[]
+    {
+        new ComparisonRow("Gross Pay", 2000.00m, 2200.00m),
+        new ComparisonRow("Net Pay", 1453.47m, 1600.00m, highlight: true),
+    };
+
+    [Fact]
+    public void Render_WithoutExtras_OmitsAnnualAndComparisonSections()
+    {
+        var csv = PaycheckCsvRenderer.Render(SampleResult(), "CA");
+
+        Assert.DoesNotContain("Annualized,", csv);
+        Assert.DoesNotContain("Difference", csv);
+    }
+
+    [Fact]
+    public void Render_WithAnnualProjection_AppendsAnnualRows()
+    {
+        var csv = PaycheckCsvRenderer.Render(SampleResult(), "CA", SampleProjection());
+
+        Assert.Contains("Annualized,Gross Pay,52000.00\r\n", csv);
+        Assert.Contains("Annualized,Pre-Tax Deductions,3900.00\r\n", csv);
+        Assert.Contains("Annualized,Net Pay,37492.00\r\n", csv);
+        Assert.Contains("Projected YTD,Remaining Paychecks,23\r\n", csv);
+        Assert.Contains("Projected YTD,Net Pay,4326.00\r\n", csv);
+        Assert.Contains("Year-End Estimate,Estimated Total Liability,10608.00\r\n", csv);
+        Assert.Contains("Year-End Estimate,Over/Under Withholding,250.00\r\n", csv);
+    }
+
+    [Fact]
+    public void Render_WithComparison_AppendsComparisonTable()
+    {
+        var csv = PaycheckCsvRenderer.Render(SampleResult(), "CA", annual: null,
+            comparison: SampleComparison(), comparisonNameA: "Job A", comparisonNameB: "Job B");
+
+        Assert.Contains("Metric,Job A,Job B,Difference\r\n", csv);
+        Assert.Contains("Gross Pay,2000.00,2200.00,200.00\r\n", csv);
+        Assert.Contains("Net Pay,1453.47,1600.00,146.53\r\n", csv);
+    }
+
+    [Fact]
+    public void RenderComparison_ProducesFourColumnTable()
+    {
+        var csv = PaycheckCsvRenderer.RenderComparison(SampleComparison(), "Job A", "Job B");
+
+        Assert.StartsWith("Metric,Job A,Job B,Difference\r\n", csv);
+        Assert.Contains("Gross Pay,2000.00,2200.00,200.00\r\n", csv);
+    }
+
+    [Fact]
+    public void RenderComparison_QuotesNamesContainingCommas()
+    {
+        var csv = PaycheckCsvRenderer.RenderComparison(SampleComparison(), "Job, A", "Job B");
+
+        Assert.StartsWith("Metric,\"Job, A\",Job B,Difference\r\n", csv);
     }
 }

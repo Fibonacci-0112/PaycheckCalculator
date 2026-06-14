@@ -72,6 +72,13 @@
         <ScrollView Grid.Row="2" IsVisible="{Binding HasResult}">
             <VerticalStackLayout>
 
+            <!-- Export file name (used by the Print / Export PDF / Export CSV toolbar actions) -->
+            <VerticalStackLayout Padding="16,12,16,0" Spacing="4">
+                <Label Text="EXPORT FILE NAME" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                <Entry Text="{Binding ExportFileName}" Placeholder="Paycheck-Summary"
+                       AutomationProperties.Name="Export file name" />
+            </VerticalStackLayout>
+
             <!-- ════════ PER PAYCHECK ════════ -->
             <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding IsPerPeriodTabVisible}">
 
