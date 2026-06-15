@@ -79,6 +79,7 @@ public partial class Calculator
     {
         public Guid Id { get; } = Guid.NewGuid();
         public string Name { get; set; } = "";
+        public bool NameError { get; set; }
         public decimal Amount { get; set; } = 0m;
         public DeductionType Type { get; set; } = DeductionType.PreTax;
         public DeductionAmountType AmountType { get; set; } = DeductionAmountType.Dollar;

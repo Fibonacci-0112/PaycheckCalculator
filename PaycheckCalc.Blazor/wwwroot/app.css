@@ -378,6 +378,21 @@ html, body {
 .btn-danger { background: #ffebee; color: #c62828; }
 .btn-danger:hover { background: #ffcdd2; }
 
+.btn-cancel { background: #f5f5f5; color: #424242; }
+.btn-cancel:hover { background: #e0e0e0; }
+
+.delete-confirm-prompt {
+    font-size: 0.78em;
+    color: #c62828;
+    white-space: nowrap;
+    align-self: center;
+}
+
+.input-error {
+    border-color: #e53935 !important;
+    background-color: #fff8f8 !important;
+}
+
 .btn-info {
     width: 20px;
     height: 20px;
@@ -450,8 +465,10 @@ html, body {
 }
 
 .placeholder-icon {
-    font-size: 3em;
+    width: 72px;
+    height: 72px;
     opacity: 0.3;
+    color: #546e7a;
 }
 
 .results-placeholder p {
