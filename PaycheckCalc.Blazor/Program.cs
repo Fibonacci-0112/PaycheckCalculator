@@ -34,6 +34,19 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapGet("/sitemap.xml", (HttpContext ctx) =>
+{
+    var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+    sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+    sb.AppendLine($"  <url><loc>{baseUrl}/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>");
+    foreach (var state in StateMetadata.All.OrderBy(s => s.Slug))
+        sb.AppendLine($"  <url><loc>{baseUrl}/{state.Slug}-paycheck-calculator</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>");
+    sb.AppendLine("</urlset>");
+    return Results.Content(sb.ToString(), "application/xml");
+});
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
