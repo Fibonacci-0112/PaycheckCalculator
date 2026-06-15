@@ -11,6 +11,13 @@ namespace PaycheckCalc.App.ViewModels;
 public partial class DeductionItemViewModel : ObservableObject
 {
     [ObservableProperty] public partial string Name { get; set; } = "";
+    [ObservableProperty] public partial bool HasNameError { get; set; }
+
+    partial void OnNameChanged(string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            HasNameError = false;
+    }
     [ObservableProperty] public partial decimal Amount { get; set; }
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPercentageAmount))]

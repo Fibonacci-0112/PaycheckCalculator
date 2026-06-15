@@ -323,7 +323,13 @@
                                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto"
                                               RowSpacing="8" ColumnSpacing="8">
                                             <Entry Grid.Row="0" Grid.Column="0" Placeholder="Name (e.g. 401k)"
-                                                   Text="{Binding Name}" TextColor="Black" BackgroundColor="#F2F2F2" />
+                                                   Text="{Binding Name}" TextColor="Black" BackgroundColor="#F2F2F2">
+                                                <Entry.Triggers>
+                                                    <DataTrigger TargetType="Entry" Binding="{Binding HasNameError}" Value="True">
+                                                        <Setter Property="BackgroundColor" Value="#FFEBEE" />
+                                                    </DataTrigger>
+                                                </Entry.Triggers>
+                                            </Entry>
                                             <Button Grid.Row="0" Grid.Column="1" Text="✕"
                                                     FontSize="12" Padding="6,2"
                                                     BackgroundColor="#EF5350" TextColor="White" CornerRadius="4"

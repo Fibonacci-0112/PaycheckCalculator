@@ -722,9 +722,13 @@ public partial class CalculatorViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void RemovePaycheck(SavedPaycheckViewModel? item)
+    private async Task RemovePaycheck(SavedPaycheckViewModel? item)
     {
         if (item is null) return;
+        bool confirmed = await Shell.Current.DisplayAlert(
+            "Delete Paycheck", $"Delete \"{item.Name}\"?", "Delete", "Cancel");
+        if (!confirmed) return;
+
         Paychecks.Remove(item);
         if (SelectedComparisonA == item) SelectedComparisonA = null;
         if (SelectedComparisonB == item) SelectedComparisonB = null;
@@ -850,6 +854,15 @@ public partial class CalculatorViewModel : ObservableObject
     [RelayCommand]
     private void Calculate()
     {
+        // Require a name on every deduction before proceeding.
+        foreach (var d in Deductions) d.HasNameError = false;
+        var unnamed = Deductions.Where(d => string.IsNullOrWhiteSpace(d.Name)).ToList();
+        if (unnamed.Count > 0)
+        {
+            foreach (var d in unnamed) d.HasNameError = true;
+            return;
+        }
+
         // Build dynamic state input values from the schema-driven fields
         var stateValues = new StateInputValues();
         foreach (var field in StateFields)
@@ -994,8 +1007,19 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>True when two paychecks are selected and the comparison can be exported on its own.</summary>
     public bool CanExportComparison => HasComparison;
 
-    partial void OnSelectedComparisonAChanged(SavedPaycheckViewModel? value) => RefreshComparisonExportState();
-    partial void OnSelectedComparisonBChanged(SavedPaycheckViewModel? value) => RefreshComparisonExportState();
+    partial void OnSelectedComparisonAChanged(SavedPaycheckViewModel? value)
+    {
+        if (value is not null && ReferenceEquals(value, SelectedComparisonB))
+            SelectedComparisonB = Paychecks.FirstOrDefault(p => !ReferenceEquals(p, value));
+        RefreshComparisonExportState();
+    }
+
+    partial void OnSelectedComparisonBChanged(SavedPaycheckViewModel? value)
+    {
+        if (value is not null && ReferenceEquals(value, SelectedComparisonA))
+            SelectedComparisonA = Paychecks.FirstOrDefault(p => !ReferenceEquals(p, value));
+        RefreshComparisonExportState();
+    }
 
     private void RefreshComparisonExportState()
     {

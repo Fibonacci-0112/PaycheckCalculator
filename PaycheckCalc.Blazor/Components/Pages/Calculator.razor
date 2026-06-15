@@ -214,7 +214,11 @@
                 {
                     <div class="deduction-card">
                         <div class="deduction-header">
-                            <input type="text" @bind="ded.Name" placeholder="Name (e.g. 401k, Health)" class="ded-name" />
+                            <input type="text" @bind="ded.Name"
+                                   @oninput="@(() => ded.NameError = false)"
+                                   placeholder="Name (e.g. 401k, Health)"
+                                   class="ded-name @(ded.NameError ? "input-error" : "")" />
+                            @if (ded.NameError) { <span class="field-error">Name is required</span> }
                             <button class="btn-icon btn-danger" @onclick="() => RemoveDeduction(ded)" title="Remove">x</button>
                         </div>
                         <div class="form-row">
@@ -289,7 +293,12 @@
         @if (_result == null)
         {
             <div class="results-placeholder">
-                <div class="placeholder-icon">&#9881;</div>
+                <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="24" cy="24" r="21"/>
+                    <line x1="24" y1="10" x2="24" y2="14.5"/>
+                    <line x1="24" y1="33.5" x2="24" y2="38"/>
+                    <path d="M18.5 18a6 6 0 0 1 11 0c0 3.5-3 5-5.5 6.5-2.5 1.5-5.5 3-5.5 6.5a6 6 0 0 0 11 0"/>
+                </svg>
                 <p>Enter your paycheck information and click <strong>Calculate</strong> to see your results.</p>
             </div>
         }
@@ -577,7 +586,16 @@
                                 <span class="history-name">@item.Name</span>
                                 <span class="history-meta">@item.Input.State &middot; Net @item.Result.NetPay.ToString("C") &middot; Gross @item.Result.GrossPay.ToString("C")</span>
                             </div>
-                            <button class="btn-icon btn-danger" @onclick="() => DeletePaycheckAsync(item)" title="Delete">x</button>
+                            @if (_pendingDeleteName == item.Name)
+                            {
+                                <span class="delete-confirm-prompt">Delete?</span>
+                                <button class="btn-icon btn-danger" @onclick="() => ConfirmDeleteAsync(item)" title="Confirm delete">Yes</button>
+                                <button class="btn-icon btn-cancel" @onclick="CancelDelete" title="Cancel">No</button>
+                            }
+                            else
+                            {
+                                <button class="btn-icon btn-danger" @onclick="() => RequestDelete(item)" title="Delete">✕</button>
+                            }
                         </div>
                     }
                 </div>
@@ -590,7 +608,7 @@
                     <div class="compare-selectors">
                         <div class="form-group">
                             <label>Paycheck A</label>
-                            <select @bind="_compareAName">
+                            <select @bind="_compareAName" @bind:after="OnCompareAChanged">
                                 @foreach (var p in _history)
                                 {
                                     <option value="@p.Name">@p.Name</option>
@@ -599,7 +617,7 @@
                         </div>
                         <div class="form-group">
                             <label>Paycheck B</label>
-                            <select @bind="_compareBName">
+                            <select @bind="_compareBName" @bind:after="OnCompareBChanged">
                                 @foreach (var p in _history)
                                 {
                                     <option value="@p.Name">@p.Name</option>
@@ -776,6 +794,19 @@
         _calcError = null;
         _stateErrors.Clear();
 
+        // Require a name on every deduction before proceeding.
+        foreach (var d in _deductions) d.NameError = false;
+        var unnamed = _deductions.Where(d => string.IsNullOrWhiteSpace(d.Name)).ToList();
+        if (unnamed.Count > 0)
+        {
+            foreach (var d in unnamed) d.NameError = true;
+            _calcError = unnamed.Count == 1
+                ? "One deduction is missing a name."
+                : $"{unnamed.Count} deductions are missing names.";
+            _inputTab = 3;
+            return;
+        }
+
         // Field-level validation
         var hasFieldErrors = false;
         foreach (var f in _stateFields)
@@ -921,6 +952,29 @@
         await Store.RemoveAsync(dto.Name, DateTimeOffset.UtcNow);
         await RefreshHistoryAsync();
         if (IsSignedIn) await TrySyncAsync();
+    }
+
+    private string? _pendingDeleteName;
+    private void RequestDelete(SavedPaycheckDto dto) => _pendingDeleteName = dto.Name;
+    private void CancelDelete() => _pendingDeleteName = null;
+    private async Task ConfirmDeleteAsync(SavedPaycheckDto dto)
+    {
+        _pendingDeleteName = null;
+        await DeletePaycheckAsync(dto);
+    }
+
+    private void OnCompareAChanged()
+    {
+        if (string.Equals(_compareAName, _compareBName, StringComparison.OrdinalIgnoreCase))
+            _compareBName = _history.FirstOrDefault(h =>
+                !string.Equals(h.Name, _compareAName, StringComparison.OrdinalIgnoreCase))?.Name;
+    }
+
+    private void OnCompareBChanged()
+    {
+        if (string.Equals(_compareAName, _compareBName, StringComparison.OrdinalIgnoreCase))
+            _compareAName = _history.FirstOrDefault(h =>
+                !string.Equals(h.Name, _compareBName, StringComparison.OrdinalIgnoreCase))?.Name;
     }
 
     private async Task LoginAsync()
