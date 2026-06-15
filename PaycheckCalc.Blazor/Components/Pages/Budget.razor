@@ -36,9 +36,20 @@
             </div>
         </div>
         <div class="form-row">
+            <div class="form-group">
+                <label>Budgeting Method</label>
+                <select @bind="_method">
+                    <option value="@BudgetMethod.FiftyThirtyTwenty">50/30/20</option>
+                    <option value="@BudgetMethod.ZeroBased">Zero-based</option>
+                    <option value="@BudgetMethod.Envelope">Envelope</option>
+                    <option value="@BudgetMethod.Custom">Custom</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
             <button class="btn btn-primary" @onclick="ApplyIncome">Set Income</button>
-            <button class="btn btn-secondary" @onclick="Apply5030_20" disabled="@(_monthlyNetIncome <= 0m)">
-                Apply 50/30/20 Rule
+            <button class="btn btn-secondary" @onclick="ApplyMethodTemplate" disabled="@(_monthlyNetIncome <= 0m)">
+                Apply Template
             </button>
         </div>
         @if (_monthlyNetIncome > 0m)
@@ -67,7 +78,29 @@
                 <span class="chip-label">Unallocated</span>
                 <span class="chip-value">@_summary?.Unallocated.ToString("C")</span>
             </div>
+            <div class="summary-chip">
+                <span class="chip-label">Recurring (mo.)</span>
+                <span class="chip-value">@_summary?.TotalRecurring.ToString("C")</span>
+            </div>
+            <div class="summary-chip">
+                <span class="chip-label">Savings goals (mo.)</span>
+                <span class="chip-value">@_summary?.TotalSavingsContribution.ToString("C")</span>
+            </div>
         </div>
+
+        @if (_method == BudgetMethod.ZeroBased && _summary is not null)
+        {
+            <div class="zero-based-banner @(_summary.IsFullyAllocated ? "ok" : "warn")">
+                @if (_summary.IsFullyAllocated)
+                {
+                    <span>✓ Every dollar is allocated — your zero-based budget is balanced.</span>
+                }
+                else
+                {
+                    <span>@_summary.Unallocated.ToString("C") still to be budgeted. Assign every dollar to reach zero.</span>
+                }
+            </div>
+        }
 
         <!-- ── CATEGORY BARS ─────────────────────────────────────── -->
         <div class="budget-card">
@@ -97,6 +130,167 @@
                     </div>
                 </div>
             }
+        </div>
+
+        <!-- ── ADD CATEGORY (user-defined) ───────────────────────── -->
+        <div class="budget-card">
+            <h3>Add Category</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" @bind="_newCatName" placeholder="e.g. Groceries" />
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select @bind="_newCatType">
+                        @foreach (var t in Enum.GetValues<BudgetType>())
+                        {
+                            <option value="@t">@t</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" @bind="_newCatAmount" min="0" step="0.01" />
+                </div>
+                <div class="form-group">
+                    <label>Amount Type</label>
+                    <select @bind="_newCatAmountType">
+                        <option value="@BudgetAmountType.Dollar">Dollar ($)</option>
+                        <option value="@BudgetAmountType.Percentage">Percentage (%)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" @onclick="AddCategory"
+                    disabled="@(string.IsNullOrWhiteSpace(_newCatName))">
+                Add Category
+            </button>
+        </div>
+
+        <!-- ── RECURRING BILLS ───────────────────────────────────── -->
+        <div class="budget-card">
+            <h3>Recurring Bills</h3>
+            @if (_bills.Count > 0)
+            {
+                <table class="tx-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Frequency</th>
+                            <th class="amount-col">Amount</th>
+                            <th class="amount-col">Monthly</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bill in _bills.OrderBy(b => b.Name))
+                        {
+                            <tr>
+                                <td>@bill.Name</td>
+                                <td>@bill.CategoryName</td>
+                                <td>@bill.Frequency</td>
+                                <td class="amount-col">@bill.Amount.ToString("C")</td>
+                                <td class="amount-col">@RecurrencePeriods.MonthlyEquivalent(bill.Amount, bill.Frequency).ToString("C")</td>
+                                <td>
+                                    <button class="btn-icon" @onclick="() => RemoveBill(bill)" title="Delete bill">✕</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            <div class="form-row" style="margin-top:.5rem;">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" @bind="_newBillName" placeholder="e.g. Rent" />
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select @bind="_newBillCategory">
+                        <option value="">— select —</option>
+                        @foreach (var cat in _categories)
+                        {
+                            <option value="@cat.Name">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount ($)</label>
+                    <input type="number" @bind="_newBillAmount" min="0.01" step="0.01" />
+                </div>
+                <div class="form-group">
+                    <label>Frequency</label>
+                    <select @bind="_newBillFrequency">
+                        @foreach (var f in Enum.GetValues<RecurrenceFrequency>())
+                        {
+                            <option value="@f">@f</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" @onclick="AddBill"
+                    disabled="@(string.IsNullOrWhiteSpace(_newBillName) || string.IsNullOrWhiteSpace(_newBillCategory) || _newBillAmount <= 0m)">
+                Add Bill
+            </button>
+        </div>
+
+        <!-- ── SAVINGS GOALS ─────────────────────────────────────── -->
+        <div class="budget-card">
+            <h3>Savings Goals</h3>
+            @if (_goals.Count > 0)
+            {
+                <table class="tx-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="amount-col">Saved</th>
+                            <th class="amount-col">Target</th>
+                            <th>By</th>
+                            <th class="amount-col">Monthly need</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var goal in _goals.OrderBy(g => g.Name))
+                        {
+                            var domainGoal = ToDomainGoal(goal);
+                            <tr>
+                                <td>@goal.Name</td>
+                                <td class="amount-col">@goal.CurrentAmount.ToString("C")</td>
+                                <td class="amount-col">@goal.TargetAmount.ToString("C")</td>
+                                <td>@(goal.TargetDate?.ToString("MMM yyyy") ?? "—")</td>
+                                <td class="amount-col">@domainGoal.MonthlyContributionNeeded(DateOnly.FromDateTime(DateTime.Today)).ToString("C")</td>
+                                <td>
+                                    <button class="btn-icon" @onclick="() => RemoveGoal(goal)" title="Delete goal">✕</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            <div class="form-row" style="margin-top:.5rem;">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" @bind="_newGoalName" placeholder="e.g. Vacation" />
+                </div>
+                <div class="form-group">
+                    <label>Target ($)</label>
+                    <input type="number" @bind="_newGoalTarget" min="0.01" step="0.01" />
+                </div>
+                <div class="form-group">
+                    <label>Saved so far ($)</label>
+                    <input type="number" @bind="_newGoalCurrent" min="0" step="0.01" />
+                </div>
+                <div class="form-group">
+                    <label>Target date (optional)</label>
+                    <input type="date" @bind="_newGoalDate" />
+                </div>
+            </div>
+            <button class="btn btn-primary" @onclick="AddGoal"
+                    disabled="@(string.IsNullOrWhiteSpace(_newGoalName) || _newGoalTarget <= 0m)">
+                Add Goal
+            </button>
         </div>
 
         <!-- ── ADD EXPENSE ───────────────────────────────────────── -->
@@ -211,6 +405,9 @@
     .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: .9rem; padding: .1rem .3rem; }
     .btn-icon:hover { color: #f44336; }
     .budget-empty { color: #888; text-align: center; padding: 2rem; }
+    .zero-based-banner { border-radius: 8px; padding: .6rem .85rem; margin-bottom: 1rem; font-size: .85rem; }
+    .zero-based-banner.ok { background: #1b3a1b; color: #9be29b; }
+    .zero-based-banner.warn { background: #3a331b; color: #e2d49b; }
 </style>
 
 @code {
@@ -221,6 +418,11 @@
 
     // ── Categories / budget definition ────────────────────────────────────────
     private List<BudgetCategory> _categories = [];
+    private BudgetMethod _method = BudgetMethod.FiftyThirtyTwenty;
+    private string _newCatName = "";
+    private BudgetType _newCatType = BudgetType.Needs;
+    private decimal _newCatAmount;
+    private BudgetAmountType _newCatAmountType = BudgetAmountType.Dollar;
 
     // ── Summary (computed from calculator) ────────────────────────────────────
     private BudgetSummary? _summary;
@@ -232,15 +434,34 @@
     private decimal _newTxAmount;
     private string _newTxDescription = "";
 
+    // ── Recurring bills ─────────────────────────────────────────────────────────
+    private List<RecurringBillDto> _bills = [];
+    private string _newBillName = "";
+    private string _newBillCategory = "";
+    private decimal _newBillAmount;
+    private RecurrenceFrequency _newBillFrequency = RecurrenceFrequency.Monthly;
+
+    // ── Savings goals ─────────────────────────────────────────────────────────
+    private List<SavingsGoalDto> _goals = [];
+    private string _newGoalName = "";
+    private decimal _newGoalTarget;
+    private decimal _newGoalCurrent;
+    private DateTime? _newGoalDate;
+
+    private const string BudgetName = "My Budget";
+
     protected override async Task OnInitializedAsync()
     {
         var budgetSet = await Store.LoadBudgetsAsync();
         var txSet     = await Store.LoadTransactionsAsync();
+        var billSet   = await Store.LoadRecurringBillsAsync();
+        var goalSet   = await Store.LoadSavingsGoalsAsync();
 
         var dto = budgetSet.Budgets.FirstOrDefault();
         if (dto is not null)
         {
             _monthlyNetIncome = dto.MonthlyNetIncome;
+            _method = dto.Method;
             _categories = dto.Categories.Select(c => new BudgetCategory
             {
                 Name = c.Name, BudgetType = c.BudgetType, Amount = c.Amount, AmountType = c.AmountType
@@ -248,6 +469,8 @@
         }
 
         _transactions = txSet.Transactions.ToList();
+        _bills = billSet.Bills.ToList();
+        _goals = goalSet.Goals.ToList();
         RecomputeSummary();
     }
 
@@ -259,15 +482,34 @@
         PersistBudget();
     }
 
-    private void Apply5030_20()
+    private void ApplyMethodTemplate()
     {
         if (_monthlyNetIncome <= 0m) return;
-        _categories = AllocationRules.FiftyThirtyTwenty()
-            .Select(c => new BudgetCategory
+        var template = AllocationRules.ForMethod(_method);
+        if (template.Count > 0)
+        {
+            _categories = template.Select(c => new BudgetCategory
             {
                 Name = c.Name, BudgetType = c.BudgetType,
                 Amount = c.Amount, AmountType = c.AmountType
             }).ToList();
+        }
+        RecomputeSummary();
+        PersistBudget();
+    }
+
+    private void AddCategory()
+    {
+        if (string.IsNullOrWhiteSpace(_newCatName)) return;
+        _categories.Add(new BudgetCategory
+        {
+            Name = _newCatName.Trim(),
+            BudgetType = _newCatType,
+            Amount = _newCatAmount,
+            AmountType = _newCatAmountType
+        });
+        _newCatName = "";
+        _newCatAmount = 0m;
         RecomputeSummary();
         PersistBudget();
     }
@@ -303,6 +545,77 @@
         RecomputeSummary();
     }
 
+    private async Task AddBill()
+    {
+        if (string.IsNullOrWhiteSpace(_newBillName) || string.IsNullOrWhiteSpace(_newBillCategory) || _newBillAmount <= 0m) return;
+
+        var dto = new RecurringBillDto
+        {
+            Id = Guid.NewGuid(),
+            BudgetName = BudgetName,
+            Name = _newBillName.Trim(),
+            CategoryName = _newBillCategory,
+            Amount = _newBillAmount,
+            Frequency = _newBillFrequency,
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+        _bills.Add(dto);
+        await Store.UpsertRecurringBillAsync(dto);
+
+        _newBillName = "";
+        _newBillCategory = "";
+        _newBillAmount = 0m;
+        _newBillFrequency = RecurrenceFrequency.Monthly;
+        RecomputeSummary();
+    }
+
+    private async Task RemoveBill(RecurringBillDto bill)
+    {
+        _bills.Remove(bill);
+        await Store.RemoveRecurringBillAsync(bill.Id, DateTimeOffset.UtcNow);
+        RecomputeSummary();
+    }
+
+    private async Task AddGoal()
+    {
+        if (string.IsNullOrWhiteSpace(_newGoalName) || _newGoalTarget <= 0m) return;
+
+        var dto = new SavingsGoalDto
+        {
+            Id = Guid.NewGuid(),
+            BudgetName = BudgetName,
+            Name = _newGoalName.Trim(),
+            TargetAmount = _newGoalTarget,
+            CurrentAmount = _newGoalCurrent,
+            TargetDate = _newGoalDate is { } d ? DateOnly.FromDateTime(d) : null,
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+        _goals.Add(dto);
+        await Store.UpsertSavingsGoalAsync(dto);
+
+        _newGoalName = "";
+        _newGoalTarget = 0m;
+        _newGoalCurrent = 0m;
+        _newGoalDate = null;
+        RecomputeSummary();
+    }
+
+    private async Task RemoveGoal(SavingsGoalDto goal)
+    {
+        _goals.Remove(goal);
+        await Store.RemoveSavingsGoalAsync(goal.Id, DateTimeOffset.UtcNow);
+        RecomputeSummary();
+    }
+
+    private static SavingsGoal ToDomainGoal(SavingsGoalDto g) => new()
+    {
+        Id = g.Id,
+        Name = g.Name,
+        TargetAmount = g.TargetAmount,
+        CurrentAmount = g.CurrentAmount,
+        TargetDate = g.TargetDate
+    };
+
     private void RecomputeSummary()
     {
         if (_monthlyNetIncome <= 0m || _categories.Count == 0)
@@ -314,8 +627,9 @@
 
         var budget = new PaycheckCalc.Core.Budgeting.Budget
         {
-            Name = "My Budget",
+            Name = BudgetName,
             MonthlyNetIncome = _monthlyNetIncome,
+            Method = _method,
             Categories = _categories
         };
 
@@ -328,7 +642,19 @@
             Description = t.Description
         }).ToList();
 
-        _summary = BudgetCalc.Calculate(budget, domainTransactions, DateOnly.FromDateTime(DateTime.Today));
+        var domainBills = _bills.Select(b => new RecurringBill
+        {
+            Id = b.Id,
+            Name = b.Name,
+            CategoryName = b.CategoryName,
+            Amount = b.Amount,
+            Frequency = b.Frequency,
+            DueDayOfMonth = b.DueDayOfMonth
+        }).ToList();
+
+        var domainGoals = _goals.Select(ToDomainGoal).ToList();
+
+        _summary = BudgetCalc.Calculate(budget, domainTransactions, DateOnly.FromDateTime(DateTime.Today), domainBills, domainGoals);
         _categorySummaries = _summary.Categories;
     }
 
@@ -336,9 +662,10 @@
     {
         var dto = new BudgetDto
         {
-            Name = "My Budget",
+            Name = BudgetName,
             UpdatedAtUtc = DateTimeOffset.UtcNow,
             MonthlyNetIncome = _monthlyNetIncome,
+            Method = _method,
             Categories = _categories.Select(c => new BudgetCategoryDto
             {
                 Name = c.Name, BudgetType = c.BudgetType,

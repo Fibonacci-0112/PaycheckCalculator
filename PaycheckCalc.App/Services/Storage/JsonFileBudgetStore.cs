@@ -82,6 +82,74 @@ public sealed class JsonFileBudgetStore : IBudgetStore
             file.TransactionTombstones = set.Tombstones.ToList();
         }, ct);
 
+    public async Task<RecurringBillSet> LoadRecurringBillsAsync(CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var file = await ReadAsync(ct).ConfigureAwait(false);
+            return new RecurringBillSet(file.RecurringBills, file.RecurringBillTombstones);
+        }
+        finally { _gate.Release(); }
+    }
+
+    public Task UpsertRecurringBillAsync(RecurringBillDto dto, CancellationToken ct = default)
+        => MutateAsync(file =>
+        {
+            file.RecurringBills.RemoveAll(b => b.Id == dto.Id);
+            file.RecurringBillTombstones.RemoveAll(t => t.Id == dto.Id);
+            file.RecurringBills.Add(dto);
+        }, ct);
+
+    public Task RemoveRecurringBillAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default)
+        => MutateAsync(file =>
+        {
+            file.RecurringBills.RemoveAll(b => b.Id == id);
+            file.RecurringBillTombstones.RemoveAll(t => t.Id == id);
+            file.RecurringBillTombstones.Add(new RecurringBillTombstone(id, deletedAtUtc));
+        }, ct);
+
+    public Task ReplaceAllRecurringBillsAsync(RecurringBillSet set, CancellationToken ct = default)
+        => MutateAsync(file =>
+        {
+            file.RecurringBills = set.Bills.ToList();
+            file.RecurringBillTombstones = set.Tombstones.ToList();
+        }, ct);
+
+    public async Task<SavingsGoalSet> LoadSavingsGoalsAsync(CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var file = await ReadAsync(ct).ConfigureAwait(false);
+            return new SavingsGoalSet(file.SavingsGoals, file.SavingsGoalTombstones);
+        }
+        finally { _gate.Release(); }
+    }
+
+    public Task UpsertSavingsGoalAsync(SavingsGoalDto dto, CancellationToken ct = default)
+        => MutateAsync(file =>
+        {
+            file.SavingsGoals.RemoveAll(g => g.Id == dto.Id);
+            file.SavingsGoalTombstones.RemoveAll(t => t.Id == dto.Id);
+            file.SavingsGoals.Add(dto);
+        }, ct);
+
+    public Task RemoveSavingsGoalAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default)
+        => MutateAsync(file =>
+        {
+            file.SavingsGoals.RemoveAll(g => g.Id == id);
+            file.SavingsGoalTombstones.RemoveAll(t => t.Id == id);
+            file.SavingsGoalTombstones.Add(new SavingsGoalTombstone(id, deletedAtUtc));
+        }, ct);
+
+    public Task ReplaceAllSavingsGoalsAsync(SavingsGoalSet set, CancellationToken ct = default)
+        => MutateAsync(file =>
+        {
+            file.SavingsGoals = set.Goals.ToList();
+            file.SavingsGoalTombstones = set.Tombstones.ToList();
+        }, ct);
+
     private async Task MutateAsync(Action<StoreFile> mutate, CancellationToken ct)
     {
         await _gate.WaitAsync(ct).ConfigureAwait(false);
@@ -125,10 +193,14 @@ public sealed class JsonFileBudgetStore : IBudgetStore
 
     private sealed class StoreFile
     {
-        public int SchemaVersion { get; set; } = 1;
+        public int SchemaVersion { get; set; } = 2;
         public List<BudgetDto> Budgets { get; set; } = [];
         public List<BudgetTombstone> BudgetTombstones { get; set; } = [];
         public List<TransactionDto> Transactions { get; set; } = [];
         public List<TransactionTombstone> TransactionTombstones { get; set; } = [];
+        public List<RecurringBillDto> RecurringBills { get; set; } = [];
+        public List<RecurringBillTombstone> RecurringBillTombstones { get; set; } = [];
+        public List<SavingsGoalDto> SavingsGoals { get; set; } = [];
+        public List<SavingsGoalTombstone> SavingsGoalTombstones { get; set; } = [];
     }
 }

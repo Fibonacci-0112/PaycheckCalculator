@@ -12,6 +12,7 @@ public partial class BudgetCategoryViewModel : ObservableObject
     [ObservableProperty] public partial decimal Budgeted { get; set; }
     [ObservableProperty] public partial decimal Spent { get; set; }
     [ObservableProperty] public partial decimal ProjectedMonthEnd { get; set; }
+    [ObservableProperty] public partial decimal Recurring { get; set; }
 
     public decimal Remaining => Budgeted - Spent;
 

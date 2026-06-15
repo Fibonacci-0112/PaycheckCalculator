@@ -15,6 +15,8 @@ public sealed class SyncDbContext(DbContextOptions<SyncDbContext> options) : Ide
     public DbSet<SavedPaycheckEntity> SavedPaychecks => Set<SavedPaycheckEntity>();
     public DbSet<BudgetEntity> Budgets => Set<BudgetEntity>();
     public DbSet<BudgetTransactionEntity> BudgetTransactions => Set<BudgetTransactionEntity>();
+    public DbSet<RecurringBillEntity> RecurringBills => Set<RecurringBillEntity>();
+    public DbSet<SavingsGoalEntity> SavingsGoals => Set<SavingsGoalEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,6 +37,18 @@ public sealed class SyncDbContext(DbContextOptions<SyncDbContext> options) : Ide
         });
 
         builder.Entity<BudgetTransactionEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.Id });
+            entity.Property(e => e.PayloadJson).IsRequired();
+        });
+
+        builder.Entity<RecurringBillEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.Id });
+            entity.Property(e => e.PayloadJson).IsRequired();
+        });
+
+        builder.Entity<SavingsGoalEntity>(entity =>
         {
             entity.HasKey(e => new { e.UserId, e.Id });
             entity.Property(e => e.PayloadJson).IsRequired();

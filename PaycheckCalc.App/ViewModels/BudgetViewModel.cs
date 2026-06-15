@@ -37,6 +37,14 @@ public partial class BudgetViewModel : ObservableObject
 
     public bool HasIncome => MonthlyNetIncome > 0m;
 
+    // ── Budgeting method ────────────────────────────────────────────────────────
+
+    [ObservableProperty] public partial BudgetMethod Method { get; set; } = BudgetMethod.FiftyThirtyTwenty;
+
+    /// <summary>Methods offered in the picker.</summary>
+    public IReadOnlyList<BudgetMethod> Methods { get; } =
+        [BudgetMethod.FiftyThirtyTwenty, BudgetMethod.ZeroBased, BudgetMethod.Envelope, BudgetMethod.Custom];
+
     // ── Categories ────────────────────────────────────────────────────────────
 
     public ObservableCollection<BudgetCategoryViewModel> Categories { get; } = new();
@@ -46,11 +54,12 @@ public partial class BudgetViewModel : ObservableObject
     partial void OnMonthlyNetIncomeChanged(decimal value) => RefreshSummary();
 
     /// <summary>
-    /// Applies the 50/30/20 allocation rule using the most recently calculated paycheck's net pay
-    /// and frequency as the monthly income basis.
+    /// Seeds categories from the selected <see cref="Method"/>'s template, using the most recently
+    /// calculated paycheck's net pay and frequency as the monthly income basis. Custom leaves the
+    /// existing categories in place (the user builds them manually).
     /// </summary>
     [RelayCommand]
-    private void Apply5030_20()
+    private void ApplyMethodTemplate()
     {
         var resultCard = _calculator.ResultCard;
         if (resultCard is null) return;
@@ -58,18 +67,21 @@ public partial class BudgetViewModel : ObservableObject
         var monthly = MonthlyIncomeNormalizer.ToMonthly(resultCard.NetPay, _calculator.Frequency);
         MonthlyNetIncome = monthly;
 
-        var preset = AllocationRules.FiftyThirtyTwenty();
-        Categories.Clear();
-        foreach (var cat in preset)
+        var preset = AllocationRules.ForMethod(Method);
+        if (preset.Count > 0)
         {
-            Categories.Add(new BudgetCategoryViewModel
+            Categories.Clear();
+            foreach (var cat in preset)
             {
-                Name = cat.Name,
-                BudgetType = cat.BudgetType,
-                Amount = cat.Amount,
-                AmountType = cat.AmountType,
-                Budgeted = cat.EffectiveMonthlyBudget(monthly)
-            });
+                Categories.Add(new BudgetCategoryViewModel
+                {
+                    Name = cat.Name,
+                    BudgetType = cat.BudgetType,
+                    Amount = cat.Amount,
+                    AmountType = cat.AmountType,
+                    Budgeted = cat.EffectiveMonthlyBudget(monthly)
+                });
+            }
         }
 
         OnPropertyChanged(nameof(HasCategories));
@@ -82,6 +94,7 @@ public partial class BudgetViewModel : ObservableObject
     {
         Categories.Add(new BudgetCategoryViewModel { Name = "New Category", Amount = 0m });
         OnPropertyChanged(nameof(HasCategories));
+        PersistBudget();
     }
 
     [RelayCommand]
@@ -143,12 +156,113 @@ public partial class BudgetViewModel : ObservableObject
         catch { }
     }
 
+    // ── Recurring bills ───────────────────────────────────────────────────────
+
+    public ObservableCollection<RecurringBillViewModel> RecurringBills { get; } = new();
+
+    public bool HasRecurringBills => RecurringBills.Count > 0;
+
+    [ObservableProperty] public partial string NewBillName { get; set; } = "";
+    [ObservableProperty] public partial string NewBillCategory { get; set; } = "";
+    [ObservableProperty] public partial decimal NewBillAmount { get; set; }
+    [ObservableProperty] public partial RecurrenceFrequency NewBillFrequency { get; set; } = RecurrenceFrequency.Monthly;
+
+    public IReadOnlyList<RecurrenceFrequency> Frequencies { get; } = Enum.GetValues<RecurrenceFrequency>();
+
+    [RelayCommand]
+    private async Task AddBillAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewBillName) || string.IsNullOrWhiteSpace(NewBillCategory) || NewBillAmount <= 0m) return;
+
+        var vm = new RecurringBillViewModel
+        {
+            Id = Guid.NewGuid(),
+            Name = NewBillName.Trim(),
+            CategoryName = NewBillCategory.Trim(),
+            Amount = NewBillAmount,
+            Frequency = NewBillFrequency
+        };
+        RecurringBills.Add(vm);
+        OnPropertyChanged(nameof(HasRecurringBills));
+
+        NewBillName = "";
+        NewBillCategory = "";
+        NewBillAmount = 0m;
+        NewBillFrequency = RecurrenceFrequency.Monthly;
+
+        RefreshSummary();
+        await PersistBillAsync(vm).ConfigureAwait(false);
+    }
+
+    [RelayCommand]
+    private async Task RemoveBillAsync(RecurringBillViewModel? item)
+    {
+        if (item is null) return;
+        RecurringBills.Remove(item);
+        OnPropertyChanged(nameof(HasRecurringBills));
+        RefreshSummary();
+
+        try { await _store.RemoveRecurringBillAsync(item.Id, DateTimeOffset.UtcNow).ConfigureAwait(false); }
+        catch { }
+    }
+
+    // ── Savings goals ─────────────────────────────────────────────────────────
+
+    public ObservableCollection<SavingsGoalViewModel> SavingsGoals { get; } = new();
+
+    public bool HasSavingsGoals => SavingsGoals.Count > 0;
+
+    [ObservableProperty] public partial string NewGoalName { get; set; } = "";
+    [ObservableProperty] public partial decimal NewGoalTarget { get; set; }
+    [ObservableProperty] public partial decimal NewGoalCurrent { get; set; }
+    [ObservableProperty] public partial DateTime NewGoalDate { get; set; } = DateTime.Today.AddMonths(6);
+    [ObservableProperty] public partial bool NewGoalHasDate { get; set; } = true;
+
+    [RelayCommand]
+    private async Task AddGoalAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewGoalName) || NewGoalTarget <= 0m) return;
+
+        var vm = new SavingsGoalViewModel
+        {
+            Id = Guid.NewGuid(),
+            Name = NewGoalName.Trim(),
+            TargetAmount = NewGoalTarget,
+            CurrentAmount = NewGoalCurrent,
+            TargetDate = NewGoalHasDate ? DateOnly.FromDateTime(NewGoalDate) : null
+        };
+        SavingsGoals.Add(vm);
+        OnPropertyChanged(nameof(HasSavingsGoals));
+
+        NewGoalName = "";
+        NewGoalTarget = 0m;
+        NewGoalCurrent = 0m;
+
+        RefreshSummary();
+        await PersistGoalAsync(vm).ConfigureAwait(false);
+    }
+
+    [RelayCommand]
+    private async Task RemoveGoalAsync(SavingsGoalViewModel? item)
+    {
+        if (item is null) return;
+        SavingsGoals.Remove(item);
+        OnPropertyChanged(nameof(HasSavingsGoals));
+        RefreshSummary();
+
+        try { await _store.RemoveSavingsGoalAsync(item.Id, DateTimeOffset.UtcNow).ConfigureAwait(false); }
+        catch { }
+    }
+
     // ── Summary ───────────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial decimal TotalBudgeted { get; set; }
     [ObservableProperty] public partial decimal TotalSpent { get; set; }
     [ObservableProperty] public partial decimal Unallocated { get; set; }
     [ObservableProperty] public partial decimal Remaining { get; set; }
+    [ObservableProperty] public partial decimal TotalRecurring { get; set; }
+    [ObservableProperty] public partial decimal TotalSavingsContribution { get; set; }
+    [ObservableProperty] public partial bool IsFullyAllocated { get; set; }
 
     private void RefreshSummary()
     {
@@ -156,13 +270,18 @@ public partial class BudgetViewModel : ObservableObject
 
         var budget = BuildDomainBudget();
         var transactions = BuildDomainTransactions();
+        var bills = BuildDomainBills();
+        var goals = BuildDomainGoals();
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var summary = _calc.Calculate(budget, transactions, today);
+        var summary = _calc.Calculate(budget, transactions, today, bills, goals);
 
         TotalBudgeted = summary.TotalBudgeted;
         TotalSpent = summary.TotalSpent;
         Unallocated = summary.Unallocated;
         Remaining = summary.Remaining;
+        TotalRecurring = summary.TotalRecurring;
+        TotalSavingsContribution = summary.TotalSavingsContribution;
+        IsFullyAllocated = summary.IsFullyAllocated;
 
         for (var i = 0; i < Categories.Count; i++)
         {
@@ -173,6 +292,7 @@ public partial class BudgetViewModel : ObservableObject
             vm.Budgeted = cat.Budgeted;
             vm.Spent = cat.Spent;
             vm.ProjectedMonthEnd = cat.ProjectedMonthEnd;
+            vm.Recurring = cat.Recurring;
         }
     }
 
@@ -180,6 +300,7 @@ public partial class BudgetViewModel : ObservableObject
     {
         Name = BudgetName,
         MonthlyNetIncome = MonthlyNetIncome,
+        Method = Method,
         Categories = Categories.Select(vm => new BudgetCategory
         {
             Name = vm.Name,
@@ -199,6 +320,20 @@ public partial class BudgetViewModel : ObservableObject
             Description = vm.Description
         }).ToList();
 
+    private IReadOnlyList<RecurringBill> BuildDomainBills() =>
+        RecurringBills.Select(vm => new RecurringBill
+        {
+            Id = vm.Id,
+            Name = vm.Name,
+            CategoryName = vm.CategoryName,
+            Amount = vm.Amount,
+            Frequency = vm.Frequency,
+            DueDayOfMonth = vm.DueDayOfMonth
+        }).ToList();
+
+    private IReadOnlyList<SavingsGoal> BuildDomainGoals() =>
+        SavingsGoals.Select(vm => vm.ToDomain()).ToList();
+
     // ── Persistence ───────────────────────────────────────────────────────────
 
     /// <summary>Loads persisted budget + transactions on first use.</summary>
@@ -211,12 +346,15 @@ public partial class BudgetViewModel : ObservableObject
         {
             var budgetSet = await _store.LoadBudgetsAsync().ConfigureAwait(false);
             var txSet     = await _store.LoadTransactionsAsync().ConfigureAwait(false);
+            var billSet   = await _store.LoadRecurringBillsAsync().ConfigureAwait(false);
+            var goalSet   = await _store.LoadSavingsGoalsAsync().ConfigureAwait(false);
 
             var dto = budgetSet.Budgets.FirstOrDefault(b =>
                 string.Equals(b.Name, BudgetName, StringComparison.OrdinalIgnoreCase));
             if (dto is not null)
             {
                 MonthlyNetIncome = dto.MonthlyNetIncome;
+                Method = dto.Method;
                 foreach (var cat in dto.Categories)
                     Categories.Add(new BudgetCategoryViewModel
                     {
@@ -242,6 +380,38 @@ public partial class BudgetViewModel : ObservableObject
                 });
             }
             OnPropertyChanged(nameof(HasTransactions));
+
+            foreach (var bill in billSet.Bills
+                         .Where(b => string.Equals(b.BudgetName, BudgetName, StringComparison.OrdinalIgnoreCase))
+                         .OrderBy(b => b.Name))
+            {
+                RecurringBills.Add(new RecurringBillViewModel
+                {
+                    Id = bill.Id,
+                    Name = bill.Name,
+                    CategoryName = bill.CategoryName,
+                    Amount = bill.Amount,
+                    Frequency = bill.Frequency,
+                    DueDayOfMonth = bill.DueDayOfMonth
+                });
+            }
+            OnPropertyChanged(nameof(HasRecurringBills));
+
+            foreach (var goal in goalSet.Goals
+                         .Where(g => string.Equals(g.BudgetName, BudgetName, StringComparison.OrdinalIgnoreCase))
+                         .OrderBy(g => g.Name))
+            {
+                SavingsGoals.Add(new SavingsGoalViewModel
+                {
+                    Id = goal.Id,
+                    Name = goal.Name,
+                    TargetAmount = goal.TargetAmount,
+                    CurrentAmount = goal.CurrentAmount,
+                    TargetDate = goal.TargetDate
+                });
+            }
+            OnPropertyChanged(nameof(HasSavingsGoals));
+
             RefreshSummary();
         }
         catch { }
@@ -258,6 +428,7 @@ public partial class BudgetViewModel : ObservableObject
                     Name = BudgetName,
                     UpdatedAtUtc = DateTimeOffset.UtcNow,
                     MonthlyNetIncome = MonthlyNetIncome,
+                    Method = Method,
                     Categories = Categories.Select(vm => new Shared.Budgeting.BudgetCategoryDto
                     {
                         Name = vm.Name,
@@ -287,6 +458,45 @@ public partial class BudgetViewModel : ObservableObject
                 UpdatedAtUtc = DateTimeOffset.UtcNow
             };
             await _store.UpsertTransactionAsync(dto).ConfigureAwait(false);
+        }
+        catch { }
+    }
+
+    private async Task PersistBillAsync(RecurringBillViewModel vm)
+    {
+        try
+        {
+            var dto = new RecurringBillDto
+            {
+                Id = vm.Id,
+                BudgetName = BudgetName,
+                Name = vm.Name,
+                CategoryName = vm.CategoryName,
+                Amount = vm.Amount,
+                Frequency = vm.Frequency,
+                DueDayOfMonth = vm.DueDayOfMonth,
+                UpdatedAtUtc = DateTimeOffset.UtcNow
+            };
+            await _store.UpsertRecurringBillAsync(dto).ConfigureAwait(false);
+        }
+        catch { }
+    }
+
+    private async Task PersistGoalAsync(SavingsGoalViewModel vm)
+    {
+        try
+        {
+            var dto = new SavingsGoalDto
+            {
+                Id = vm.Id,
+                BudgetName = BudgetName,
+                Name = vm.Name,
+                TargetAmount = vm.TargetAmount,
+                CurrentAmount = vm.CurrentAmount,
+                TargetDate = vm.TargetDate,
+                UpdatedAtUtc = DateTimeOffset.UtcNow
+            };
+            await _store.UpsertSavingsGoalAsync(dto).ConfigureAwait(false);
         }
         catch { }
     }
