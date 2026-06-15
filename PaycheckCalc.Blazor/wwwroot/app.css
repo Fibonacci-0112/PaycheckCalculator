@@ -981,3 +981,39 @@ html, body {
 .compare-row-highlight { background: #e8f5e9; font-weight: 700; }
 .compare-row-highlight .compare-metric,
 .compare-row-highlight .compare-num { color: #1b5e20; }
+
+/* ── State landing page intro ──────────────────────────────── */
+.state-landing-intro {
+    max-width: 1440px;
+    margin: 0 auto 20px;
+    padding: 24px 20px 20px;
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid #1a237e;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+.state-landing-intro h1 {
+    font-size: 1.45em;
+    font-weight: 700;
+    color: #1a237e;
+    margin: 0 0 10px;
+}
+
+.state-blurb {
+    color: #37474f;
+    line-height: 1.6;
+    margin: 0 0 10px;
+}
+
+.state-cta {
+    color: #546e7a;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.state-not-found {
+    border-left-color: #b71c1c;
+}
+
+.state-not-found h1 { color: #b71c1c; }

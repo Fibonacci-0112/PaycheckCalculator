@@ -1,4 +1,3 @@
-@page "/"
 @rendermode InteractiveServer
 @using System.Text
 @using PaycheckCalc.Blazor.Models
@@ -13,8 +12,6 @@
 @inject CircuitAccountSession Account
 @inject PaycheckApiClient Api
 @inject PaycheckSyncService Sync
-
-<PageTitle>PaycheckCalc — 2026 US Paycheck Calculator</PageTitle>
 
 <div class="calc-layout">
 
@@ -763,6 +760,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (InitialState.HasValue)
+            _state = InitialState.Value;
         LoadStateFields();
         await RefreshHistoryAsync();
     }

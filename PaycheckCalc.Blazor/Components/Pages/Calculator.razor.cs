@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Tax.State;
 
@@ -5,6 +6,11 @@ namespace PaycheckCalc.Blazor.Components.Pages;
 
 public partial class Calculator
 {
+    /// <summary>
+    /// When set by a state landing page, the calculator pre-selects this state on load.
+    /// </summary>
+    [Parameter] public UsState? InitialState { get; set; }
+
     private sealed class StateFieldVm
     {
         public StateFieldDefinition Def { get; }
