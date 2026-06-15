@@ -16,7 +16,7 @@ namespace PaycheckCalc.Api.Migrations
         // If you encounter a merge conflict in the line below, it means you need to
         // discard one of the migration branches and recreate its migrations on top of
         // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-        public override string LatestMigrationId => "20260614051721_InitialCreate";
+        public override string LatestMigrationId => "20260615000000_AddBudgets";
 
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -248,6 +248,56 @@ namespace PaycheckCalc.Api.Migrations
                     b.HasKey("UserId", "NameKey");
 
                     b.ToTable("SavedPaychecks");
+                });
+
+            modelBuilder.Entity("PaycheckCalc.Api.Data.BudgetEntity", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NameKey")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "NameKey");
+
+                    b.ToTable("Budgets");
+                });
+
+            modelBuilder.Entity("PaycheckCalc.Api.Data.BudgetTransactionEntity", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "Id");
+
+                    b.ToTable("BudgetTransactions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

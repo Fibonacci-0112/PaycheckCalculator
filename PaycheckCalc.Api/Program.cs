@@ -37,6 +37,9 @@ app.MapGroup("/api/account").MapIdentityApi<IdentityUser>();
 // Authorized paycheck sync.
 app.MapGroup("/api/paychecks").RequireAuthorization().MapPaycheckSyncEndpoints();
 
+// Authorized budget + transaction sync.
+app.MapGroup("/api/budgets").RequireAuthorization().MapBudgetSyncEndpoints();
+
 app.Run();
 
 // Exposed so the integration tests can spin up the app with WebApplicationFactory<Program>.

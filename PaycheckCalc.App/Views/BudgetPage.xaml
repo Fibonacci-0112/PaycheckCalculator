@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PaycheckCalc.App.ViewModels"
+             x:Class="PaycheckCalc.App.Views.BudgetPage"
+             Title="Budget">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Monthly income header -->
+            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Monthly Net Income" FontSize="12" TextColor="#9E9E9E" />
+                    <Label Text="{Binding MonthlyNetIncome, StringFormat='{0:C}'}"
+                           FontSize="28" FontAttributes="Bold" TextColor="White" />
+                    <Label IsVisible="{Binding HasIncome, Converter={StaticResource InvertBool}}"
+                           Text="Tap 'Apply 50/30/20' after calculating a paycheck"
+                           FontSize="12" TextColor="#9E9E9E" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- 50/30/20 action -->
+            <Button Text="Apply 50/30/20 from Last Paycheck"
+                    Command="{Binding Apply5030_20Command}"
+                    BackgroundColor="#4CAF50"
+                    TextColor="White"
+                    CornerRadius="8"
+                    FontAttributes="Bold"
+                    HeightRequest="48" />
+
+            <!-- Summary row -->
+            <Grid IsVisible="{Binding HasCategories}" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Frame Grid.Column="0" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="Budgeted" FontSize="11" TextColor="#9E9E9E" />
+                        <Label Text="{Binding TotalBudgeted, StringFormat='{0:C}'}"
+                               FontSize="16" FontAttributes="Bold" TextColor="White" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="1" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="Spent" FontSize="11" TextColor="#9E9E9E" />
+                        <Label Text="{Binding TotalSpent, StringFormat='{0:C}'}"
+                               FontSize="16" FontAttributes="Bold" TextColor="White" />
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Category list -->
+            <Label Text="Budget Categories" FontSize="14" FontAttributes="Bold" TextColor="White"
+                   IsVisible="{Binding HasCategories}" />
+
+            <CollectionView ItemsSource="{Binding Categories}" IsVisible="{Binding HasCategories}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BudgetCategoryViewModel">
+                        <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,8,Auto">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}" FontSize="16"
+                                       FontAttributes="Bold" TextColor="White" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding BudgetTypeLabel}" FontSize="11"
+                                       TextColor="#9E9E9E" VerticalOptions="Center" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Budgeted, StringFormat='Budgeted: {0:C}'}"
+                                       FontSize="12" TextColor="#9E9E9E" />
+                                <!-- Progress bar: Spent / Budgeted -->
+                                <ProgressBar Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                             Progress="{Binding Spent}"
+                                             ProgressColor="#4CAF50"
+                                             BackgroundColor="#444" />
+                                <Label Grid.Row="3" Grid.Column="0"
+                                       Text="{Binding Spent, StringFormat='Spent: {0:C}'}"
+                                       FontSize="12" TextColor="White" />
+                                <Label Grid.Row="3" Grid.Column="1"
+                                       Text="{Binding Remaining, StringFormat='Left: {0:C}'}"
+                                       FontSize="12" TextColor="#9E9E9E" HorizontalOptions="End" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Add transaction -->
+            <Label Text="Add Expense" FontSize="14" FontAttributes="Bold" TextColor="White"
+                   IsVisible="{Binding HasCategories}" />
+
+            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
+                   IsVisible="{Binding HasCategories}">
+                <VerticalStackLayout Spacing="8">
+                    <Entry Placeholder="Category" Text="{Binding NewTransactionCategory}"
+                           PlaceholderColor="#666" TextColor="White" BackgroundColor="Transparent" />
+                    <Entry Placeholder="Amount" Text="{Binding NewTransactionAmount}"
+                           Keyboard="Numeric"
+                           PlaceholderColor="#666" TextColor="White" BackgroundColor="Transparent" />
+                    <Entry Placeholder="Description (optional)" Text="{Binding NewTransactionDescription}"
+                           PlaceholderColor="#666" TextColor="White" BackgroundColor="Transparent" />
+                    <Button Text="Add Expense"
+                            Command="{Binding AddTransactionAsyncCommand}"
+                            BackgroundColor="#1976D2" TextColor="White"
+                            CornerRadius="6" HeightRequest="40" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Transaction list -->
+            <Label Text="This Month's Expenses" FontSize="14" FontAttributes="Bold" TextColor="White"
+                   IsVisible="{Binding HasTransactions}" />
+
+            <CollectionView ItemsSource="{Binding Transactions}" IsVisible="{Binding HasTransactions}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BudgetTransactionViewModel">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete" BackgroundColor="Red"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BudgetViewModel}},
+                                                                  Path=RemoveTransactionAsyncCommand}"
+                                               CommandParameter="{Binding}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Frame BackgroundColor="#2C2C2C" CornerRadius="6" Padding="10" Margin="0,0,0,4">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding CategoryName}" FontSize="14"
+                                               FontAttributes="Bold" TextColor="White" />
+                                        <Label Text="{Binding Description}" FontSize="11"
+                                               TextColor="#9E9E9E"
+                                               IsVisible="{Binding Description, Converter={StaticResource StringToBool}}" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End">
+                                        <Label Text="{Binding Amount, StringFormat='{0:C}'}"
+                                               FontSize="14" FontAttributes="Bold" TextColor="White"
+                                               HorizontalOptions="End" />
+                                        <Label Text="{Binding DisplayDate}" FontSize="11"
+                                               TextColor="#9E9E9E" HorizontalOptions="End" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

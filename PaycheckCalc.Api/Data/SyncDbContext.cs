@@ -13,6 +13,8 @@ namespace PaycheckCalc.Api.Data;
 public sealed class SyncDbContext(DbContextOptions<SyncDbContext> options) : IdentityDbContext<IdentityUser>(options)
 {
     public DbSet<SavedPaycheckEntity> SavedPaychecks => Set<SavedPaycheckEntity>();
+    public DbSet<BudgetEntity> Budgets => Set<BudgetEntity>();
+    public DbSet<BudgetTransactionEntity> BudgetTransactions => Set<BudgetTransactionEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -22,6 +24,19 @@ public sealed class SyncDbContext(DbContextOptions<SyncDbContext> options) : Ide
         {
             entity.HasKey(e => new { e.UserId, e.NameKey });
             entity.Property(e => e.Name).IsRequired();
+            entity.Property(e => e.PayloadJson).IsRequired();
+        });
+
+        builder.Entity<BudgetEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.NameKey });
+            entity.Property(e => e.Name).IsRequired();
+            entity.Property(e => e.PayloadJson).IsRequired();
+        });
+
+        builder.Entity<BudgetTransactionEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.Id });
             entity.Property(e => e.PayloadJson).IsRequired();
         });
     }
