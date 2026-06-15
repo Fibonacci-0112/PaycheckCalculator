@@ -4,7 +4,7 @@ A simple US paycheck calculator (2026 tax tables) that computes net pay, tax wit
 
 ## Features
 
-- **Gross Pay Calculation** — Computes gross pay from hourly rate, regular hours, and overtime hours with a configurable overtime multiplier.
+- **Gross Pay Calculation** — Computes gross pay for **hourly** workers (regular + overtime hours with a configurable overtime multiplier) or **salaried** workers (an annual or per-period salary).
 - **Gross-Up Calculator** — Works the paycheck math backward: enter a desired net (take-home) amount and `GrossUpCalculator` solves for the gross pay that delivers it after federal, FICA, state, and deduction withholding — useful for net bonuses and relocation payments. Available in both apps via a calculation-mode toggle on the Pay tab.
 - **Federal Income Tax** — Implements the IRS Publication 15-T (2026) percentage method for automated payroll systems, supporting all W-4 inputs (filing status, Step 2 checkbox, Step 3 credits, Step 4 adjustments).
 - **FICA Taxes** — Calculates Social Security (6.2%, capped at $184,500), Medicare (1.45%), and Additional Medicare (0.9% above $200,000). Optional YTD Social Security / Medicare wage inputs (exposed in the web UI) handle the wage base cap and Additional Medicare threshold mid-year.
@@ -19,7 +19,10 @@ A simple US paycheck calculator (2026 tax tables) that computes net pay, tax wit
 - **Results Visualization** — Doughnut chart breakdown of gross pay (net pay, federal tax, Social Security, Medicare, state income tax, state disability insurance, and deductions) with percentage labels formatted to two decimal places.
 - **Export & Print (both apps)** — Exports the results to a Letter-size PDF via a built-in minimal PDF writer (no external PDF packages) or to CSV, and prints them. Exports include the per-period summary **and** the annual projection, append an A/B comparison table when two saved paychecks are selected, and offer a dedicated comparison-only export. An editable file-name box (prefilled from the paycheck name) names the exported file.
 - **Annual Projection** — `AnnualProjectionCalculator` in Core annualizes a paycheck, projects YTD totals by paycheck number, and estimates year-end over/under withholding; both the Blazor and MAUI apps show it on a Per Paycheck / Annual sub-tab of the results.
-- **Multiple Pay Frequencies** — Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, and Daily.
+- **Multiple Pay Frequencies** — Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, and Daily (plus 53-week and 27-biweekly payroll-calendar variants).
+- **Saved Paychecks & A/B Comparison** — Save calculated paychecks (with their inputs) and compare any two side by side. The MAUI app persists them on device; the Blazor app keeps anonymous ones for the browser session.
+- **Monthly Budget Tracker** — Turn a paycheck's net pay into a monthly budget with an optional 50/30/20 preset, track expenses against Needs/Wants/Savings categories, and see budgeted vs. spent vs. a projected month-end. Available on both front-ends.
+- **Optional Accounts & Sync** — Sign in (email/password) to sync saved paychecks and budgets across the MAUI and Blazor apps via a standalone ASP.NET Core Web API (ASP.NET Core Identity over EF Core PostgreSQL) with a deterministic last-write-wins merge. Everything works fully offline / without an account.
 
 ## Project Structure
 
@@ -39,16 +42,19 @@ PaycheckCalc.slnx
 │   └── MauiProgram.cs         # DI configuration & app startup
 ├── PaycheckCalc.Blazor/       # Blazor Server web frontend
 │   ├── Components/
-│   │   ├── Pages/             # Calculator page (inputs and results side by side)
+│   │   ├── Pages/             # Calculator, Home, Budget, and per-state SEO landing pages
 │   │   └── Shared/            # DoughnutChart (SVG), ExplanationModal
-│   ├── Services/              # FileSystemTaxDataReader (tax JSON loading from TaxData/)
+│   ├── Services/              # FileSystemTaxDataReader, session stores, StateMetadata, Export/
 │   └── Program.cs             # DI configuration & app startup
-├── PaycheckCalc.Core/         # Business logic (no UI dependencies)
-│   ├── Models/                # PaycheckInput/Result, Enums, UsState, Deduction, AnnualProjection
-│   ├── Pay/                   # PayCalculator (main orchestrator), AnnualProjectionCalculator
+├── PaycheckCalc.Core/         # Business logic (no UI / HTTP / persistence dependencies)
+│   ├── Models/                # PaycheckInput/Result, Enums, UsState, Deduction,
+│   │                          #   AnnualProjection, GrossUpResult
+│   ├── Pay/                   # PayCalculator (orchestrator), PayPeriods,
+│   │                          #   AnnualProjectionCalculator, GrossUpCalculator
+│   ├── Budgeting/             # Budget engine (Budget, BudgetCategory, BudgetTransaction,
+│   │                          #   BudgetCalculator, AllocationRules, MonthlyIncomeNormalizer)
 │   ├── Explanation/           # "Show Your Work" engine (PaycheckExplanation, LineExplanation,
-│   │                          #   ExplanationStep, ExplanationLineKey) — step-by-step
-│   │                          #   walkthroughs of every line on a paycheck
+│   │                          #   ExplanationStep, ExplanationLineKey)
 │   ├── DependencyInjection/   # AddPaycheckCalcCore + ITaxDataReader abstraction
 │   ├── Data/                  # JSON tax tables (IRS 15-T, OK OW-2, CA Method B, AR,
 │   │                          #   CO DR 0004, CT TPG-211)
@@ -62,8 +68,11 @@ PaycheckCalc.slnx
 │       │                      #   and no-income-tax adapter
 │       └── <State>/           # One folder per state (Alabama, Arizona, … Wyoming)
 │                              #   each containing a dedicated IStateWithholdingCalculator
-│                              #   implementation for that state's withholding rules
-├── PaycheckCalc.Tests/        # xUnit test suite
+├── PaycheckCalc.Shared/       # Sync wire/storage contracts, JSON config, last-write-wins
+│                              #   mergers, typed PaycheckApiClient, store abstractions
+├── PaycheckCalc.Api/          # ASP.NET Core Web API: Identity accounts + paycheck/budget
+│                              #   sync over EF Core PostgreSQL (Data/, Endpoints/, Migrations/)
+├── PaycheckCalc.Tests/        # xUnit test suite (Core + Shared + Api + Blazor)
 └── docs/                      # Wiki and class diagrams
 ```
 
@@ -71,9 +80,10 @@ PaycheckCalc.slnx
 
 | Component | Technology |
 |---|---|
-| **Frameworks** | .NET 11 — MAUI (PaycheckCalc.App), ASP.NET Core Blazor Server (PaycheckCalc.Blazor) |
+| **Frameworks** | .NET 11 — MAUI (PaycheckCalc.App), ASP.NET Core Blazor Server (PaycheckCalc.Blazor), ASP.NET Core Web API (PaycheckCalc.Api) |
 | **Target Platforms** | Android, Windows 10+, web browser |
 | **UI Patterns** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MAUI); interactive server-rendered Razor components (Blazor) |
+| **Accounts / Sync** | ASP.NET Core Identity over EF Core PostgreSQL; shared deterministic last-write-wins merge |
 | **Test Framework** | xUnit 2.9.3 |
 | **Tax Data** | JSON-based IRS 15-T and state tax bracket tables (2026) |
 
@@ -104,6 +114,15 @@ dotnet test PaycheckCalc.Tests
 ```bash
 dotnet run --project PaycheckCalc.Blazor
 ```
+
+### Run the Sync API (optional, for accounts/sync)
+
+```bash
+dotnet run --project PaycheckCalc.Api      # defaults to http://localhost:5201; needs PostgreSQL
+```
+
+EF Core migrations are applied at startup; configure the database via `ConnectionStrings:Sync`. Run the API
+and Blazor together for end-to-end account/sync testing.
 
 ### Run the MAUI App
 
@@ -162,10 +181,13 @@ Notable state-specific details:
 
 ### MAUI app
 
-A two-tab Shell:
+A five-tab Shell — **Inputs**, **Results**, **Paychecks**, **Budget**, and **Account**:
 
-- **Inputs** — Four sub-tabs: Pay & Hours, Federal (W-4), State, and Deductions. The Pay & Hours sub-tab has a **Mode** selector that switches between a standard paycheck and a gross-up (enter a desired net pay to find the required gross). The State sub-tab renders each state's input fields dynamically from its schema and surfaces state-specific validation errors. Every sub-tab has a Calculate button.
+- **Inputs** — Four sub-tabs: Pay & Hours, Federal (W-4), State, and Deductions. The Pay & Hours sub-tab has a **Mode** selector that switches between a standard paycheck and a gross-up (enter a desired net pay to find the required gross), and a pay type of hourly or salary. The State sub-tab renders each state's input fields dynamically from its schema and surfaces state-specific validation errors. Every sub-tab has a Calculate button.
 - **Results** — A Per Paycheck / Annual sub-tab: the per-period summary (an income card of gross pay plus federal, FICA, and state taxable income, tax withholdings, deductions, net pay, and the doughnut chart, with tap-for-explanation info icons on each line) and the annual projection. **Print**, **Export PDF**, and **Export CSV** toolbar buttons save/print the results — including the annual projection and, when an A/B pair is selected, the comparison table — using the editable export file-name box. Before the first calculation the page shows a friendly empty state.
+- **Paychecks** — The saved-paychecks list and A/B side-by-side comparison, with its own comparison-only PDF/CSV export. Saved paychecks persist on device.
+- **Budget** — A monthly budget tracker: seed monthly income from the current paycheck, apply a 50/30/20 preset, edit Needs/Wants/Savings categories, and record expenses to see budgeted vs. spent vs. a projected month-end.
+- **Account** — Optional sign-in / account creation, manual sync, sign-out, and an editable sync server URL.
 
 ### Blazor web app
 
@@ -173,5 +195,5 @@ A single calculator page with the inputs panel and results panel side by side. I
 
 ## Documentation
 
-- [Wiki](docs/wiki/Home.md) — Full project wiki covering architecture, tax engine, state coverage, UI guide, and contributing guidelines.
+- [Wiki](docs/wiki/Home.md) — Full project wiki covering architecture, tax engine, state coverage, budgeting, accounts & sync, UI guide, and contributing guidelines.
 - [UML Class Diagram](docs/class-diagram.md) — Mermaid-based class diagram of the architecture.

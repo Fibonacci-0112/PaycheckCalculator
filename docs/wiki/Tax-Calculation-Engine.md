@@ -10,11 +10,15 @@ This page describes the paycheck calculation pipeline implemented in `PayCalcula
 
 ### Step 1: Gross Pay
 
-```
-Gross Pay = (Regular Hours × Hourly Rate) + (Overtime Hours × Hourly Rate × OT Multiplier)
-```
+Gross pay depends on the **pay type**:
 
-The default overtime multiplier is 1.5×.
+- **Hourly:**
+  ```
+  Gross Pay = (Regular Hours × Hourly Rate) + (Overtime Hours × Hourly Rate × OT Multiplier)
+  ```
+  The default overtime multiplier is 1.5×.
+- **Salary:** an annual amount divided by the number of pay periods, or a per-period amount used directly
+  (`SalaryBasis` = `PerYear` or `PerPeriod`).
 
 ### Step 2: Deductions
 
@@ -25,7 +29,10 @@ Deductions are categorized as **pre-tax** or **post-tax**:
 
 Each deduction can be a **dollar amount** or a **percentage** of gross pay (`DeductionAmountType`).
 
-Some pre-tax deductions also carry a `ReducesStateTaxableWages` flag, which is tracked separately for states that treat certain deductions differently.
+Pre-tax deductions carry three independent flags — `ReducesFederalTaxableWages`, `ReducesStateTaxableWages`,
+and `ReducesFicaWages` — because different deductions reduce different wage bases. For example, a
+traditional 401(k) reduces federal and state taxable wages but **not** FICA wages, whereas a Section 125
+cafeteria-plan benefit reduces all three.
 
 ### Step 3: FICA Taxes
 
@@ -37,7 +44,9 @@ Some pre-tax deductions also carry a `ReducesStateTaxableWages` flag, which is t
 | Medicare | 1.45% | No cap |
 | Additional Medicare | 0.9% | Wages above $200,000 |
 
-FICA is calculated on `Gross Pay − Pre-Tax Deductions`. Year-to-date (YTD) Social Security and Medicare wages are tracked to correctly apply annual caps.
+FICA is calculated on FICA-taxable wages (`Gross Pay` minus only the pre-tax deductions that carry
+`ReducesFicaWages`). Year-to-date (YTD) Social Security and Medicare wages are tracked to correctly apply
+the annual Social Security wage-base cap and the Additional Medicare threshold mid-year.
 
 ### Step 4: Federal Withholding
 
@@ -106,6 +115,22 @@ Net Pay = Gross Pay − Pre-Tax Deductions − Post-Tax Deductions − Federal T
 | Quarterly | 4 |
 | Semiannual | 2 |
 | Annual | 1 |
+| Weekly53 | 53 |
+| Biweekly27 | 27 |
+
+`Weekly53` and `Biweekly27` cover payroll calendars with an extra pay period in some years. The mapping
+lives in `Pay/PayPeriods.cs`.
+
+---
+
+## Gross-Up
+
+`GrossUpCalculator` runs the pipeline **in reverse**: given a target net (take-home) amount, it
+binary-searches (bisection) for the gross pay that produces it, re-running the full `PayCalculator`
+pipeline at every probe so graduated brackets, FICA wage-base caps, and percentage-of-gross deductions are
+all honored. It returns a `GrossUpResult` (target net, required gross, the cost of taxes and deductions
+covered, and the full per-period `PaycheckResult` at the solved gross). It is surfaced in both front-ends
+via a calculation-mode toggle.
 
 ---
 

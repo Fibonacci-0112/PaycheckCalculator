@@ -16,7 +16,7 @@ classDiagram
 
     class Core["PaycheckCalc.Core"] {
         <<library>>
-        UI-agnostic tax engine
+        UI-agnostic tax + budget engine
     }
     class Shared["PaycheckCalc.Shared"] {
         <<library>>
@@ -32,7 +32,7 @@ classDiagram
     }
     class Api["PaycheckCalc.Api"] {
         <<service>>
-        Identity accounts + /api/paychecks/sync
+        Identity accounts + paycheck/budget sync (PostgreSQL)
     }
     class Tests["PaycheckCalc.Tests"] {
         <<xUnit>>
@@ -47,6 +47,7 @@ classDiagram
     Tests ..> Core : ProjectReference
     Tests ..> Shared : ProjectReference
     Tests ..> Api : ProjectReference
+    Tests ..> Blazor : ProjectReference
     App ..> Api : HTTP (sync)
     Blazor ..> Api : HTTP (sync)
 ```
@@ -61,10 +62,13 @@ classDiagram
     class PaycheckInput {
         <<sealed>>
         +PayFrequency Frequency
+        +PayType PayType
         +decimal HourlyRate
         +decimal RegularHours
         +decimal OvertimeHours
         +decimal OvertimeMultiplier
+        +decimal SalaryAmount
+        +SalaryBasis SalaryBasis
         +UsState State
         +StateInputValues? StateInputValues
         +FederalW4Input FederalW4
@@ -81,6 +85,7 @@ classDiagram
         +decimal PostTaxDeductions
         +decimal FederalTaxableIncome
         +decimal FederalWithholding
+        +decimal FicaTaxableWages
         +decimal SocialSecurityWithholding
         +decimal MedicareWithholding
         +decimal AdditionalMedicareWithholding
@@ -88,6 +93,7 @@ classDiagram
         +decimal StateTaxableWages
         +decimal StateWithholding
         +decimal StateDisabilityInsurance
+        +string StateDisabilityInsuranceLabel
         +decimal TotalTaxes
         +decimal NetPay
         +PaycheckExplanation Explanation
@@ -131,6 +137,36 @@ classDiagram
 
     class AnnualProjectionCalculator {
         +Calculate(PaycheckInput, PaycheckResult) AnnualProjection
+    }
+
+    class GrossUpCalculator {
+        +Calculate(target, PaycheckInput) GrossUpResult
+    }
+
+    class GrossUpResult {
+        <<sealed>>
+        +decimal TargetNetPay
+        +decimal GrossUpPay
+        +PaycheckResult Paycheck
+        +decimal GrossUpCost
+        +bool Converged
+    }
+
+    %% ── Budget engine ───────────────────────────────────────
+    class BudgetCalculator {
+        +Calculate(Budget, transactions, today) BudgetSummary
+    }
+
+    class Budget {
+        +string Name
+        +decimal MonthlyNetIncome
+        +IReadOnlyList~BudgetCategory~ Categories
+    }
+
+    class BudgetSummary {
+        +decimal TotalBudgeted
+        +decimal TotalSpent
+        +IReadOnlyList~CategorySummary~ Categories
     }
 
     %% ── State plugin model ──────────────────────────────────
@@ -179,6 +215,11 @@ classDiagram
     AnnualProjectionCalculator --> Irs15TPercentageCalculator
     AnnualProjectionCalculator --> FicaCalculator
     AnnualProjectionCalculator ..> AnnualProjection
+    GrossUpCalculator --> PayCalculator : re-runs at each probe
+    GrossUpCalculator ..> GrossUpResult
+    GrossUpResult o-- PaycheckResult
+    BudgetCalculator ..> Budget
+    BudgetCalculator ..> BudgetSummary
     StateCalculatorRegistry o-- IStateWithholdingCalculator : 51 registered
     IStateWithholdingCalculator ..> IStateSchemaProvider : schema lookup
     JsonStateSchemaProvider ..|> IStateSchemaProvider
@@ -203,6 +244,21 @@ classDiagram
         Period + Annual tabs, doughnut chart
     }
 
+    class PaychecksPage {
+        <<ContentPage>>
+        Saved list + A/B comparison
+    }
+
+    class BudgetPage {
+        <<ContentPage>>
+        50/30/20, categories, transactions
+    }
+
+    class AccountPage {
+        <<ContentPage>>
+        Sign-in / sync / server URL
+    }
+
     class CalculatorViewModel {
         +Frequency / HourlyRate / Hours / OT
         +FederalW4 step properties
@@ -220,6 +276,19 @@ classDiagram
 
     class DeductionItemViewModel {
         wraps one Deduction entry
+    }
+
+    class BudgetViewModel {
+        +Categories / Transactions
+        +Apply 50/30/20 + summary
+    }
+
+    class AccountViewModel {
+        +sign-in / sync / server URL
+    }
+
+    class SavedPaycheckViewModel {
+        wraps one saved paycheck
     }
 
     class PaycheckInputMapper {
@@ -249,9 +318,13 @@ classDiagram
 
     InputsPage --> CalculatorViewModel : BindingContext
     ResultsPage --> CalculatorViewModel : BindingContext
+    PaychecksPage --> CalculatorViewModel : BindingContext
+    BudgetPage --> BudgetViewModel : BindingContext
+    AccountPage --> AccountViewModel : BindingContext
     ResultsPage --> DoughnutChartDrawable
     CalculatorViewModel o-- StateFieldViewModel
     CalculatorViewModel o-- DeductionItemViewModel
+    CalculatorViewModel o-- SavedPaycheckViewModel
     CalculatorViewModel ..> PaycheckInputMapper
     CalculatorViewModel ..> ResultCardMapper
     CalculatorViewModel ..> AnnualProjectionMapper
@@ -259,3 +332,70 @@ classDiagram
     AnnualProjectionMapper ..> AnnualProjectionModel
     DoughnutChartDrawable ..> ResultCardModel
 ```
+
+## Shared — accounts, sync & storage
+
+```mermaid
+classDiagram
+    direction TB
+
+    class PaycheckApiClient {
+        +RegisterAsync() / LoginAsync() / LogoutAsync()
+        +SyncAsync(SyncRequest) SyncResponse
+        +SyncBudgetsAsync(BudgetSyncRequest) BudgetSyncResponse
+    }
+
+    class ITokenStore {
+        <<interface>>
+        +GetTokensAsync() / SetTokensAsync()
+    }
+    class IApiBaseAddressProvider {
+        <<interface>>
+        +Uri? BaseAddress
+    }
+
+    class ISavedPaycheckStore {
+        <<interface>>
+        +LoadAsync() / UpsertAsync() / RemoveAsync()
+        +ReplaceAllAsync(SavedPaycheckSet)
+    }
+    class IBudgetStore {
+        <<interface>>
+        +Load/Upsert/Remove/ReplaceAll (budgets + transactions)
+    }
+
+    class PaycheckSyncService {
+        +SyncAsync() SyncOutcome
+    }
+    class BudgetSyncService {
+        +SyncAsync() BudgetSyncOutcome
+    }
+
+    class SavedPaycheckMerger {
+        +Merge(existing, incoming) SavedPaycheckSet
+    }
+    class BudgetMerger {
+        +MergeBudgets(...) / MergeTransactions(...)
+    }
+
+    class SyncDbContext {
+        <<IdentityDbContext>>
+        SavedPaychecks / Budgets / BudgetTransactions
+    }
+
+    PaycheckApiClient --> ITokenStore
+    PaycheckApiClient --> IApiBaseAddressProvider
+    PaycheckSyncService --> ISavedPaycheckStore
+    PaycheckSyncService --> PaycheckApiClient
+    BudgetSyncService --> IBudgetStore
+    BudgetSyncService --> PaycheckApiClient
+    PaycheckApiClient ..> SavedPaycheckMerger : server-side merge
+    PaycheckApiClient ..> BudgetMerger : server-side merge
+    SavedPaycheckMerger ..> SyncDbContext
+    BudgetMerger ..> SyncDbContext
+```
+
+> Store implementations: MAUI persists to on-device JSON (`JsonFilePaycheckStore`,
+> `JsonFileBudgetStore`); Blazor uses circuit memory (`SessionPaycheckStore`, `SessionBudgetStore`); the
+> server persists EF Core rows in PostgreSQL. The mergers are defined once in `PaycheckCalc.Shared` and
+> reused by the API and clients.
