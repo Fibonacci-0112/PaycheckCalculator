@@ -1017,3 +1017,40 @@ html, body {
 }
 
 .state-not-found h1 { color: #b71c1c; }
+
+/* ── State landing page FAQ ────────────────────────────────── */
+.state-faq {
+    max-width: 1440px;
+    margin: 20px auto 0;
+    padding: 24px 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+.state-faq h2 {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #1a237e;
+    margin: 0 0 16px;
+}
+
+.faq-item {
+    padding: 14px 0;
+    border-top: 1px solid #eceff1;
+}
+
+.faq-item:first-of-type { border-top: none; }
+
+.faq-question {
+    font-size: 1em;
+    font-weight: 600;
+    color: #263238;
+    margin: 0 0 6px;
+}
+
+.faq-answer {
+    color: #546e7a;
+    line-height: 1.6;
+    margin: 0;
+}

@@ -35,6 +35,40 @@ public static class StateMetadata
 
     public static IReadOnlyCollection<StateInfo> All => _bySlug.Values;
 
+    /// <summary>
+    /// The nine states with no state income tax on wages. New Hampshire taxes only
+    /// interest/dividends (handled at filing, not payroll); Washington withholds for the
+    /// WA Cares Fund but levies no income tax.
+    /// </summary>
+    private static readonly HashSet<UsState> NoIncomeTaxStates = new()
+    {
+        UsState.AK, UsState.FL, UsState.NH, UsState.NV,
+        UsState.SD, UsState.TN, UsState.TX, UsState.WA, UsState.WY
+    };
+
+    public static bool HasStateIncomeTax(UsState state) => !NoIncomeTaxStates.Contains(state);
+
+    /// <summary>
+    /// Builds the FAQ list for a state landing page. The same list drives both the visible
+    /// FAQ section and the FAQPage JSON-LD, so structured data always matches on-page content
+    /// (required by Google's FAQ rich-result guidelines).
+    /// </summary>
+    public static IReadOnlyList<FaqItem> BuildFaqs(StateInfo info)
+    {
+        var hasTax = HasStateIncomeTax(info.State);
+        return new List<FaqItem>
+        {
+            new($"Does {info.FullName} have a state income tax?",
+                hasTax
+                    ? $"Yes. {info.FullName} withholds state income tax from your paycheck. The calculator above computes the exact amount using the official 2026 {info.FullName} withholding tables."
+                    : $"No. {info.FullName} has no state income tax on wages, so no state income tax is withheld from your paycheck — only federal income tax, Social Security, and Medicare apply."),
+            new($"How is my {info.FullName} take-home pay calculated for 2026?",
+                info.WithholdingBlurb),
+            new($"Is the {info.FullName} paycheck calculator free to use?",
+                $"Yes. The {info.FullName} paycheck calculator is completely free. Enter your pay rate, hours, filing status, and deductions to see your estimated 2026 take-home pay instantly — no sign-up required."),
+        };
+    }
+
     private static List<StateInfo> BuildAll() => new()
     {
         S(UsState.AK, "Alaska", "alaska",

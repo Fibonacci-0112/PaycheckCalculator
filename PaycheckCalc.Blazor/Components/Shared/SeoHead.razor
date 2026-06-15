@@ -1,0 +1,43 @@
+@* Reusable per-page SEO head: title, meta description, canonical, Open Graph / Twitter cards,
+   optional robots noindex, and optional JSON-LD structured data. Renders into HeadOutlet during
+   static SSR so crawlers receive it in the initial HTML. *@
+<HeadContent>
+    <title>@Title</title>
+    <meta name="description" content="@Description" />
+    @if (!string.IsNullOrEmpty(Canonical))
+    {
+        <link rel="canonical" href="@Canonical" />
+    }
+    @if (NoIndex)
+    {
+        <meta name="robots" content="noindex, follow" />
+    }
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PaycheckCalc" />
+    <meta property="og:title" content="@Title" />
+    <meta property="og:description" content="@Description" />
+    @if (!string.IsNullOrEmpty(Canonical))
+    {
+        <meta property="og:url" content="@Canonical" />
+    }
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="@Title" />
+    <meta name="twitter:description" content="@Description" />
+
+    @if (!string.IsNullOrEmpty(JsonLd))
+    {
+        <script type="application/ld+json">@((MarkupString)JsonLd)</script>
+    }
+</HeadContent>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public string Description { get; set; } = "";
+    [Parameter] public string? Canonical { get; set; }
+    [Parameter] public bool NoIndex { get; set; }
+
+    /// <summary>Pre-serialized JSON-LD (e.g. from <see cref="Services.SeoJsonLd"/>). Rendered raw inside a script tag.</summary>
+    [Parameter] public string? JsonLd { get; set; }
+}
