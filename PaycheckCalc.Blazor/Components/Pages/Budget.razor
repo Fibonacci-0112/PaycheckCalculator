@@ -4,8 +4,13 @@
 @using PaycheckCalc.Core.Models
 @using PaycheckCalc.Core.Pay
 @using PaycheckCalc.Shared.Budgeting
+@using PaycheckCalc.Shared.Entitlements
+@using PaycheckCalc.Blazor.Services.Export
 @inject BudgetCalculator BudgetCalc
+@inject BudgetReportCalculator ReportCalc
+@inject IEntitlementProvider Entitlements
 @inject SessionBudgetStore Store
+@inject IJSRuntime JS
 
 <PageTitle>Budget — PaycheckCalc</PageTitle>
 
@@ -364,6 +369,94 @@
         </div>
     }
 
+    <!-- ── REPORTS (C3 - Pro-gated) ─────────────────────────────── -->
+    <div class="budget-card reports-card">
+        <h3>Budget Reports &amp; Insights</h3>
+        @if (!Entitlements.IsPro)
+        {
+            <div class="pro-gate">
+                <p class="pro-gate-heading">Pro feature</p>
+                <p class="pro-gate-body">Budget reports — spend-by-category history and budget-vs-actual trends — are available on the Pro plan.</p>
+            </div>
+        }
+        else
+        {
+            <div class="form-row" style="margin-bottom:.75rem;">
+                <div class="form-group">
+                    <label>Months to include</label>
+                    <input type="number" @bind="_reportMonthsBack" min="1" max="12" style="max-width:80px;" />
+                </div>
+                <button class="btn btn-primary" @onclick="GenerateReport"
+                        disabled="@(_monthlyNetIncome <= 0m || _categories.Count == 0)">
+                    Generate Report
+                </button>
+            </div>
+
+            @if (_report is not null)
+            {
+                <!-- Export actions -->
+                <div class="form-row" style="margin-bottom:1rem;">
+                    <button class="btn btn-secondary" @onclick="DownloadReportCsv">Export CSV</button>
+                    <button class="btn btn-secondary" @onclick="DownloadReportPdf">Export PDF</button>
+                </div>
+
+                <!-- Budget vs Actual -->
+                <h4 class="report-section-heading">Budget vs Actual</h4>
+                <table class="tx-table report-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th class="amount-col">Budgeted</th>
+                            <th class="amount-col">Actual</th>
+                            <th class="amount-col">Variance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pt in _report.BudgetVsActual)
+                        {
+                            <tr>
+                                <td>@pt.Month.ToString("MMM yyyy")</td>
+                                <td class="amount-col">@pt.Budgeted.ToString("C")</td>
+                                <td class="amount-col">@pt.Actual.ToString("C")</td>
+                                <td class="amount-col @(pt.Variance > 0 ? "over-budget" : pt.Variance < 0 ? "under-budget" : "")">
+                                    @pt.Variance.ToString("C")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- Spend by Category -->
+                <h4 class="report-section-heading" style="margin-top:1.25rem;">Spend by Category</h4>
+                @foreach (var month in _report.Months)
+                {
+                    <p class="report-month-label">@month.ToString("MMMM yyyy")</p>
+                    <table class="tx-table report-table" style="margin-bottom:.75rem;">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th class="amount-col">Spent</th>
+                                <th class="amount-col">Budgeted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pt in _report.SpendByCategory.Where(p => p.Month == month).OrderBy(p => p.CategoryName))
+                            {
+                                <tr>
+                                    <td>@pt.CategoryName</td>
+                                    <td><span class="category-type @pt.BudgetType.ToString().ToLower()">@pt.BudgetType</span></td>
+                                    <td class="amount-col @(pt.Spent > pt.Budgeted ? "over-budget" : "")">@pt.Spent.ToString("C")</td>
+                                    <td class="amount-col">@pt.Budgeted.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+        }
+    </div>
+
 </div>
 
 <style>
@@ -408,6 +501,15 @@
     .zero-based-banner { border-radius: 8px; padding: .6rem .85rem; margin-bottom: 1rem; font-size: .85rem; }
     .zero-based-banner.ok { background: #1b3a1b; color: #9be29b; }
     .zero-based-banner.warn { background: #3a331b; color: #e2d49b; }
+    .reports-card { margin-top: 1.5rem; }
+    .pro-gate { text-align: center; padding: 1.5rem 1rem; }
+    .pro-gate-heading { font-size: 1.1rem; font-weight: bold; color: #fff; margin: 0 0 .4rem; }
+    .pro-gate-body { color: #aaa; margin: 0; }
+    .report-section-heading { margin: 0 0 .5rem; font-size: .9rem; color: #ccc; }
+    .report-month-label { font-size: .8rem; color: #aaa; margin: .5rem 0 .2rem; }
+    .report-table { margin-bottom: .5rem; }
+    .over-budget { color: #f44336; }
+    .under-budget { color: #4CAF50; }
 </style>
 
 @code {
@@ -449,6 +551,10 @@
     private DateTime? _newGoalDate;
 
     private const string BudgetName = "My Budget";
+
+    // ── Reports (C3) ─────────────────────────────────────────────────────────
+    private BudgetReport? _report;
+    private int _reportMonthsBack = 5;
 
     protected override async Task OnInitializedAsync()
     {
@@ -673,6 +779,46 @@
             }).ToList()
         };
         _ = Store.UpsertBudgetAsync(dto);
+    }
+
+    private void GenerateReport()
+    {
+        if (_monthlyNetIncome <= 0m || _categories.Count == 0) return;
+        var months = Math.Clamp(_reportMonthsBack, 1, 12);
+        var budget = new PaycheckCalc.Core.Budgeting.Budget
+        {
+            Name = BudgetName,
+            MonthlyNetIncome = _monthlyNetIncome,
+            Method = _method,
+            Categories = _categories
+        };
+        var allTransactions = _transactions.Select(t => new BudgetTransaction
+        {
+            Id = t.Id, CategoryName = t.CategoryName, Amount = t.Amount,
+            Date = t.Date, Description = t.Description
+        }).ToList();
+        _report = ReportCalc.Compute(budget, allTransactions, DateOnly.FromDateTime(DateTime.Today), months - 1);
+    }
+
+    private async Task DownloadReportCsv()
+    {
+        if (_report is null) return;
+        var csv = BudgetReportCsvRenderer.Render(_report);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+        await JS.InvokeVoidAsync("paycheckExport.downloadFile",
+            $"budget-report-{DateTime.Today:yyyy-MM}.csv",
+            "text/csv",
+            Convert.ToBase64String(bytes));
+    }
+
+    private async Task DownloadReportPdf()
+    {
+        if (_report is null) return;
+        var pdf = BudgetReportPdfRenderer.Render(_report);
+        await JS.InvokeVoidAsync("paycheckExport.downloadFile",
+            $"budget-report-{DateTime.Today:yyyy-MM}.pdf",
+            "application/pdf",
+            Convert.ToBase64String(pdf));
     }
 
     private static string FrequencyLabel(PayFrequency f) => f switch

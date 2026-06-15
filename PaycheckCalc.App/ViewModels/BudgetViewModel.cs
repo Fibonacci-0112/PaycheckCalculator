@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PaycheckCalc.App.Services.Csv;
 using PaycheckCalc.Core.Budgeting;
 using PaycheckCalc.Shared.Budgeting;
+using PaycheckCalc.Shared.Entitlements;
 using System.Collections.ObjectModel;
 
 namespace PaycheckCalc.App.ViewModels;
@@ -16,13 +18,25 @@ public partial class BudgetViewModel : ObservableObject
     private readonly BudgetCalculator _calc;
     private readonly IBudgetStore _store;
     private readonly CalculatorViewModel _calculator;
+    private readonly BudgetReportCalculator _reportCalc;
+    private readonly IEntitlementProvider _entitlements;
+    private readonly ICsvExportService _csvExport;
     private bool _initialized;
 
-    public BudgetViewModel(BudgetCalculator calc, IBudgetStore store, CalculatorViewModel calculator)
+    public BudgetViewModel(
+        BudgetCalculator calc,
+        IBudgetStore store,
+        CalculatorViewModel calculator,
+        BudgetReportCalculator reportCalc,
+        IEntitlementProvider entitlements,
+        ICsvExportService csvExport)
     {
         _calc = calc;
         _store = store;
         _calculator = calculator;
+        _reportCalc = reportCalc;
+        _entitlements = entitlements;
+        _csvExport = csvExport;
     }
 
     // ── Identity ─────────────────────────────────────────────────────────────
@@ -333,6 +347,40 @@ public partial class BudgetViewModel : ObservableObject
 
     private IReadOnlyList<SavingsGoal> BuildDomainGoals() =>
         SavingsGoals.Select(vm => vm.ToDomain()).ToList();
+
+    // ── Reports (C3) ─────────────────────────────────────────────────────────
+
+    public bool IsPro => _entitlements.IsPro;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasReport))]
+    public partial BudgetReport? Report { get; set; }
+
+    [ObservableProperty] public partial int ReportMonthsBack { get; set; } = 5;
+
+    public bool HasReport => Report is not null;
+
+    [RelayCommand]
+    private void GenerateReport()
+    {
+        if (!_entitlements.IsPro || MonthlyNetIncome <= 0m || Categories.Count == 0) return;
+        var months = Math.Clamp(ReportMonthsBack, 1, 12);
+        var budget = BuildDomainBudget();
+        var allTx  = BuildDomainTransactions();
+        Report = _reportCalc.Compute(budget, allTx, DateOnly.FromDateTime(DateTime.Today), months - 1);
+    }
+
+    [RelayCommand]
+    private async Task ExportReportCsvAsync()
+    {
+        if (Report is null) return;
+        try
+        {
+            var csv = BudgetReportCsvRenderer.Render(Report);
+            await _csvExport.ExportAndOpenAsync(csv, $"budget-report-{DateTime.Today:yyyy-MM}").ConfigureAwait(false);
+        }
+        catch { }
+    }
 
     // ── Persistence ───────────────────────────────────────────────────────────
 

@@ -168,6 +168,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
         services.AddSingleton(new GrossUpCalculator(payCalculator));
         services.AddSingleton(new BudgetCalculator());
+        services.AddSingleton(new BudgetReportCalculator());
 
         return services;
     }
