@@ -9,9 +9,10 @@ using PaycheckCalc.Shared.Json;
 namespace PaycheckCalc.Api.Endpoints;
 
 /// <summary>
-/// Authorized budget + transaction sync endpoints. <c>POST /sync</c> merges the client's pushed
-/// state with the stored state (server-side, via <see cref="BudgetMerger"/>) and returns the merged
-/// result; <c>GET /</c> returns the stored state without writing.
+/// Authorized budget sync endpoints. <c>POST /sync</c> merges the client's pushed state (budgets,
+/// transactions, recurring bills, and savings goals) with the stored state (server-side, via
+/// <see cref="BudgetMerger"/>) and returns the merged result; <c>GET /</c> returns the stored state
+/// without writing.
 /// </summary>
 public static class BudgetSyncEndpoints
 {
@@ -38,19 +39,15 @@ public static class BudgetSyncEndpoints
         if (!TryValidate(request, out var error))
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["request"] = [error] });
 
-        var (existingBudgets, existingTransactions) = await LoadSetsAsync(db, userId, ct);
-        var incomingBudgets      = new BudgetSet(request.Budgets, request.BudgetTombstones);
-        var incomingTransactions = new TransactionSet(request.Transactions, request.TransactionTombstones);
+        var existing = await LoadSetsAsync(db, userId, ct);
+        var mergedBudgets      = BudgetMerger.MergeBudgets(existing.Budgets, new BudgetSet(request.Budgets, request.BudgetTombstones));
+        var mergedTransactions = BudgetMerger.MergeTransactions(existing.Transactions, new TransactionSet(request.Transactions, request.TransactionTombstones));
+        var mergedBills        = BudgetMerger.MergeRecurringBills(existing.Bills, new RecurringBillSet(request.RecurringBills, request.RecurringBillTombstones));
+        var mergedGoals        = BudgetMerger.MergeSavingsGoals(existing.Goals, new SavingsGoalSet(request.SavingsGoals, request.SavingsGoalTombstones));
 
-        var mergedBudgets      = BudgetMerger.MergeBudgets(existingBudgets, incomingBudgets);
-        var mergedTransactions = BudgetMerger.MergeTransactions(existingTransactions, incomingTransactions);
+        await PersistAsync(db, userId, mergedBudgets, mergedTransactions, mergedBills, mergedGoals, ct);
 
-        await PersistAsync(db, userId, mergedBudgets, mergedTransactions, ct);
-
-        return Results.Ok(new BudgetSyncResponse(
-            mergedBudgets.Budgets, mergedBudgets.Tombstones,
-            mergedTransactions.Transactions, mergedTransactions.Tombstones,
-            DateTimeOffset.UtcNow));
+        return Results.Ok(BuildResponse(mergedBudgets, mergedTransactions, mergedBills, mergedGoals));
     }
 
     private static async Task<IResult> GetAsync(
@@ -62,16 +59,24 @@ public static class BudgetSyncEndpoints
         var userId = users.GetUserId(principal);
         if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
-        var (budgets, transactions) = await LoadSetsAsync(db, userId, ct);
-        return Results.Ok(new BudgetSyncResponse(
-            budgets.Budgets, budgets.Tombstones, transactions.Transactions, transactions.Tombstones,
-            DateTimeOffset.UtcNow));
+        var sets = await LoadSetsAsync(db, userId, ct);
+        return Results.Ok(BuildResponse(sets.Budgets, sets.Transactions, sets.Bills, sets.Goals));
     }
+
+    private static BudgetSyncResponse BuildResponse(
+        BudgetSet budgets, TransactionSet transactions, RecurringBillSet bills, SavingsGoalSet goals) =>
+        new(budgets.Budgets, budgets.Tombstones,
+            transactions.Transactions, transactions.Tombstones,
+            bills.Bills, bills.Tombstones,
+            goals.Goals, goals.Tombstones,
+            DateTimeOffset.UtcNow);
 
     private static bool TryValidate(BudgetSyncRequest request, out string error)
     {
         if (request.Budgets.Count + request.BudgetTombstones.Count > MaxEntries
-            || request.Transactions.Count + request.TransactionTombstones.Count > MaxEntries)
+            || request.Transactions.Count + request.TransactionTombstones.Count > MaxEntries
+            || request.RecurringBills.Count + request.RecurringBillTombstones.Count > MaxEntries
+            || request.SavingsGoals.Count + request.SavingsGoalTombstones.Count > MaxEntries)
         {
             error = $"Too many entries (max {MaxEntries} per collection).";
             return false;
@@ -91,15 +96,15 @@ public static class BudgetSyncEndpoints
         return true;
     }
 
-    private static async Task<(BudgetSet Budgets, TransactionSet Transactions)> LoadSetsAsync(
+    private static async Task<(BudgetSet Budgets, TransactionSet Transactions, RecurringBillSet Bills, SavingsGoalSet Goals)> LoadSetsAsync(
         SyncDbContext db, string userId, CancellationToken ct)
     {
-        var budgetRows = await db.Budgets
-            .Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
-        var txRows = await db.BudgetTransactions
-            .Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
+        var budgetRows = await db.Budgets.Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
+        var txRows     = await db.BudgetTransactions.Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
+        var billRows   = await db.RecurringBills.Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
+        var goalRows   = await db.SavingsGoals.Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
 
-        var budgets    = new List<BudgetDto>();
+        var budgets     = new List<BudgetDto>();
         var budgetTombs = new List<BudgetTombstone>();
         foreach (var row in budgetRows)
         {
@@ -125,12 +130,42 @@ public static class BudgetSyncEndpoints
             }
         }
 
-        return (new BudgetSet(budgets, budgetTombs), new TransactionSet(transactions, txTombs));
+        var bills      = new List<RecurringBillDto>();
+        var billTombs  = new List<RecurringBillTombstone>();
+        foreach (var row in billRows)
+        {
+            if (row.IsDeleted)
+                billTombs.Add(new RecurringBillTombstone(row.Id, row.UpdatedAtUtc));
+            else
+            {
+                var dto = JsonSerializer.Deserialize<RecurringBillDto>(row.PayloadJson, PaycheckJson.Options);
+                if (dto is not null) bills.Add(dto);
+            }
+        }
+
+        var goals     = new List<SavingsGoalDto>();
+        var goalTombs = new List<SavingsGoalTombstone>();
+        foreach (var row in goalRows)
+        {
+            if (row.IsDeleted)
+                goalTombs.Add(new SavingsGoalTombstone(row.Id, row.UpdatedAtUtc));
+            else
+            {
+                var dto = JsonSerializer.Deserialize<SavingsGoalDto>(row.PayloadJson, PaycheckJson.Options);
+                if (dto is not null) goals.Add(dto);
+            }
+        }
+
+        return (new BudgetSet(budgets, budgetTombs),
+                new TransactionSet(transactions, txTombs),
+                new RecurringBillSet(bills, billTombs),
+                new SavingsGoalSet(goals, goalTombs));
     }
 
     private static async Task PersistAsync(
         SyncDbContext db, string userId,
         BudgetSet mergedBudgets, TransactionSet mergedTransactions,
+        RecurringBillSet mergedBills, SavingsGoalSet mergedGoals,
         CancellationToken ct)
     {
         // ── Budgets ──────────────────────────────────────────────────────────
@@ -187,6 +222,60 @@ public static class BudgetSyncEndpoints
 
         foreach (var row in txRows)
             if (!keepTx.Contains(row.Id)) db.BudgetTransactions.Remove(row);
+
+        // ── Recurring bills ────────────────────────────────────────────────────
+        var billRows = await db.RecurringBills.Where(r => r.UserId == userId).ToListAsync(ct);
+        var billById = billRows.ToDictionary(r => r.Id);
+        var keepBills = new HashSet<Guid>();
+
+        void UpsertBill(Guid id, DateTimeOffset ts, bool deleted, string payload)
+        {
+            keepBills.Add(id);
+            if (billById.TryGetValue(id, out var row))
+            {
+                row.UpdatedAtUtc = ts; row.IsDeleted = deleted; row.PayloadJson = payload;
+            }
+            else
+            {
+                db.RecurringBills.Add(new RecurringBillEntity
+                    { UserId = userId, Id = id, UpdatedAtUtc = ts, IsDeleted = deleted, PayloadJson = payload });
+            }
+        }
+
+        foreach (var bill in mergedBills.Bills)
+            UpsertBill(bill.Id, bill.UpdatedAtUtc, false, JsonSerializer.Serialize(bill, PaycheckJson.Options));
+        foreach (var t in mergedBills.Tombstones)
+            UpsertBill(t.Id, t.DeletedAtUtc, true, string.Empty);
+
+        foreach (var row in billRows)
+            if (!keepBills.Contains(row.Id)) db.RecurringBills.Remove(row);
+
+        // ── Savings goals ──────────────────────────────────────────────────────
+        var goalRows = await db.SavingsGoals.Where(r => r.UserId == userId).ToListAsync(ct);
+        var goalById = goalRows.ToDictionary(r => r.Id);
+        var keepGoals = new HashSet<Guid>();
+
+        void UpsertGoal(Guid id, DateTimeOffset ts, bool deleted, string payload)
+        {
+            keepGoals.Add(id);
+            if (goalById.TryGetValue(id, out var row))
+            {
+                row.UpdatedAtUtc = ts; row.IsDeleted = deleted; row.PayloadJson = payload;
+            }
+            else
+            {
+                db.SavingsGoals.Add(new SavingsGoalEntity
+                    { UserId = userId, Id = id, UpdatedAtUtc = ts, IsDeleted = deleted, PayloadJson = payload });
+            }
+        }
+
+        foreach (var goal in mergedGoals.Goals)
+            UpsertGoal(goal.Id, goal.UpdatedAtUtc, false, JsonSerializer.Serialize(goal, PaycheckJson.Options));
+        foreach (var t in mergedGoals.Tombstones)
+            UpsertGoal(t.Id, t.DeletedAtUtc, true, string.Empty);
+
+        foreach (var row in goalRows)
+            if (!keepGoals.Contains(row.Id)) db.SavingsGoals.Remove(row);
 
         await db.SaveChangesAsync(ct);
     }

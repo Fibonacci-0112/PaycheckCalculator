@@ -182,6 +182,86 @@ public sealed class BudgetMergerTest
         Assert.Equal(2, merged.Transactions.Count);
     }
 
+    // ── Recurring bill merge ────────────────────────────────────────────────────
+
+    [Fact]
+    public void MergeRecurringBills_NewerIncoming_WinsOverExisting()
+    {
+        var id = Guid.NewGuid();
+        var existing = BillSet(Bill(id, "Rent", 1_500m, At(1)));
+        var incoming = BillSet(Bill(id, "Rent", 1_600m, At(2))); // newer
+
+        var merged = BudgetMerger.MergeRecurringBills(existing, incoming);
+
+        Assert.Single(merged.Bills);
+        Assert.Equal(1_600m, merged.Bills[0].Amount);
+    }
+
+    [Fact]
+    public void MergeRecurringBills_Tombstone_ErasesOlderBill()
+    {
+        var id = Guid.NewGuid();
+        var existing = BillSet(Bill(id, "Rent", 1_500m, At(1)));
+        var incoming = new RecurringBillSet([], [new RecurringBillTombstone(id, At(2))]);
+
+        var merged = BudgetMerger.MergeRecurringBills(existing, incoming);
+
+        Assert.Empty(merged.Bills);
+        Assert.Single(merged.Tombstones);
+    }
+
+    [Fact]
+    public void MergeRecurringBills_MultipleBills_SortedByName()
+    {
+        var existing = BillSet(Bill(Guid.NewGuid(), "Water", 40m, At(1)));
+        var incoming = BillSet(Bill(Guid.NewGuid(), "Electric", 90m, At(1)));
+
+        var merged = BudgetMerger.MergeRecurringBills(existing, incoming);
+
+        Assert.Equal(2, merged.Bills.Count);
+        Assert.Equal("Electric", merged.Bills[0].Name);
+        Assert.Equal("Water",    merged.Bills[1].Name);
+    }
+
+    // ── Savings goal merge ───────────────────────────────────────────────────────
+
+    [Fact]
+    public void MergeSavingsGoals_NewerIncoming_WinsOverExisting()
+    {
+        var id = Guid.NewGuid();
+        var existing = GoalSet(Goal(id, "Car", 10_000m, 1_000m, At(1)));
+        var incoming = GoalSet(Goal(id, "Car", 10_000m, 2_500m, At(2))); // newer
+
+        var merged = BudgetMerger.MergeSavingsGoals(existing, incoming);
+
+        Assert.Single(merged.Goals);
+        Assert.Equal(2_500m, merged.Goals[0].CurrentAmount);
+    }
+
+    [Fact]
+    public void MergeSavingsGoals_NewerEntry_BeatsOlderTombstone()
+    {
+        var id = Guid.NewGuid();
+        var existing = new SavingsGoalSet([], [new SavingsGoalTombstone(id, At(1))]);
+        var incoming = GoalSet(Goal(id, "Car", 10_000m, 500m, At(2))); // newer
+
+        var merged = BudgetMerger.MergeSavingsGoals(existing, incoming);
+
+        Assert.Single(merged.Goals);
+        Assert.Empty(merged.Tombstones);
+    }
+
+    [Fact]
+    public void MergeSavingsGoals_IndependentIds_BothPreserved()
+    {
+        var existing = GoalSet(Goal(Guid.NewGuid(), "Car", 10_000m, 0m, At(1)));
+        var incoming = GoalSet(Goal(Guid.NewGuid(), "House", 50_000m, 0m, At(1)));
+
+        var merged = BudgetMerger.MergeSavingsGoals(existing, incoming);
+
+        Assert.Equal(2, merged.Goals.Count);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static BudgetDto Budget(string name, DateTimeOffset updatedAt, decimal income) => new()
@@ -206,4 +286,29 @@ public sealed class BudgetMergerTest
     };
 
     private static TransactionSet TxSet(TransactionDto dto) => new([dto], []);
+
+    private static RecurringBillDto Bill(Guid id, string name, decimal amount, DateTimeOffset updatedAt) => new()
+    {
+        Id = id,
+        BudgetName = "Test",
+        Name = name,
+        CategoryName = "Needs",
+        Amount = amount,
+        Frequency = RecurrenceFrequency.Monthly,
+        UpdatedAtUtc = updatedAt
+    };
+
+    private static RecurringBillSet BillSet(RecurringBillDto dto) => new([dto], []);
+
+    private static SavingsGoalDto Goal(Guid id, string name, decimal target, decimal current, DateTimeOffset updatedAt) => new()
+    {
+        Id = id,
+        BudgetName = "Test",
+        Name = name,
+        TargetAmount = target,
+        CurrentAmount = current,
+        UpdatedAtUtc = updatedAt
+    };
+
+    private static SavingsGoalSet GoalSet(SavingsGoalDto dto) => new([dto], []);
 }

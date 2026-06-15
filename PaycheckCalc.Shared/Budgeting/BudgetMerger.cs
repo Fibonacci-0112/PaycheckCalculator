@@ -68,6 +68,70 @@ public static class BudgetMerger
         return new TransactionSet(transactions, tombstones);
     }
 
+    public static RecurringBillSet MergeRecurringBills(RecurringBillSet existing, RecurringBillSet incoming)
+    {
+        var winners = new Dictionary<Guid, BillCandidate>();
+
+        void Consider(BillCandidate c)
+        {
+            if (!winners.TryGetValue(c.Id, out var cur) || c.Beats(cur))
+                winners[c.Id] = c;
+        }
+
+        foreach (var e in existing.Bills)      Consider(BillCandidate.ForEntry(e,    fromIncoming: false));
+        foreach (var t in existing.Tombstones) Consider(BillCandidate.ForTombstone(t, fromIncoming: false));
+        foreach (var e in incoming.Bills)      Consider(BillCandidate.ForEntry(e,    fromIncoming: true));
+        foreach (var t in incoming.Tombstones) Consider(BillCandidate.ForTombstone(t, fromIncoming: true));
+
+        var bills      = new List<RecurringBillDto>();
+        var tombstones = new List<RecurringBillTombstone>();
+        foreach (var w in winners.Values)
+        {
+            if (w.Entry is not null) bills.Add(w.Entry);
+            else tombstones.Add(w.Tombstone!);
+        }
+
+        bills.Sort(static (a, b) =>
+        {
+            var d = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+            return d != 0 ? d : a.Id.CompareTo(b.Id);
+        });
+        tombstones.Sort(static (a, b) => a.Id.CompareTo(b.Id));
+        return new RecurringBillSet(bills, tombstones);
+    }
+
+    public static SavingsGoalSet MergeSavingsGoals(SavingsGoalSet existing, SavingsGoalSet incoming)
+    {
+        var winners = new Dictionary<Guid, GoalCandidate>();
+
+        void Consider(GoalCandidate c)
+        {
+            if (!winners.TryGetValue(c.Id, out var cur) || c.Beats(cur))
+                winners[c.Id] = c;
+        }
+
+        foreach (var e in existing.Goals)      Consider(GoalCandidate.ForEntry(e,    fromIncoming: false));
+        foreach (var t in existing.Tombstones) Consider(GoalCandidate.ForTombstone(t, fromIncoming: false));
+        foreach (var e in incoming.Goals)      Consider(GoalCandidate.ForEntry(e,    fromIncoming: true));
+        foreach (var t in incoming.Tombstones) Consider(GoalCandidate.ForTombstone(t, fromIncoming: true));
+
+        var goals      = new List<SavingsGoalDto>();
+        var tombstones = new List<SavingsGoalTombstone>();
+        foreach (var w in winners.Values)
+        {
+            if (w.Entry is not null) goals.Add(w.Entry);
+            else tombstones.Add(w.Tombstone!);
+        }
+
+        goals.Sort(static (a, b) =>
+        {
+            var d = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+            return d != 0 ? d : a.Id.CompareTo(b.Id);
+        });
+        tombstones.Sort(static (a, b) => a.Id.CompareTo(b.Id));
+        return new SavingsGoalSet(goals, tombstones);
+    }
+
     private sealed class BudgetCandidate
     {
         public required string Key { get; init; }
@@ -107,6 +171,52 @@ public static class BudgetMerger
         { Id = t.Id, Timestamp = t.DeletedAtUtc, IsTombstone = true, FromIncoming = fromIncoming, Tombstone = t };
 
         public bool Beats(TxCandidate other)
+        {
+            if (Timestamp != other.Timestamp) return Timestamp > other.Timestamp;
+            if (IsTombstone != other.IsTombstone) return !IsTombstone;
+            return FromIncoming && !other.FromIncoming;
+        }
+    }
+
+    private sealed class BillCandidate
+    {
+        public Guid Id { get; init; }
+        public DateTimeOffset Timestamp { get; init; }
+        public bool IsTombstone { get; init; }
+        public bool FromIncoming { get; init; }
+        public RecurringBillDto? Entry { get; init; }
+        public RecurringBillTombstone? Tombstone { get; init; }
+
+        public static BillCandidate ForEntry(RecurringBillDto dto, bool fromIncoming) => new()
+        { Id = dto.Id, Timestamp = dto.UpdatedAtUtc, IsTombstone = false, FromIncoming = fromIncoming, Entry = dto };
+
+        public static BillCandidate ForTombstone(RecurringBillTombstone t, bool fromIncoming) => new()
+        { Id = t.Id, Timestamp = t.DeletedAtUtc, IsTombstone = true, FromIncoming = fromIncoming, Tombstone = t };
+
+        public bool Beats(BillCandidate other)
+        {
+            if (Timestamp != other.Timestamp) return Timestamp > other.Timestamp;
+            if (IsTombstone != other.IsTombstone) return !IsTombstone;
+            return FromIncoming && !other.FromIncoming;
+        }
+    }
+
+    private sealed class GoalCandidate
+    {
+        public Guid Id { get; init; }
+        public DateTimeOffset Timestamp { get; init; }
+        public bool IsTombstone { get; init; }
+        public bool FromIncoming { get; init; }
+        public SavingsGoalDto? Entry { get; init; }
+        public SavingsGoalTombstone? Tombstone { get; init; }
+
+        public static GoalCandidate ForEntry(SavingsGoalDto dto, bool fromIncoming) => new()
+        { Id = dto.Id, Timestamp = dto.UpdatedAtUtc, IsTombstone = false, FromIncoming = fromIncoming, Entry = dto };
+
+        public static GoalCandidate ForTombstone(SavingsGoalTombstone t, bool fromIncoming) => new()
+        { Id = t.Id, Timestamp = t.DeletedAtUtc, IsTombstone = true, FromIncoming = fromIncoming, Tombstone = t };
+
+        public bool Beats(GoalCandidate other)
         {
             if (Timestamp != other.Timestamp) return Timestamp > other.Timestamp;
             if (IsTombstone != other.IsTombstone) return !IsTombstone;

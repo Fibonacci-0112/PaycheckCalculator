@@ -9,4 +9,7 @@ public sealed class Budget
     public string Name { get; init; } = "";
     public IReadOnlyList<BudgetCategory> Categories { get; init; } = [];
     public decimal MonthlyNetIncome { get; init; }
+
+    /// <summary>The budgeting methodology this budget follows (drives UI guidance only).</summary>
+    public BudgetMethod Method { get; init; } = BudgetMethod.Custom;
 }

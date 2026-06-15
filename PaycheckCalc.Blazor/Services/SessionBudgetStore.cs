@@ -13,6 +13,10 @@ public sealed class SessionBudgetStore : IBudgetStore
     private readonly Dictionary<string, BudgetTombstone> _budgetTombs = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<Guid, TransactionDto> _transactions = new();
     private readonly Dictionary<Guid, TransactionTombstone> _txTombs = new();
+    private readonly Dictionary<Guid, RecurringBillDto> _bills = new();
+    private readonly Dictionary<Guid, RecurringBillTombstone> _billTombs = new();
+    private readonly Dictionary<Guid, SavingsGoalDto> _goals = new();
+    private readonly Dictionary<Guid, SavingsGoalTombstone> _goalTombs = new();
 
     public Task<BudgetSet> LoadBudgetsAsync(CancellationToken ct = default)
         => Task.FromResult(new BudgetSet(_budgets.Values.ToList(), _budgetTombs.Values.ToList()));
@@ -63,6 +67,58 @@ public sealed class SessionBudgetStore : IBudgetStore
         _txTombs.Clear();
         foreach (var t in set.Transactions) _transactions[t.Id] = t;
         foreach (var t in set.Tombstones)   _txTombs[t.Id]      = t;
+        return Task.CompletedTask;
+    }
+
+    public Task<RecurringBillSet> LoadRecurringBillsAsync(CancellationToken ct = default)
+        => Task.FromResult(new RecurringBillSet(_bills.Values.ToList(), _billTombs.Values.ToList()));
+
+    public Task UpsertRecurringBillAsync(RecurringBillDto dto, CancellationToken ct = default)
+    {
+        _bills[dto.Id] = dto;
+        _billTombs.Remove(dto.Id);
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveRecurringBillAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default)
+    {
+        _bills.Remove(id);
+        _billTombs[id] = new RecurringBillTombstone(id, deletedAtUtc);
+        return Task.CompletedTask;
+    }
+
+    public Task ReplaceAllRecurringBillsAsync(RecurringBillSet set, CancellationToken ct = default)
+    {
+        _bills.Clear();
+        _billTombs.Clear();
+        foreach (var b in set.Bills)      _bills[b.Id]     = b;
+        foreach (var t in set.Tombstones) _billTombs[t.Id] = t;
+        return Task.CompletedTask;
+    }
+
+    public Task<SavingsGoalSet> LoadSavingsGoalsAsync(CancellationToken ct = default)
+        => Task.FromResult(new SavingsGoalSet(_goals.Values.ToList(), _goalTombs.Values.ToList()));
+
+    public Task UpsertSavingsGoalAsync(SavingsGoalDto dto, CancellationToken ct = default)
+    {
+        _goals[dto.Id] = dto;
+        _goalTombs.Remove(dto.Id);
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveSavingsGoalAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default)
+    {
+        _goals.Remove(id);
+        _goalTombs[id] = new SavingsGoalTombstone(id, deletedAtUtc);
+        return Task.CompletedTask;
+    }
+
+    public Task ReplaceAllSavingsGoalsAsync(SavingsGoalSet set, CancellationToken ct = default)
+    {
+        _goals.Clear();
+        _goalTombs.Clear();
+        foreach (var g in set.Goals)      _goals[g.Id]     = g;
+        foreach (var t in set.Tombstones) _goalTombs[t.Id] = t;
         return Task.CompletedTask;
     }
 }

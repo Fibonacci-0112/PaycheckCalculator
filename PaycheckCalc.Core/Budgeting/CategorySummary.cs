@@ -12,4 +12,7 @@ public sealed class CategorySummary
     public decimal Spent { get; init; }
     public decimal Remaining => Budgeted - Spent;
     public decimal ProjectedMonthEnd { get; init; }
+
+    /// <summary>Total monthly-equivalent cost of recurring bills assigned to this category.</summary>
+    public decimal Recurring { get; init; }
 }

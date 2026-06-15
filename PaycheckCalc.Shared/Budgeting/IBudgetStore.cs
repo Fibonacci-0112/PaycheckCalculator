@@ -18,4 +18,16 @@ public interface IBudgetStore
     Task UpsertTransactionAsync(TransactionDto dto, CancellationToken ct = default);
     Task RemoveTransactionAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default);
     Task ReplaceAllTransactionsAsync(TransactionSet set, CancellationToken ct = default);
+
+    // ── Recurring bills ────────────────────────────────────────────────────────
+    Task<RecurringBillSet> LoadRecurringBillsAsync(CancellationToken ct = default);
+    Task UpsertRecurringBillAsync(RecurringBillDto dto, CancellationToken ct = default);
+    Task RemoveRecurringBillAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default);
+    Task ReplaceAllRecurringBillsAsync(RecurringBillSet set, CancellationToken ct = default);
+
+    // ── Savings goals ──────────────────────────────────────────────────────────
+    Task<SavingsGoalSet> LoadSavingsGoalsAsync(CancellationToken ct = default);
+    Task UpsertSavingsGoalAsync(SavingsGoalDto dto, CancellationToken ct = default);
+    Task RemoveSavingsGoalAsync(Guid id, DateTimeOffset deletedAtUtc, CancellationToken ct = default);
+    Task ReplaceAllSavingsGoalsAsync(SavingsGoalSet set, CancellationToken ct = default);
 }

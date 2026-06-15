@@ -249,6 +249,106 @@ public sealed class BudgetCalculatorTest
         Assert.Equal(2_500m, summary.Unallocated);
     }
 
+    // ── AllocationRules (zero-based / method templates) ──────────────────────
+
+    [Fact]
+    public void ZeroBasedStarter_AllCategoriesAreDollarSeededAtZero()
+    {
+        var cats = AllocationRules.ZeroBasedStarter();
+        Assert.NotEmpty(cats);
+        Assert.All(cats, c => Assert.Equal(BudgetAmountType.Dollar, c.AmountType));
+        Assert.All(cats, c => Assert.Equal(0m, c.Amount));
+    }
+
+    [Fact]
+    public void ForMethod_FiftyThirtyTwenty_ReturnsThreePercentageCategories()
+    {
+        var cats = AllocationRules.ForMethod(BudgetMethod.FiftyThirtyTwenty);
+        Assert.Equal(3, cats.Count);
+        Assert.All(cats, c => Assert.Equal(BudgetAmountType.Percentage, c.AmountType));
+    }
+
+    [Fact]
+    public void ForMethod_Custom_ReturnsEmpty()
+        => Assert.Empty(AllocationRules.ForMethod(BudgetMethod.Custom));
+
+    // ── BudgetSummary.IsFullyAllocated (zero-based goal) ─────────────────────
+
+    [Fact]
+    public void IsFullyAllocated_True_WhenDollarCategoriesSumToIncome()
+    {
+        var budget = new Budget
+        {
+            Name = "ZB",
+            MonthlyNetIncome = 3_000m,
+            Method = BudgetMethod.ZeroBased,
+            Categories =
+            [
+                new BudgetCategory { Name = "Housing", Amount = 2_000m, AmountType = BudgetAmountType.Dollar, BudgetType = BudgetType.Needs },
+                new BudgetCategory { Name = "Savings", Amount = 1_000m, AmountType = BudgetAmountType.Dollar, BudgetType = BudgetType.Savings }
+            ]
+        };
+        var summary = Calc.Calculate(budget, [], new DateOnly(2026, 6, 15));
+        Assert.Equal(0m, summary.Unallocated);
+        Assert.True(summary.IsFullyAllocated);
+    }
+
+    [Fact]
+    public void IsFullyAllocated_False_WhenIncomeRemainsUnassigned()
+    {
+        var budget = new Budget
+        {
+            Name = "ZB",
+            MonthlyNetIncome = 3_000m,
+            Categories = [new BudgetCategory { Name = "Housing", Amount = 2_000m, AmountType = BudgetAmountType.Dollar, BudgetType = BudgetType.Needs }]
+        };
+        var summary = Calc.Calculate(budget, [], new DateOnly(2026, 6, 15));
+        Assert.Equal(1_000m, summary.Unallocated);
+        Assert.False(summary.IsFullyAllocated);
+    }
+
+    // ── BudgetCalculator with recurring bills & savings goals ────────────────
+
+    [Fact]
+    public void Calculate_RecurringBills_FoldIntoCategoryAndTotalRecurring()
+    {
+        var budget = Budget50_30_20(4_000m);
+        RecurringBill[] bills =
+        [
+            new() { Name = "Rent",    CategoryName = "Needs", Amount = 1_500m, Frequency = RecurrenceFrequency.Monthly },
+            new() { Name = "Insurance", CategoryName = "Needs", Amount = 1_200m, Frequency = RecurrenceFrequency.Annual } // $100/mo
+        ];
+        var summary = Calc.Calculate(budget, [], new DateOnly(2026, 6, 15), bills);
+
+        var needs = summary.Categories.Single(c => c.Name == "Needs");
+        Assert.Equal(1_600m, needs.Recurring);       // 1,500 + 100
+        Assert.Equal(1_600m, summary.TotalRecurring);
+    }
+
+    [Fact]
+    public void Calculate_SavingsGoals_SumIntoTotalSavingsContribution()
+    {
+        var budget = Budget50_30_20(4_000m);
+        SavingsGoal[] goals =
+        [
+            new() { Name = "Vacation", TargetAmount = 6_000m, CurrentAmount = 0m, TargetDate = new DateOnly(2026, 12, 15) }, // $1,000/mo
+            new() { Name = "Laptop",   TargetAmount = 3_000m, CurrentAmount = 0m, TargetDate = new DateOnly(2026, 9, 15) }   // $1,000/mo
+        ];
+        var summary = Calc.Calculate(budget, [], new DateOnly(2026, 6, 15), recurringBills: null, savingsGoals: goals);
+
+        Assert.Equal(2_000m, summary.TotalSavingsContribution);
+    }
+
+    [Fact]
+    public void Calculate_NoBillsOrGoals_TotalsAreZero()
+    {
+        var budget = Budget50_30_20(4_000m);
+        var summary = Calc.Calculate(budget, [], new DateOnly(2026, 6, 15));
+        Assert.Equal(0m, summary.TotalRecurring);
+        Assert.Equal(0m, summary.TotalSavingsContribution);
+        Assert.All(summary.Categories, c => Assert.Equal(0m, c.Recurring));
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static Budget Budget50_30_20(decimal monthlyNetIncome) => new()

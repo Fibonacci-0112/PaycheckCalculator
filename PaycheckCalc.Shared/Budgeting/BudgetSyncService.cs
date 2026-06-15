@@ -7,11 +7,17 @@ public sealed record BudgetSyncOutcome(
     bool Success,
     BudgetSet? MergedBudgets,
     TransactionSet? MergedTransactions,
+    RecurringBillSet? MergedRecurringBills,
+    SavingsGoalSet? MergedSavingsGoals,
     string? Error)
 {
-    public static BudgetSyncOutcome Ok(BudgetSet budgets, TransactionSet transactions) =>
-        new(true, budgets, transactions, null);
-    public static BudgetSyncOutcome Fail(string error) => new(false, null, null, error);
+    public static BudgetSyncOutcome Ok(
+        BudgetSet budgets,
+        TransactionSet transactions,
+        RecurringBillSet bills,
+        SavingsGoalSet goals) =>
+        new(true, budgets, transactions, bills, goals, null);
+    public static BudgetSyncOutcome Fail(string error) => new(false, null, null, null, null, error);
 }
 
 /// <summary>
@@ -34,15 +40,19 @@ public sealed class BudgetSyncService
     {
         var budgets      = await _store.LoadBudgetsAsync(ct).ConfigureAwait(false);
         var transactions = await _store.LoadTransactionsAsync(ct).ConfigureAwait(false);
-        var request      = BudgetSyncRequest.From(budgets, transactions);
+        var bills        = await _store.LoadRecurringBillsAsync(ct).ConfigureAwait(false);
+        var goals        = await _store.LoadSavingsGoalsAsync(ct).ConfigureAwait(false);
+        var request      = BudgetSyncRequest.From(budgets, transactions, bills, goals);
 
         var result = await _api.SyncBudgetsAsync(request, ct).ConfigureAwait(false);
         if (!result.Success || result.Value is null)
             return BudgetSyncOutcome.Fail(result.Error ?? "Sync failed.");
 
-        var (mergedBudgets, mergedTransactions) = result.Value.ToSets();
+        var (mergedBudgets, mergedTransactions, mergedBills, mergedGoals) = result.Value.ToSets();
         await _store.ReplaceAllBudgetsAsync(mergedBudgets, ct).ConfigureAwait(false);
         await _store.ReplaceAllTransactionsAsync(mergedTransactions, ct).ConfigureAwait(false);
-        return BudgetSyncOutcome.Ok(mergedBudgets, mergedTransactions);
+        await _store.ReplaceAllRecurringBillsAsync(mergedBills, ct).ConfigureAwait(false);
+        await _store.ReplaceAllSavingsGoalsAsync(mergedGoals, ct).ConfigureAwait(false);
+        return BudgetSyncOutcome.Ok(mergedBudgets, mergedTransactions, mergedBills, mergedGoals);
     }
 }
