@@ -29,5 +29,7 @@ public static class PaycheckJson
         // Enums as names, never ordinals — reordering an enum must not silently corrupt stored data.
         options.Converters.Add(new JsonStringEnumConverter());
         options.Converters.Add(new StateInputValuesJsonConverter());
+        // Explicit ISO-8601 date serialization for BudgetTransaction.Date.
+        options.Converters.Add(new DateOnlyJsonConverter());
     }
 }

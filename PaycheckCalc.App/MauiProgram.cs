@@ -7,6 +7,8 @@ using PaycheckCalc.App.Services.Storage;
 using PaycheckCalc.App.Services.Sync;
 using PaycheckCalc.App.ViewModels;
 using PaycheckCalc.App.Views;
+using PaycheckCalc.Core.Budgeting;
+using PaycheckCalc.Shared.Budgeting;
 using PaycheckCalc.Core.DependencyInjection;
 using PaycheckCalc.Shared.Client;
 using PaycheckCalc.Shared.Sync;
@@ -43,6 +45,7 @@ public static class MauiProgram
 
         // Local persistence (saved paychecks on device) + optional account sync.
         builder.Services.AddSingleton<ISavedPaycheckStore, JsonFilePaycheckStore>();
+        builder.Services.AddSingleton<IBudgetStore, JsonFileBudgetStore>();
         builder.Services.AddSingleton<ITokenStore, SecureStorageTokenStore>();
         builder.Services.AddSingleton<PreferencesApiBaseAddressProvider>();
         builder.Services.AddSingleton<IApiBaseAddressProvider>(sp => sp.GetRequiredService<PreferencesApiBaseAddressProvider>());
@@ -53,9 +56,11 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<CalculatorViewModel>();
         builder.Services.AddSingleton<AccountViewModel>();
+        builder.Services.AddSingleton<BudgetViewModel>();
         builder.Services.AddSingleton<InputsPage>();
         builder.Services.AddSingleton<ResultsPage>();
         builder.Services.AddSingleton<PaychecksPage>();
+        builder.Services.AddSingleton<BudgetPage>();
         builder.Services.AddSingleton<AccountPage>();
         builder.Services.AddSingleton<AppShell>();
 

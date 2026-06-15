@@ -1,0 +1,365 @@
+@page "/budget"
+@rendermode InteractiveServer
+@using PaycheckCalc.Core.Budgeting
+@using PaycheckCalc.Core.Models
+@using PaycheckCalc.Core.Pay
+@using PaycheckCalc.Shared.Budgeting
+@inject BudgetCalculator BudgetCalc
+@inject SessionBudgetStore Store
+
+<PageTitle>Budget — PaycheckCalc</PageTitle>
+
+<div class="budget-layout">
+
+    <!-- ── HEADER ──────────────────────────────────────────────── -->
+    <div class="budget-header">
+        <h2>Monthly Budget</h2>
+        <p class="budget-subtitle">Paycheck-driven allocation + expense tracking</p>
+    </div>
+
+    <!-- ── INCOME SETUP ────────────────────────────────────────── -->
+    <div class="budget-card">
+        <h3>Monthly Net Income</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Net Pay per Paycheck ($)</label>
+                <input type="number" @bind="_netPayPerPeriod" min="0" step="0.01" />
+            </div>
+            <div class="form-group">
+                <label>Pay Frequency</label>
+                <select @bind="_frequency">
+                    @foreach (var f in Enum.GetValues<PayFrequency>())
+                    {
+                        <option value="@f">@FrequencyLabel(f)</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <button class="btn btn-primary" @onclick="ApplyIncome">Set Income</button>
+            <button class="btn btn-secondary" @onclick="Apply5030_20" disabled="@(_monthlyNetIncome <= 0m)">
+                Apply 50/30/20 Rule
+            </button>
+        </div>
+        @if (_monthlyNetIncome > 0m)
+        {
+            <p class="income-display">Monthly net income: <strong>@_monthlyNetIncome.ToString("C")</strong></p>
+        }
+    </div>
+
+    @if (_monthlyNetIncome > 0m && _categories.Count > 0)
+    {
+        <!-- ── SUMMARY ──────────────────────────────────────────── -->
+        <div class="budget-summary-row">
+            <div class="summary-chip">
+                <span class="chip-label">Budgeted</span>
+                <span class="chip-value">@_summary?.TotalBudgeted.ToString("C")</span>
+            </div>
+            <div class="summary-chip">
+                <span class="chip-label">Spent</span>
+                <span class="chip-value">@_summary?.TotalSpent.ToString("C")</span>
+            </div>
+            <div class="summary-chip">
+                <span class="chip-label">Remaining</span>
+                <span class="chip-value">@_summary?.Remaining.ToString("C")</span>
+            </div>
+            <div class="summary-chip">
+                <span class="chip-label">Unallocated</span>
+                <span class="chip-value">@_summary?.Unallocated.ToString("C")</span>
+            </div>
+        </div>
+
+        <!-- ── CATEGORY BARS ─────────────────────────────────────── -->
+        <div class="budget-card">
+            <h3>Categories</h3>
+            @foreach (var cat in _categorySummaries)
+            {
+                var pct = cat.Budgeted > 0m
+                    ? Math.Min(1.0, (double)(cat.Spent / cat.Budgeted))
+                    : 0.0;
+                var barColor = pct >= 1.0 ? "var(--color-error, #f44336)"
+                             : pct >= 0.8 ? "var(--color-warn, #ff9800)"
+                             : "var(--color-ok, #4CAF50)";
+                <div class="category-bar">
+                    <div class="category-bar-header">
+                        <span class="category-name">@cat.Name</span>
+                        <span class="category-type @cat.BudgetType.ToString().ToLower()">@cat.BudgetType</span>
+                        <span class="category-amounts">
+                            @cat.Spent.ToString("C") / @cat.Budgeted.ToString("C")
+                        </span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: @((pct * 100).ToString("F1"))%; background: @barColor"></div>
+                    </div>
+                    <div class="category-bar-footer">
+                        <span>Remaining: @cat.Remaining.ToString("C")</span>
+                        <span>Projected month-end: @cat.ProjectedMonthEnd.ToString("C")</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- ── ADD EXPENSE ───────────────────────────────────────── -->
+        <div class="budget-card">
+            <h3>Add Expense</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select @bind="_newTxCategory">
+                        <option value="">— select —</option>
+                        @foreach (var cat in _categories)
+                        {
+                            <option value="@cat.Name">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount ($)</label>
+                    <input type="number" @bind="_newTxAmount" min="0.01" step="0.01" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description (optional)</label>
+                <input type="text" @bind="_newTxDescription" />
+            </div>
+            <button class="btn btn-primary" @onclick="AddTransaction"
+                    disabled="@(string.IsNullOrWhiteSpace(_newTxCategory) || _newTxAmount <= 0m)">
+                Add Expense
+            </button>
+        </div>
+
+        <!-- ── TRANSACTION LIST ──────────────────────────────────── -->
+        @if (_transactions.Count > 0)
+        {
+            <div class="budget-card">
+                <h3>This Month's Expenses</h3>
+                <table class="tx-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th class="amount-col">Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tx in _transactions.OrderByDescending(t => t.Date))
+                        {
+                            <tr>
+                                <td>@tx.Date.ToString("MMM d")</td>
+                                <td>@tx.CategoryName</td>
+                                <td class="tx-desc">@tx.Description</td>
+                                <td class="amount-col">@tx.Amount.ToString("C")</td>
+                                <td>
+                                    <button class="btn-icon" @onclick="() => RemoveTransaction(tx)"
+                                            title="Delete expense">✕</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+    else if (_monthlyNetIncome <= 0m)
+    {
+        <div class="budget-empty">
+            <p>Enter your net pay per paycheck and frequency above, then tap <strong>Set Income</strong>
+               to start budgeting. Use <strong>Apply 50/30/20 Rule</strong> for a quick start.</p>
+        </div>
+    }
+
+</div>
+
+<style>
+    .budget-layout { max-width: 800px; margin: 0 auto; padding: 1rem; }
+    .budget-header { margin-bottom: 1rem; }
+    .budget-subtitle { color: #888; margin: 0; }
+    .budget-card { background: #2c2c2c; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    .budget-card h3 { margin: 0 0 .75rem; font-size: 1rem; color: #eee; }
+    .budget-summary-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .summary-chip { background: #2c2c2c; border-radius: 8px; padding: .5rem .75rem; flex: 1; min-width: 120px; }
+    .chip-label { font-size: .7rem; color: #888; display: block; }
+    .chip-value { font-size: 1.1rem; font-weight: bold; color: #fff; }
+    .income-display { margin: .5rem 0 0; color: #aaa; }
+    .form-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: .5rem; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: .25rem; flex: 1; min-width: 150px; }
+    .form-group label { font-size: .75rem; color: #aaa; }
+    .form-group input, .form-group select { background: #1a1a1a; border: 1px solid #444; color: #fff;
+        border-radius: 4px; padding: .35rem .5rem; }
+    .btn { padding: .4rem .9rem; border-radius: 6px; border: none; cursor: pointer; font-size: .85rem; }
+    .btn-primary { background: #1976D2; color: #fff; }
+    .btn-secondary { background: #388E3C; color: #fff; }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .category-bar { margin-bottom: .75rem; }
+    .category-bar-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .25rem; }
+    .category-name { font-weight: bold; color: #eee; flex: 1; }
+    .category-type { font-size: .7rem; padding: .15rem .4rem; border-radius: 4px; background: #444; color: #ccc; }
+    .category-type.needs { background: #1565C0; }
+    .category-type.wants { background: #6A1B9A; }
+    .category-type.savings { background: #2E7D32; }
+    .category-amounts { font-size: .85rem; color: #aaa; }
+    .bar-track { height: 8px; background: #444; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .category-bar-footer { display: flex; justify-content: space-between; font-size: .75rem; color: #888; margin-top: .2rem; }
+    .tx-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .tx-table th { text-align: left; color: #888; border-bottom: 1px solid #444; padding: .25rem .5rem; }
+    .tx-table td { padding: .3rem .5rem; border-bottom: 1px solid #333; color: #ccc; }
+    .amount-col { text-align: right; }
+    .tx-desc { color: #888; }
+    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: .9rem; padding: .1rem .3rem; }
+    .btn-icon:hover { color: #f44336; }
+    .budget-empty { color: #888; text-align: center; padding: 2rem; }
+</style>
+
+@code {
+    // ── Income ────────────────────────────────────────────────────────────────
+    private decimal _netPayPerPeriod;
+    private PayFrequency _frequency = PayFrequency.Biweekly;
+    private decimal _monthlyNetIncome;
+
+    // ── Categories / budget definition ────────────────────────────────────────
+    private List<BudgetCategory> _categories = [];
+
+    // ── Summary (computed from calculator) ────────────────────────────────────
+    private BudgetSummary? _summary;
+    private IReadOnlyList<CategorySummary> _categorySummaries = [];
+
+    // ── Transactions ──────────────────────────────────────────────────────────
+    private List<TransactionDto> _transactions = [];
+    private string _newTxCategory = "";
+    private decimal _newTxAmount;
+    private string _newTxDescription = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var budgetSet = await Store.LoadBudgetsAsync();
+        var txSet     = await Store.LoadTransactionsAsync();
+
+        var dto = budgetSet.Budgets.FirstOrDefault();
+        if (dto is not null)
+        {
+            _monthlyNetIncome = dto.MonthlyNetIncome;
+            _categories = dto.Categories.Select(c => new BudgetCategory
+            {
+                Name = c.Name, BudgetType = c.BudgetType, Amount = c.Amount, AmountType = c.AmountType
+            }).ToList();
+        }
+
+        _transactions = txSet.Transactions.ToList();
+        RecomputeSummary();
+    }
+
+    private void ApplyIncome()
+    {
+        if (_netPayPerPeriod <= 0m) return;
+        _monthlyNetIncome = MonthlyIncomeNormalizer.ToMonthly(_netPayPerPeriod, _frequency);
+        RecomputeSummary();
+        PersistBudget();
+    }
+
+    private void Apply5030_20()
+    {
+        if (_monthlyNetIncome <= 0m) return;
+        _categories = AllocationRules.FiftyThirtyTwenty()
+            .Select(c => new BudgetCategory
+            {
+                Name = c.Name, BudgetType = c.BudgetType,
+                Amount = c.Amount, AmountType = c.AmountType
+            }).ToList();
+        RecomputeSummary();
+        PersistBudget();
+    }
+
+    private async Task AddTransaction()
+    {
+        if (string.IsNullOrWhiteSpace(_newTxCategory) || _newTxAmount <= 0m) return;
+
+        var dto = new TransactionDto
+        {
+            Id = Guid.NewGuid(),
+            BudgetName = "My Budget",
+            CategoryName = _newTxCategory,
+            Amount = _newTxAmount,
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            Description = _newTxDescription.Trim(),
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+        _transactions.Add(dto);
+        await Store.UpsertTransactionAsync(dto);
+
+        _newTxCategory = "";
+        _newTxAmount = 0m;
+        _newTxDescription = "";
+
+        RecomputeSummary();
+    }
+
+    private async Task RemoveTransaction(TransactionDto tx)
+    {
+        _transactions.Remove(tx);
+        await Store.RemoveTransactionAsync(tx.Id, DateTimeOffset.UtcNow);
+        RecomputeSummary();
+    }
+
+    private void RecomputeSummary()
+    {
+        if (_monthlyNetIncome <= 0m || _categories.Count == 0)
+        {
+            _summary = null;
+            _categorySummaries = [];
+            return;
+        }
+
+        var budget = new PaycheckCalc.Core.Budgeting.Budget
+        {
+            Name = "My Budget",
+            MonthlyNetIncome = _monthlyNetIncome,
+            Categories = _categories
+        };
+
+        var domainTransactions = _transactions.Select(t => new BudgetTransaction
+        {
+            Id = t.Id,
+            CategoryName = t.CategoryName,
+            Amount = t.Amount,
+            Date = t.Date,
+            Description = t.Description
+        }).ToList();
+
+        _summary = BudgetCalc.Calculate(budget, domainTransactions, DateOnly.FromDateTime(DateTime.Today));
+        _categorySummaries = _summary.Categories;
+    }
+
+    private void PersistBudget()
+    {
+        var dto = new BudgetDto
+        {
+            Name = "My Budget",
+            UpdatedAtUtc = DateTimeOffset.UtcNow,
+            MonthlyNetIncome = _monthlyNetIncome,
+            Categories = _categories.Select(c => new BudgetCategoryDto
+            {
+                Name = c.Name, BudgetType = c.BudgetType,
+                Amount = c.Amount, AmountType = c.AmountType
+            }).ToList()
+        };
+        _ = Store.UpsertBudgetAsync(dto);
+    }
+
+    private static string FrequencyLabel(PayFrequency f) => f switch
+    {
+        PayFrequency.Weekly       => "Weekly (52×/year)",
+        PayFrequency.Biweekly     => "Biweekly (26×/year)",
+        PayFrequency.Semimonthly  => "Semimonthly (24×/year)",
+        PayFrequency.Monthly      => "Monthly (12×/year)",
+        PayFrequency.Quarterly    => "Quarterly (4×/year)",
+        PayFrequency.Semiannual   => "Semiannual (2×/year)",
+        PayFrequency.Annual       => "Annual (1×/year)",
+        PayFrequency.Daily        => "Daily (260×/year)",
+        PayFrequency.Weekly53     => "Weekly 53-period year",
+        PayFrequency.Biweekly27   => "Biweekly 27-period year",
+        _                         => f.ToString()
+    };
+}

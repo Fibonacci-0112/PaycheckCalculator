@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PaycheckCalc.Core.Budgeting;
 using PaycheckCalc.Core.Models;
 using PaycheckCalc.Core.Pay;
 using PaycheckCalc.Core.Tax.Alabama;
@@ -166,6 +167,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         services.AddSingleton(payCalculator);
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
         services.AddSingleton(new GrossUpCalculator(payCalculator));
+        services.AddSingleton(new BudgetCalculator());
 
         return services;
     }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using PaycheckCalc.Shared.Budgeting;
 using PaycheckCalc.Shared.Json;
 using PaycheckCalc.Shared.Sync;
 
@@ -106,6 +107,49 @@ public sealed class PaycheckApiClient
         {
             return ApiResult<SyncResponse>.Fail($"Could not reach the server: {ex.Message}");
         }
+    }
+
+    public async Task<ApiResult<BudgetSyncResponse>> SyncBudgetsAsync(BudgetSyncRequest request, CancellationToken ct = default)
+    {
+        var uri = BuildUri("api/budgets/sync");
+        if (uri is null) return ApiResult<BudgetSyncResponse>.Fail("No server URL is configured.");
+
+        var tokens = await _tokens.GetTokensAsync(ct).ConfigureAwait(false);
+        if (tokens is null) return ApiResult<BudgetSyncResponse>.Fail("Not signed in.");
+
+        try
+        {
+            var resp = await PostBudgetSyncAsync(uri, request, tokens.AccessToken, ct).ConfigureAwait(false);
+            if (resp.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                resp.Dispose();
+                var refreshed = await TryRefreshAsync(tokens.RefreshToken, ct).ConfigureAwait(false);
+                if (refreshed is null)
+                    return ApiResult<BudgetSyncResponse>.Fail("Your session has expired. Please sign in again.");
+                resp = await PostBudgetSyncAsync(uri, request, refreshed.AccessToken, ct).ConfigureAwait(false);
+            }
+
+            using (resp)
+            {
+                if (!resp.IsSuccessStatusCode)
+                    return ApiResult<BudgetSyncResponse>.Fail(await ReadErrorAsync(resp, ct).ConfigureAwait(false));
+                var body = await ReadJsonAsync<BudgetSyncResponse>(resp, ct).ConfigureAwait(false);
+                return body is null
+                    ? ApiResult<BudgetSyncResponse>.Fail("Unexpected sync response from server.")
+                    : ApiResult<BudgetSyncResponse>.Ok(body);
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return ApiResult<BudgetSyncResponse>.Fail($"Could not reach the server: {ex.Message}");
+        }
+    }
+
+    private async Task<HttpResponseMessage> PostBudgetSyncAsync(Uri uri, BudgetSyncRequest request, string accessToken, CancellationToken ct)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonBody(request) };
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return await _http.SendAsync(req, ct).ConfigureAwait(false);
     }
 
     private async Task<HttpResponseMessage> PostSyncAsync(Uri uri, SyncRequest request, string accessToken, CancellationToken ct)
