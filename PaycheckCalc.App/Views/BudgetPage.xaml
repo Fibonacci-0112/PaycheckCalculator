@@ -312,6 +312,87 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- ── REPORTS (C3 - Pro-gated) ───────────────────────── -->
+            <Label Text="Budget Reports &amp; Insights" FontSize="14" FontAttributes="Bold" TextColor="White" />
+
+            <!-- Pro gate -->
+            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="16"
+                   IsVisible="{Binding IsPro, Converter={StaticResource InvertBool}}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Pro Feature" FontSize="14" FontAttributes="Bold" TextColor="White"
+                           HorizontalOptions="Center" />
+                    <Label Text="Budget reports — spend history and trends — are available on the Pro plan."
+                           FontSize="12" TextColor="#9E9E9E" HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Report controls (Pro only) -->
+            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
+                   IsVisible="{Binding IsPro}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Months to include" FontSize="12" TextColor="#9E9E9E" />
+                            <Stepper Minimum="1" Maximum="12" Increment="1"
+                                     Value="{Binding ReportMonthsBack}" />
+                            <Label Text="{Binding ReportMonthsBack, StringFormat='{0} months'}"
+                                   FontSize="12" TextColor="#9E9E9E" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Generate"
+                                Command="{Binding GenerateReportCommand}"
+                                BackgroundColor="#1976D2" TextColor="White"
+                                CornerRadius="6" HeightRequest="48"
+                                VerticalOptions="End" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Report results -->
+            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
+                   IsVisible="{Binding HasReport}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,*">
+                        <Label Grid.Column="0" Text="Budget vs Actual" FontSize="13"
+                               FontAttributes="Bold" TextColor="#ccc" />
+                        <Button Grid.Column="1" Text="Export CSV"
+                                Command="{Binding ExportReportCsvAsyncCommand}"
+                                BackgroundColor="#388E3C" TextColor="White"
+                                CornerRadius="6" HeightRequest="36"
+                                HorizontalOptions="End" />
+                    </Grid>
+
+                    <!-- Budget vs Actual table header -->
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0" Text="Month" FontSize="11" TextColor="#9E9E9E" />
+                        <Label Grid.Column="1" Text="Budgeted" FontSize="11" TextColor="#9E9E9E" HorizontalOptions="End" />
+                        <Label Grid.Column="2" Text="Actual" FontSize="11" TextColor="#9E9E9E" HorizontalOptions="End" />
+                        <Label Grid.Column="3" Text="Variance" FontSize="11" TextColor="#9E9E9E" HorizontalOptions="End" />
+                    </Grid>
+
+                    <CollectionView ItemsSource="{Binding Report.BudgetVsActual}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8" Padding="0,3">
+                                    <Label Grid.Column="0"
+                                           Text="{Binding Month, StringFormat='{0:MMM yyyy}'}"
+                                           FontSize="13" TextColor="White" />
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Budgeted, StringFormat='{0:C}'}"
+                                           FontSize="13" TextColor="White" HorizontalOptions="End" />
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Actual, StringFormat='{0:C}'}"
+                                           FontSize="13" TextColor="White" HorizontalOptions="End" />
+                                    <Label Grid.Column="3"
+                                           Text="{Binding Variance, StringFormat='{0:C}'}"
+                                           FontSize="13" TextColor="White" HorizontalOptions="End" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

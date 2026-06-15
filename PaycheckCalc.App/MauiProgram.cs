@@ -11,6 +11,7 @@ using PaycheckCalc.Core.Budgeting;
 using PaycheckCalc.Shared.Budgeting;
 using PaycheckCalc.Core.DependencyInjection;
 using PaycheckCalc.Shared.Client;
+using PaycheckCalc.Shared.Entitlements;
 using PaycheckCalc.Shared.Sync;
 
 namespace PaycheckCalc.App;
@@ -53,6 +54,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<PaycheckApiClient>();
         builder.Services.AddSingleton<PaycheckSyncService>();
         builder.Services.AddSingleton<ISyncCoordinator, SyncCoordinator>();
+
+        // Entitlement provider — defaults to free tier until E2 billing is wired.
+        builder.Services.AddSingleton<IEntitlementProvider, FreeEntitlementProvider>();
 
         builder.Services.AddSingleton<CalculatorViewModel>();
         builder.Services.AddSingleton<AccountViewModel>();

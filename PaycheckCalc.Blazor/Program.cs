@@ -4,6 +4,7 @@ using PaycheckCalc.Core.Budgeting;
 using PaycheckCalc.Core.DependencyInjection;
 using PaycheckCalc.Shared.Budgeting;
 using PaycheckCalc.Shared.Client;
+using PaycheckCalc.Shared.Entitlements;
 using PaycheckCalc.Shared.Sync;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,9 @@ builder.Services.AddPaycheckCalcCore(new FileSystemTaxDataReader(taxDataPath));
 // Budget store — circuit-scoped so anonymous data persists only until the tab closes.
 builder.Services.AddScoped<SessionBudgetStore>();
 builder.Services.AddScoped<IBudgetStore>(sp => sp.GetRequiredService<SessionBudgetStore>());
+
+// Entitlement provider — defaults to free tier until E2 billing is wired.
+builder.Services.AddScoped<IEntitlementProvider, FreeEntitlementProvider>();
 
 // Account + paycheck sync. The session store and account session are scoped to the Blazor circuit, so
 // anonymous data lives only until the browser tab closes; signing in syncs it to the API server-side.
