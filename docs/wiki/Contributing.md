@@ -6,18 +6,24 @@ This page covers the development workflow, testing expectations, and coding conv
 
 ## Development Workflow
 
-1. **Clone the repository** and ensure the .NET 11 SDK (preview, pinned in `global.json`) is installed.
+1. **Clone the repository** and ensure the .NET 11 SDK (preview, pinned in `global.json`) is installed. The
+   MAUI workload is only needed for `PaycheckCalc.App`; Core, Shared, Api, Blazor, and Tests build without
+   it.
 2. **Build the Core library** to verify your environment:
    ```bash
    dotnet build PaycheckCalc.Core
    ```
-3. **Run the test suite** before making changes to establish a baseline:
+3. **Run the test suite** before making changes to establish a baseline (this is what CI runs on Linux):
    ```bash
    dotnet test PaycheckCalc.Tests
    ```
 4. **Make focused changes** — prefer small, surgical edits over broad refactors, especially in tax code.
 5. **Run tests again** to confirm nothing is broken.
 6. **Submit a pull request** with a clear description of what changed and why.
+
+> Working on the web app or sync? `dotnet run --project PaycheckCalc.Blazor` runs the web UI, and
+> `dotnet run --project PaycheckCalc.Api` runs the sync API (needs PostgreSQL). Neither requires the MAUI
+> workload.
 
 ---
 
@@ -32,9 +38,14 @@ This page covers the development workflow, testing expectations, and coding conv
 
 ### Code Organization
 
-- **Core stays UI-free.** Do not add MAUI, XAML, or view-model dependencies to `PaycheckCalc.Core`.
+- **Core stays UI-free (and HTTP/persistence-free).** Do not add MAUI, XAML, view-model, HTTP, or storage
+  dependencies to `PaycheckCalc.Core`. Sync wire/storage concerns belong in `PaycheckCalc.Shared`; the HTTP
+  server belongs in `PaycheckCalc.Api`, which must never reference the front-ends.
 - **PayCalculator is an orchestrator.** It composes calculation steps but does not contain state-specific tax rules.
-- **State calculators are self-contained plugins.** Tax rules for a specific state belong in `PaycheckCalc.Core/Tax/<StateName>/`.
+- **State calculators are self-contained plugins.** Every state (50 + DC) has its own dedicated
+  `IStateWithholdingCalculator` under `PaycheckCalc.Core/Tax/<StateName>/`. (The generic
+  `PercentageMethodWithholdingAdapter`/`StateTaxConfigs2026` path is retained only for tests and is no
+  longer wired to a production state.)
 - **Mappers translate, not compute.** The mapper layer converts between domain and UI models without performing business logic.
 - **Pages are thin.** View models own state and commands. Code-behind should only contain view-specific behavior.
 
