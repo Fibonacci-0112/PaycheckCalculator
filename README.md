@@ -1,6 +1,6 @@
 # PaycheckCalc
 
-PaycheckCalc is a US paycheck calculator for 2026 withholding rules. It computes gross pay, net pay, federal withholding, FICA, state withholding, employee-paid state disability / paid-leave premiums, deductions, annual projections, and gross-up pay for all 50 US states plus the District of Columbia.
+PaycheckCalc is a US paycheck calculator for 2026 withholding rules. It computes gross pay, net pay, federal withholding, FICA, state withholding, employee-paid state disability / paid-leave premiums, deductions, annual projections, gross-up pay, and self-employment (1099) estimates for all 50 US states plus the District of Columbia.
 
 The solution currently ships three runtime surfaces backed by shared libraries:
 
@@ -14,6 +14,7 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 
 - **Gross pay calculation** — Supports hourly pay with regular and overtime hours, plus salary pay by annual amount or per-period amount.
 - **Gross-up calculator** — Solves backward from desired take-home pay to the required gross amount by repeatedly running the full paycheck pipeline. This preserves graduated brackets, FICA caps, state rules, and percentage-based deductions.
+- **Self-employment / 1099 calculator** — From annual net earnings (Schedule C net profit) it computes federal self-employment tax (15.3% — 12.4% Social Security to the $184,500 cap plus 2.9% Medicare, both halves, with 0.9% Additional Medicare over $200,000 — on 92.35% of earnings), estimates state income tax through the ordinary state engine (no state levies a separate self-employment tax), and produces a quarterly estimated-payment schedule (Form 1040-ES). It does not model federal income tax.
 - **Federal income tax** — Implements the IRS Publication 15-T 2026 percentage method for automated payroll systems. Supported W-4 inputs include filing status, Step 2 checkbox, Step 3 credits, Step 4(a) other income, Step 4(b) deductions, and Step 4(c) extra withholding.
 - **FICA taxes** — Calculates Social Security, Medicare, and Additional Medicare withholding, with YTD wage inputs available where needed to handle the Social Security wage-base cap and Additional Medicare threshold mid-year.
 - **State withholding for all 50 states plus DC** — Each jurisdiction is handled by a registered `IStateWithholdingCalculator` under `PaycheckCalc.Core/Tax/<StateName>/`. State-specific UI inputs are schema-driven from `PaycheckCalc.Core/Data/Schemas/*.json`.
@@ -36,8 +37,8 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 PaycheckCalc.slnx
 ├── global.json                  # .NET 11 preview SDK pin and roll-forward settings
 ├── PaycheckCalc.Core/           # UI-agnostic domain, tax, pay, projection, gross-up, budget, and report engines
-│   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult
-│   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator
+│   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult, SelfEmploymentInput/Result
+│   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/               # Budget, categories, transactions, recurring bills, savings goals, reports
 │   ├── Explanation/             # Show-your-work explanation records
 │   ├── DependencyInjection/     # AddPaycheckCalcCore and ITaxDataReader
@@ -173,6 +174,8 @@ dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
 Money values use `decimal`. Gross pay, deductions, and withholding components are rounded to cents with `MidpointRounding.AwayFromZero`; net pay is computed so the displayed equation ties out to the cent.
 
 `GrossUpCalculator` treats `PayCalculator` as the forward function and uses bisection to solve for the required gross that produces the requested target net.
+
+`SelfEmploymentCalculator` works from annual net earnings: self-employment tax is 12.4% Social Security (to the `FicaCalculator` wage base) plus 2.9% Medicare, with 0.9% Additional Medicare over the threshold, all applied to 92.35% of earnings. State income tax is estimated by running the full earnings through the same `StateCalculatorRegistry` engine at an annual frequency — there is no separate *state* self-employment tax, so the nine no-income-tax states owe $0. The result includes a quarterly estimated-payment (Form 1040-ES) schedule with federal and state splits. Federal income tax is intentionally out of scope.
 
 `AnnualProjectionCalculator` projects the paycheck result across the full pay year and estimates annualized totals, projected YTD totals, and over/under withholding.
 

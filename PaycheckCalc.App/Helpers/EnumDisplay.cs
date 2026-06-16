@@ -35,6 +35,7 @@ public static class EnumDisplay
         "Standard" => "Standard Paycheck",
         "GrossUp" => "Gross-Up (net → gross)",
         "Bonus" => "Bonus / Supplemental Wage",
+        "SelfEmployment" => "Self-Employment / 1099",
         _ => SplitPascalCase(name)
     };
 

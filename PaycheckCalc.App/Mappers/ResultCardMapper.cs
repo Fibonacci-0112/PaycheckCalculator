@@ -48,6 +48,35 @@ public static class ResultCardMapper
             BonusStateDescription = result.StateWithholdingDescription
         };
 
+    /// <summary>
+    /// Maps a <see cref="SelfEmploymentResult"/> for display. There is no W-4 / federal income
+    /// tax withholding in this mode, so the federal-withholding slot carries the total
+    /// self-employment tax and the state slot carries the estimated state income tax. The
+    /// quarterly estimated-payment schedule is attached for the 1040-ES table.
+    /// </summary>
+    public static ResultCardModel MapSelfEmployment(SelfEmploymentResult result)
+        => new()
+        {
+            GrossPay = result.AnnualNetEarnings,
+            FederalTaxableIncome = result.NetEarningsSubjectToSeTax,
+            FicaTaxableWages = result.NetEarningsSubjectToSeTax,
+            StateTaxableWages = result.AnnualNetEarnings,
+            FederalWithholding = result.SelfEmploymentTax,
+            SocialSecurityWithholding = result.SocialSecurityTax,
+            MedicareWithholding = result.MedicareTax,
+            AdditionalMedicareWithholding = result.AdditionalMedicareTax,
+            StateWithholding = result.StateIncomeTax,
+            StateDisabilityInsurance = 0m,
+            PreTaxDeductions = 0m,
+            PostTaxDeductions = 0m,
+            TotalTaxes = result.TotalTax,
+            NetPay = result.TakeHome,
+            StateName = EnumDisplay.UsStateName(result.State.ToString()),
+            Explanation = result.Explanation,
+            IsSelfEmployment = true,
+            QuarterlyEstimates = result.QuarterlyEstimates
+        };
+
     private static ResultCardModel MapInternal(PaycheckResult result, bool isGrossUp, decimal targetNetPay)
     {
         return new ResultCardModel

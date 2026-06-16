@@ -1,4 +1,5 @@
 using PaycheckCalc.Core.Explanation;
+using PaycheckCalc.Core.Models;
 
 namespace PaycheckCalc.App.Models;
 
@@ -53,6 +54,16 @@ public sealed class ResultCardModel
 
     /// <summary>Human-readable summary of how the bonus's state withholding was derived (or why it is 0).</summary>
     public string BonusStateDescription { get; init; } = "";
+
+    // ── Self-employment / 1099 (only populated for a self-employment result) ──
+    /// <summary>True when this result was produced by the self-employment / 1099 calculator.</summary>
+    public bool IsSelfEmployment { get; init; }
+
+    /// <summary>
+    /// The quarterly estimated-payment schedule (Form 1040-ES) for a self-employment result.
+    /// Empty for every other result type.
+    /// </summary>
+    public IReadOnlyList<QuarterlyEstimate> QuarterlyEstimates { get; init; } = Array.Empty<QuarterlyEstimate>();
 
     // ── Display helpers (UI-only concerns) ──────────────────
     /// <summary>True when state disability insurance is non-zero and should be shown.</summary>

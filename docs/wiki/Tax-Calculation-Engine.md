@@ -156,6 +156,18 @@ The returned `GrossUpResult` contains the target net, solved gross, gross-up cos
 
 ---
 
+## Self-Employment / 1099
+
+`SelfEmploymentCalculator` estimates taxes for self-employed / 1099 contractors from **annual net earnings** (Schedule C net profit — what the user enters as "gross pay").
+
+- **Self-employment tax** is the combined employer + employee FICA halves: 12.4% Social Security (capped at the `FicaCalculator` wage base, $184,500 for 2026) plus 2.9% Medicare (uncapped), with 0.9% Additional Medicare on earnings above $200,000. All three apply to **92.35%** of net earnings. Year-to-date Social Security / Medicare wages from a W-2 job can reduce the remaining wage base and cross the Additional Medicare threshold.
+- **State income tax** is estimated by running the *full* net earnings through the ordinary `StateCalculatorRegistry` engine at an annual frequency. No U.S. state has a separate self-employment tax — states tax self-employment income as ordinary income, so the nine no-income-tax states owe $0. State disability / paid-leave levies (e.g. CA SDI) are wage-based and are **not** applied to self-employment income.
+- **Quarterly estimated payments** — the annual self-employment tax and state income tax are each split into four equal installments (the remainder absorbed by Q4) on the standard Form 1040-ES due dates (Apr 15, Jun 15, Sep 15, and Jan 15 of the following year), with federal and state amounts reported separately.
+
+The returned `SelfEmploymentResult` contains the net earnings subject to SE tax, the Social Security / Medicare / Additional Medicare components, the SE-tax total, the estimated state income tax, take-home (before federal income tax), the quarterly schedule, and a "Show Your Work" explanation. **Federal income tax is intentionally out of scope** — it depends on filing status and other income and is settled at filing.
+
+---
+
 ## Annual Projection
 
 `AnnualProjectionCalculator` converts a per-paycheck result into year-level estimates:

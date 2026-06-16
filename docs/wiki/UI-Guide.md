@@ -90,6 +90,8 @@ The per-paycheck result includes:
 
 Gross-up mode also shows the desired net pay, required gross pay, and gross-up cost.
 
+Self-employment / 1099 mode shows the net self-employment income, self-employment tax (Social Security + Medicare on 92.35% of earnings), estimated state income tax, take-home (before federal income tax), and a quarterly estimated-payment (Form 1040-ES) schedule with federal and state amounts per due date.
+
 ### Show Your Work
 
 Result lines expose explanation details from Core's `PaycheckExplanation` model. The UI opens those details from line-level info actions.

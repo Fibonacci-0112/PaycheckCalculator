@@ -186,6 +186,22 @@
                                    TextColor="#9E9E9E" FontSize="11" />
                         </VerticalStackLayout>
 
+                        <!-- Self-employment / 1099 input (shown when Mode = Self-Employment) -->
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding IsSelfEmploymentMode}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Net Self-Employment Income (annual)" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                <Entry Text="{Binding SelfEmploymentEarnings}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Label Text="Enter your annual net profit (Schedule C). Self-employment tax is 15.3% — 12.4% Social Security (to the $184,500 cap) + 2.9% Medicare — on 92.35% of it. Choose your state on the State tab for an income-tax estimate. No state has a separate self-employment tax."
+                                   TextColor="#9E9E9E" FontSize="11" />
+                        </VerticalStackLayout>
+
                         <!-- Paycheck number (for annual projection) -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Paycheck # (this year)" Grid.Column="0"

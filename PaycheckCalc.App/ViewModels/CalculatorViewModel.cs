@@ -30,13 +30,14 @@ public record PickerItem<T>(T Value, string Text)
 /// How the calculator turns inputs into a result: a standard paycheck (gross → net),
 /// a gross-up (target net → required gross), or a bonus / supplemental-wage calculation.
 /// </summary>
-public enum CalculationMode { Standard, GrossUp, Bonus }
+public enum CalculationMode { Standard, GrossUp, Bonus, SelfEmployment }
 
 public partial class CalculatorViewModel : ObservableObject
 {
     private readonly PayCalculator _calc;
     private readonly GrossUpCalculator _grossUp;
     private readonly BonusCalculator _bonus;
+    private readonly SelfEmploymentCalculator _selfEmployment;
     private readonly AnnualProjectionCalculator _annual;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
@@ -48,11 +49,12 @@ public partial class CalculatorViewModel : ObservableObject
     private UsState _previousState;
     private bool _initialized;
 
-    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, BonusCalculator bonus, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
+    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, BonusCalculator bonus, SelfEmploymentCalculator selfEmployment, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
     {
         _calc = calc;
         _grossUp = grossUp;
         _bonus = bonus;
+        _selfEmployment = selfEmployment;
         _annual = annual;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
@@ -129,6 +131,7 @@ public partial class CalculatorViewModel : ObservableObject
         OnPropertyChanged(nameof(IsStandardMode));
         OnPropertyChanged(nameof(IsGrossUpMode));
         OnPropertyChanged(nameof(IsBonusMode));
+        OnPropertyChanged(nameof(IsSelfEmploymentMode));
     }
 
     /// <summary>True when standard paycheck inputs (pay type, hours/salary) should be shown.</summary>
@@ -140,6 +143,9 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>True when the bonus / supplemental-wage inputs should be shown.</summary>
     public bool IsBonusMode => CalculationMode == CalculationMode.Bonus;
 
+    /// <summary>True when the self-employment / 1099 input should be shown.</summary>
+    public bool IsSelfEmploymentMode => CalculationMode == CalculationMode.SelfEmployment;
+
     /// <summary>Desired net (take-home) pay for the gross-up calculation.</summary>
     [ObservableProperty] public partial decimal TargetNetPay { get; set; }
 
@@ -148,6 +154,9 @@ public partial class CalculatorViewModel : ObservableObject
 
     /// <summary>Supplemental wages already paid this year, for the federal $1,000,000 threshold.</summary>
     [ObservableProperty] public partial decimal YtdSupplementalWages { get; set; }
+
+    /// <summary>Annual net self-employment earnings (Schedule C net profit) for the 1099 calculation.</summary>
+    [ObservableProperty] public partial decimal SelfEmploymentEarnings { get; set; } = 80000m;
 
     // ── Pay type (Hourly vs Salary) ─────────────────────────────
     public IReadOnlyList<PickerItem<PayType>> PayTypes { get; } =
@@ -878,7 +887,7 @@ public partial class CalculatorViewModel : ObservableObject
         // Require a name on every deduction before proceeding.
         foreach (var d in Deductions) d.HasNameError = false;
         var unnamed = Deductions.Where(d => string.IsNullOrWhiteSpace(d.Name)).ToList();
-        if (unnamed.Count > 0)
+        if (unnamed.Count > 0 && !IsSelfEmploymentMode)
         {
             foreach (var d in unnamed) d.HasNameError = true;
             return;
@@ -909,6 +918,13 @@ public partial class CalculatorViewModel : ObservableObject
         // Block calculation when state input is invalid
         if (hasFieldErrors || stateErrors.Count > 0)
             return;
+
+        // Self-employment mode reuses the validated state inputs but its own engine.
+        if (IsSelfEmploymentMode)
+        {
+            CalculateSelfEmployment(stateValues);
+            return;
+        }
 
         // Map ViewModel state → domain input via mapper
         var input = PaycheckInputMapper.Map(this, stateValues);
@@ -962,6 +978,33 @@ public partial class CalculatorViewModel : ObservableObject
 
         // Prefill the export file name from the paycheck name (the user can edit it).
         ExportFileName = string.IsNullOrWhiteSpace(PaycheckName) ? "Bonus-Summary" : PaycheckName.Trim();
+
+        ExportPdfCommand.NotifyCanExecuteChanged();
+        ExportCsvCommand.NotifyCanExecuteChanged();
+        PrintCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Runs the self-employment / 1099 calculation and maps it to the result card. Like the
+    /// bonus path it has no annual projection (Projection = null) and is not added to the
+    /// saved-paychecks list; it reuses the validated <paramref name="stateValues"/> for the
+    /// state income-tax estimate.
+    /// </summary>
+    private void CalculateSelfEmployment(StateInputValues stateValues)
+    {
+        var seResult = _selfEmployment.Calculate(new SelfEmploymentInput
+        {
+            AnnualNetEarnings = SelfEmploymentEarnings,
+            State = SelectedState,
+            StateInputValues = stateValues
+        });
+
+        ResultCard = ResultCardMapper.MapSelfEmployment(seResult);
+        Projection = null;
+        SelectedResultTab = 0;
+
+        // Prefill the export file name from the paycheck name (the user can edit it).
+        ExportFileName = string.IsNullOrWhiteSpace(PaycheckName) ? "Self-Employment-Summary" : PaycheckName.Trim();
 
         ExportPdfCommand.NotifyCanExecuteChanged();
         ExportCsvCommand.NotifyCanExecuteChanged();
