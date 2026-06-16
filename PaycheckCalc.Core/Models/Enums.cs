@@ -15,6 +15,16 @@ public enum PayType
     Salary
 }
 
+/// <summary>Direction of an hourly ↔ salary conversion (see <c>HourlySalaryCalculator</c>).</summary>
+public enum PayConversionMode
+{
+    /// <summary>Given an hourly rate, derive the equivalent salary and per-period pay.</summary>
+    HourlyToSalary,
+
+    /// <summary>Given an annual salary, derive the equivalent ("real") hourly rate.</summary>
+    SalaryToHourly
+}
+
 /// <summary>How a salary amount maps onto a single pay period.</summary>
 public enum SalaryBasis
 {
