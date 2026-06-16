@@ -1,199 +1,208 @@
 # PaycheckCalc
 
-A simple US paycheck calculator (2026 tax tables) that computes net pay, tax withholdings, and deductions for all 50 US states plus DC. It ships two front-ends — a **.NET MAUI** app (Android & Windows) and a **Blazor Server** web app — both backed by the same UI-agnostic core calculation library, `PaycheckCalc.Core`.
+PaycheckCalc is a US paycheck calculator for 2026 withholding rules. It computes gross pay, net pay, federal withholding, FICA, state withholding, employee-paid state disability / paid-leave premiums, deductions, annual projections, and gross-up pay for all 50 US states plus the District of Columbia.
+
+The solution currently ships three runtime surfaces backed by shared libraries:
+
+- **PaycheckCalc.App** — .NET MAUI app for Android and Windows.
+- **PaycheckCalc.Blazor** — Blazor Server web app.
+- **PaycheckCalc.Api** — optional ASP.NET Core Web API for accounts and sync.
+
+The tax, gross-up, annual projection, budgeting, and reporting engines live in the UI-agnostic `PaycheckCalc.Core` project. Sync DTOs, JSON configuration, merge logic, store abstractions, API client code, and entitlement abstractions live in `PaycheckCalc.Shared`.
 
 ## Features
 
-- **Gross Pay Calculation** — Computes gross pay for **hourly** workers (regular + overtime hours with a configurable overtime multiplier) or **salaried** workers (an annual or per-period salary).
-- **Gross-Up Calculator** — Works the paycheck math backward: enter a desired net (take-home) amount and `GrossUpCalculator` solves for the gross pay that delivers it after federal, FICA, state, and deduction withholding — useful for net bonuses and relocation payments. Available in both apps via a calculation-mode toggle on the Pay tab.
-- **Federal Income Tax** — Implements the IRS Publication 15-T (2026) percentage method for automated payroll systems, supporting all W-4 inputs (filing status, Step 2 checkbox, Step 3 credits, Step 4 adjustments).
-- **FICA Taxes** — Calculates Social Security (6.2%, capped at $184,500), Medicare (1.45%), and Additional Medicare (0.9% above $200,000). Optional YTD Social Security / Medicare wage inputs (exposed in the web UI) handle the wage base cap and Additional Medicare threshold mid-year.
-- **State Income Tax** — Covers all 50 states and DC. Every state ships its own `IStateWithholdingCalculator` implementation under `PaycheckCalc.Core/Tax/<State>/`, registered centrally via `StateCalculatorRegistry`:
-  - **9 no-income-tax states** — AK, FL, NV, NH, SD, TN, TX, WA, WY. Most use the shared `NoIncomeTaxWithholdingAdapter`; WA has a dedicated calculator for the WA Cares Fund (0.58% LTC premium with opt-out), and WY has its own dedicated (empty-schema) calculator.
-  - **Flat-rate state** — Pennsylvania (3.07%).
-  - **All other states** — Each implements its own withholding rules (W-4 / state-specific certificate, standard deductions, allowances / exemptions, graduated brackets or flat rate, and state-specific credits). Examples include Alabama (graduated + dependents + federal deduction), Arkansas (DFA formula method), California (Method B, EDD DE 44 withholding tables + SDI), Colorado (flat 4.4% + DR 0004 Table 1 allowance + FMLI), Connecticut (TPG-211 table-driven withholding + PFMLI), Delaware (DE W-4, 7 graduated brackets + $110 personal credit), Georgia (flat 5.19% per HB 111 + G-4 allowances and dependent deductions), Illinois (flat 4.95% + IL-W-4 allowances), Ohio (IT-4 exemptions + two-bracket formula), Oklahoma (OW-2), Oregon (OR-W-4 with per-allowance tax credit), Utah (flat 4.5% with phase-out allowance credit), Virginia (VA-4), Wisconsin (WT-4), West Virginia (IT-104), and the remaining states that use an annualized graduated-bracket approach with state-specific deductions and allowances.
-- **State Disability / Family Leave Insurance** — California SDI, Colorado FMLI (0.044%), Connecticut PFMLI, and the Washington WA Cares Fund (0.58% LTC premium) are computed alongside state withholding with dynamic labels on the results screen.
-- **Pre-Tax & Post-Tax Deductions** — Supports configurable deductions as fixed dollar amounts or a percentage of gross, with per-deduction control over which wage bases (federal, state, FICA) a pre-tax deduction reduces.
-- **Dynamic State Inputs** — Each state declares its own input schema (filing status, allowances, dependents, extra withholding), and the UI renders fields dynamically.
-- **"Show Your Work" Explanations** — Every result line — gross pay, federal/FICA/state taxable income, each tax, state disability, and net pay — carries a step-by-step breakdown of how the number was computed, opened from the info icon next to the line.
-- **Results Visualization** — Doughnut chart breakdown of gross pay (net pay, federal tax, Social Security, Medicare, state income tax, state disability insurance, and deductions) with percentage labels formatted to two decimal places.
-- **Export & Print (both apps)** — Exports the results to a Letter-size PDF via a built-in minimal PDF writer (no external PDF packages) or to CSV, and prints them. Exports include the per-period summary **and** the annual projection, append an A/B comparison table when two saved paychecks are selected, and offer a dedicated comparison-only export. An editable file-name box (prefilled from the paycheck name) names the exported file.
-- **Annual Projection** — `AnnualProjectionCalculator` in Core annualizes a paycheck, projects YTD totals by paycheck number, and estimates year-end over/under withholding; both the Blazor and MAUI apps show it on a Per Paycheck / Annual sub-tab of the results.
-- **Multiple Pay Frequencies** — Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, and Daily (plus 53-week and 27-biweekly payroll-calendar variants).
-- **Saved Paychecks & A/B Comparison** — Save calculated paychecks (with their inputs) and compare any two side by side. The MAUI app persists them on device; the Blazor app keeps anonymous ones for the browser session.
-- **Monthly Budget Tracker** — Turn a paycheck's net pay into a monthly budget with an optional 50/30/20 preset, track expenses against Needs/Wants/Savings categories, and see budgeted vs. spent vs. a projected month-end. Available on both front-ends.
-- **Optional Accounts & Sync** — Sign in (email/password) to sync saved paychecks and budgets across the MAUI and Blazor apps via a standalone ASP.NET Core Web API (ASP.NET Core Identity over EF Core PostgreSQL) with a deterministic last-write-wins merge. Everything works fully offline / without an account.
+- **Gross pay calculation** — Supports hourly pay with regular and overtime hours, plus salary pay by annual amount or per-period amount.
+- **Gross-up calculator** — Solves backward from desired take-home pay to the required gross amount by repeatedly running the full paycheck pipeline. This preserves graduated brackets, FICA caps, state rules, and percentage-based deductions.
+- **Federal income tax** — Implements the IRS Publication 15-T 2026 percentage method for automated payroll systems. Supported W-4 inputs include filing status, Step 2 checkbox, Step 3 credits, Step 4(a) other income, Step 4(b) deductions, and Step 4(c) extra withholding.
+- **FICA taxes** — Calculates Social Security, Medicare, and Additional Medicare withholding, with YTD wage inputs available where needed to handle the Social Security wage-base cap and Additional Medicare threshold mid-year.
+- **State withholding for all 50 states plus DC** — Each jurisdiction is handled by a registered `IStateWithholdingCalculator` under `PaycheckCalc.Core/Tax/<StateName>/`. State-specific UI inputs are schema-driven from `PaycheckCalc.Core/Data/Schemas/*.json`.
+- **State disability / paid-leave premiums** — California SDI, Colorado FMLI, Connecticut PFMLI, and Washington WA Cares Fund are surfaced as separate result lines with dynamic labels.
+- **Pre-tax and post-tax deductions** — Deductions can be dollar amounts or percentages. Pre-tax deductions independently control whether they reduce federal taxable wages, state taxable wages, and/or FICA wages.
+- **Show Your Work explanations** — Result lines carry step-by-step explanations through the Core `Explanation/` model and are displayed by both front-ends.
+- **Annual projection** — Projects per-paycheck results across the full year, including annualized totals, projected YTD values, estimated annual liability, and over/under withholding.
+- **Multiple pay frequencies** — Daily, Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, plus 53-week and 27-biweekly payroll-calendar variants.
+- **Saved paychecks and A/B comparison** — Save calculated paychecks with inputs and compare two saved results side by side. MAUI persists saved paychecks on device; Blazor keeps anonymous saved paychecks in circuit memory until the tab closes.
+- **Export and print** — Both front-ends support paycheck CSV/PDF export and printing. Exports include the per-period result, annual projection, and optional A/B comparison data.
+- **Monthly budget tracker** — Converts paycheck net pay to monthly income, supports Custom, 50/30/20, Zero-Based, and Envelope budgeting methods, tracks categories and transactions, and projects month-end spend.
+- **Recurring bills** — Stores recurring bills with weekly, biweekly, semimonthly, monthly, quarterly, semiannual, or annual cadence and normalizes each bill to a monthly equivalent.
+- **Savings goals** — Tracks target amount, current amount, optional target date, remaining amount, and required monthly contribution.
+- **Budget reports and insights** — Core can generate spend-by-category history and budget-vs-actual reports. CSV/PDF report exporters exist in the front-ends. The UI currently gates reports behind `IEntitlementProvider`; the default `FreeEntitlementProvider` returns free-tier access until billing is wired.
+- **Optional accounts and sync** — Email/password accounts sync paychecks, budgets, transactions, recurring bills, and savings goals across MAUI and Blazor through the Web API. Everything remains usable without an account.
 
 ## Project Structure
 
-```
+```text
 PaycheckCalc.slnx
-├── PaycheckCalc.App/          # .NET MAUI frontend (Android & Windows)
-│   ├── Views/                 # XAML pages (Inputs, Results)
-│   ├── ViewModels/            # MVVM view models (Calculator, StateField, DeductionItem)
-│   ├── Mappers/               # Domain-to-UI mappers (PaycheckInputMapper, ResultCardMapper)
-│   ├── Models/                # UI presentation models (ResultCardModel)
-│   ├── Controls/              # Custom controls (DoughnutChartDrawable)
-│   ├── Behaviors/             # Input formatting behaviors
-│   ├── Helpers/               # Enum display helpers and XAML value converters
-│   ├── Services/              # MauiAppPackageTaxDataReader (tax JSON loading)
-│   │   └── Pdf/               # Single-page PDF export: renderer, minimal PDF writer,
-│   │                          #   and platform PDF viewer launcher
-│   └── MauiProgram.cs         # DI configuration & app startup
-├── PaycheckCalc.Blazor/       # Blazor Server web frontend
-│   ├── Components/
-│   │   ├── Pages/             # Calculator, Home, Budget, and per-state SEO landing pages
-│   │   └── Shared/            # DoughnutChart (SVG), ExplanationModal
-│   ├── Services/              # FileSystemTaxDataReader, session stores, StateMetadata, Export/
-│   └── Program.cs             # DI configuration & app startup
-├── PaycheckCalc.Core/         # Business logic (no UI / HTTP / persistence dependencies)
-│   ├── Models/                # PaycheckInput/Result, Enums, UsState, Deduction,
-│   │                          #   AnnualProjection, GrossUpResult
-│   ├── Pay/                   # PayCalculator (orchestrator), PayPeriods,
-│   │                          #   AnnualProjectionCalculator, GrossUpCalculator
-│   ├── Budgeting/             # Budget engine (Budget, BudgetCategory, BudgetTransaction,
-│   │                          #   BudgetCalculator, AllocationRules, MonthlyIncomeNormalizer)
-│   ├── Explanation/           # "Show Your Work" engine (PaycheckExplanation, LineExplanation,
-│   │                          #   ExplanationStep, ExplanationLineKey)
-│   ├── DependencyInjection/   # AddPaycheckCalcCore + ITaxDataReader abstraction
-│   ├── Data/                  # JSON tax tables (IRS 15-T, OK OW-2, CA Method B, AR,
-│   │                          #   CO DR 0004, CT TPG-211)
-│   │   └── Schemas/           # One JSON file per state (ak.json … wy.json) declaring that
-│   │                          #   state's input schema for the schema-driven UI
-│   └── Tax/
-│       ├── Federal/           # IRS 15-T percentage calculator
-│       ├── Fica/              # Social Security & Medicare calculator
-│       ├── State/             # State tax interfaces, registry, schema provider, shared
-│       │                      #   explanation steps, generic percentage-method adapter,
-│       │                      #   and no-income-tax adapter
-│       └── <State>/           # One folder per state (Alabama, Arizona, … Wyoming)
-│                              #   each containing a dedicated IStateWithholdingCalculator
-├── PaycheckCalc.Shared/       # Sync wire/storage contracts, JSON config, last-write-wins
-│                              #   mergers, typed PaycheckApiClient, store abstractions
-├── PaycheckCalc.Api/          # ASP.NET Core Web API: Identity accounts + paycheck/budget
-│                              #   sync over EF Core PostgreSQL (Data/, Endpoints/, Migrations/)
-├── PaycheckCalc.Tests/        # xUnit test suite (Core + Shared + Api + Blazor)
-└── docs/                      # Wiki and class diagrams
+├── global.json                  # .NET 11 preview SDK pin and roll-forward settings
+├── PaycheckCalc.Core/           # UI-agnostic domain, tax, pay, projection, gross-up, budget, and report engines
+│   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult
+│   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator
+│   ├── Budgeting/               # Budget, categories, transactions, recurring bills, savings goals, reports
+│   ├── Explanation/             # Show-your-work explanation records
+│   ├── DependencyInjection/     # AddPaycheckCalcCore and ITaxDataReader
+│   ├── Data/                    # JSON tax tables and dynamic state schemas
+│   │   └── Schemas/             # One schema JSON file per state / DC
+│   └── Tax/                     # Federal, FICA, State contracts/registry, and one folder per jurisdiction
+├── PaycheckCalc.App/            # .NET MAUI app for Android and Windows
+│   ├── Views/                   # Inputs, Results, Paychecks, Budget, Account pages
+│   ├── ViewModels/              # Calculator, budget, account, saved paycheck, dynamic field VMs
+│   ├── Mappers/                 # Domain-to-UI mappers
+│   ├── Models/                  # UI presentation models
+│   ├── Controls/                # Doughnut chart drawable
+│   ├── Behaviors/               # Input formatting behavior
+│   ├── Helpers/                 # Enum labels and XAML helpers
+│   └── Services/                # Tax data, storage, sync, CSV, PDF, printing
+├── PaycheckCalc.Blazor/         # Blazor Server web app
+│   ├── Components/Pages/        # Home, Calculator, Budget, and state landing pages
+│   ├── Components/Shared/       # Shared Razor UI such as chart and explanation modal
+│   ├── Services/                # Tax data, session stores, state metadata, exports, account session
+│   └── wwwroot/                 # Static CSS/JS, including export.js and print styles
+├── PaycheckCalc.Shared/         # Shared sync contracts, stores, mergers, JSON, API client, entitlements
+│   ├── Snapshots/               # Saved paycheck DTOs, mapper, tombstones, merger
+│   ├── Budgeting/               # Budget/transaction/bill/goal DTOs, sets, tombstones, merger, sync service
+│   ├── Client/                  # PaycheckApiClient, API results, tokens, base-address provider
+│   ├── Entitlements/            # IEntitlementProvider and default free-tier provider
+│   ├── Json/                    # Shared System.Text.Json options and converters
+│   └── Sync/                    # Paycheck sync service and saved paycheck store abstraction
+├── PaycheckCalc.Api/            # ASP.NET Core Web API for Identity accounts and sync
+│   ├── Data/                    # SyncDbContext and EF Core entities
+│   ├── Endpoints/               # Paycheck and budget sync minimal API endpoints
+│   └── Migrations/              # PostgreSQL EF Core migrations
+├── PaycheckCalc.Tests/          # xUnit test suite for Core, Shared, Api, and Blazor export paths
+└── docs/
+    ├── class-diagram.md         # Mermaid architecture/class diagrams
+    └── wiki/                    # Project wiki
 ```
+
+The solution file includes six projects: `PaycheckCalc.Api`, `PaycheckCalc.App`, `PaycheckCalc.Blazor`, `PaycheckCalc.Core`, `PaycheckCalc.Shared`, and `PaycheckCalc.Tests`.
 
 ## Technology Stack
 
 | Component | Technology |
 |---|---|
-| **Frameworks** | .NET 11 — MAUI (PaycheckCalc.App), ASP.NET Core Blazor Server (PaycheckCalc.Blazor), ASP.NET Core Web API (PaycheckCalc.Api) |
-| **Target Platforms** | Android, Windows 10+, web browser |
-| **UI Patterns** | MVVM with [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MAUI); interactive server-rendered Razor components (Blazor) |
-| **Accounts / Sync** | ASP.NET Core Identity over EF Core PostgreSQL; shared deterministic last-write-wins merge |
-| **Test Framework** | xUnit 2.9.3 |
-| **Tax Data** | JSON-based IRS 15-T and state tax bracket tables (2026) |
+| Primary SDK | .NET 11 preview pinned in `global.json` |
+| Core library | `net11.0;net9.0` when built with the .NET 11 SDK; `net9.0` fallback on older SDKs |
+| MAUI app | .NET MAUI, `net11.0-android`, `net11.0-windows10.0.19041.0`, CommunityToolkit.Mvvm |
+| Web app | ASP.NET Core Blazor Server, `net11.0` |
+| Sync API | ASP.NET Core minimal APIs, ASP.NET Core Identity, EF Core, Npgsql/PostgreSQL |
+| Shared contracts | `System.Text.Json` with enum, `DateOnly`, and `StateInputValues` converters |
+| Tests | xUnit |
+| Data | JSON tax tables and one schema JSON file per state / DC |
 
 ## Prerequisites
 
-- [.NET 11 SDK](https://dotnet.microsoft.com/) (preview) — the solution targets `net11.0` (see `global.json` for the pinned SDK version and roll-forward settings)
-- .NET MAUI workload (only required for the MAUI App project; the Blazor, Core, and Tests projects build without it):
+- [.NET 11 SDK](https://dotnet.microsoft.com/) preview matching `global.json`.
+- .NET MAUI workload only when building or running `PaycheckCalc.App`:
   ```bash
   dotnet workload install maui
   ```
+- Android SDK or Windows 10+ SDK for MAUI targets.
+- PostgreSQL only when running `PaycheckCalc.Api` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
+
+`PaycheckCalc.Core`, `PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` build without the MAUI workload. `PaycheckCalc.App` requires the MAUI workload.
 
 ## Getting Started
 
-### Build the Core Library
+### Build a non-MAUI project
 
 ```bash
 dotnet build PaycheckCalc.Core
+dotnet build PaycheckCalc.Shared
+dotnet build PaycheckCalc.Blazor
+dotnet build PaycheckCalc.Api
 ```
 
-### Run Tests
+### Build the full solution
+
+```bash
+dotnet build PaycheckCalc.slnx
+```
+
+The full solution build requires the MAUI workload because it includes `PaycheckCalc.App`.
+
+### Run tests
 
 ```bash
 dotnet test PaycheckCalc.Tests
 ```
 
-### Run the Web App
+The test project covers the paycheck pipeline, federal withholding, FICA, all state calculators, dynamic schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, reports, snapshot JSON, merge behavior, sync API integration, and export renderers.
+
+### Run the Blazor web app
 
 ```bash
 dotnet run --project PaycheckCalc.Blazor
 ```
 
-### Run the Sync API (optional, for accounts/sync)
+### Run the sync API
 
 ```bash
-dotnet run --project PaycheckCalc.Api      # defaults to http://localhost:5201; needs PostgreSQL
+dotnet run --project PaycheckCalc.Api
 ```
 
-EF Core migrations are applied at startup; configure the database via `ConnectionStrings:Sync`. Run the API
-and Blazor together for end-to-end account/sync testing.
+The API defaults to `http://localhost:5201` and uses `ConnectionStrings:Sync` for PostgreSQL. EF Core migrations are applied at startup when the provider is PostgreSQL.
 
-### Run the MAUI App
+### Run the MAUI app
 
 ```bash
 dotnet build PaycheckCalc.App
-dotnet run --project PaycheckCalc.App
 ```
 
-> **Note:** The MAUI app requires the `maui` workload and a supported target platform (Android emulator/device or Windows).
+Target-specific examples:
 
-## How It Works
+```bash
+# Android
+dotnet build PaycheckCalc.App -t:Run -f net11.0-android
 
-The **PayCalculator** orchestrates the full paycheck calculation pipeline:
+# Windows
+dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
+```
 
-1. **Gross Pay** — `(Regular Hours × Hourly Rate) + (Overtime Hours × Hourly Rate × OT Multiplier)`
-2. **Deductions** — Pre-tax deductions reduce taxable wages; post-tax deductions are subtracted after taxes.
-3. **FICA** — Social Security and Medicare are calculated on gross wages minus applicable pre-tax deductions, with annual wage-base caps.
-4. **Federal Withholding** — Wages are annualized, the standard deduction and W-4 adjustments are applied, the tax is computed using graduated brackets from IRS Publication 15-T, and the result is de-annualized back to the pay period.
-5. **State Withholding** — The `StateCalculatorRegistry` looks up the registered `IStateWithholdingCalculator` for the selected state and delegates calculation using the state's specific rules and inputs.
-6. **Net Pay** — `Gross Pay − Pre-Tax Deductions − Post-Tax Deductions − Federal Tax − State Tax − State Disability − Social Security − Medicare − Additional Medicare`
+## How the Paycheck Engine Works
 
-Gross pay, taxes, and deductions are rounded individually to two decimal places using `MidpointRounding.AwayFromZero` (round half away from zero). Net pay is computed from the unrounded components and then rounded so the displayed net equals `gross − taxes − deductions` to the cent.
+`PayCalculator` is the main orchestrator:
 
-**Gross-up** runs this pipeline in reverse. `GrossUpCalculator` takes a target net amount and binary-searches for the gross that produces it, re-running the full pipeline at every probe so graduated brackets, FICA wage-base caps, and percentage-of-gross deductions are all honored. It reports the required gross, the cost of taxes and deductions covered, and the complete per-period breakdown at the solved gross.
+1. Computes gross pay from hourly or salary inputs.
+2. Resolves pre-tax and post-tax deductions.
+3. Calculates FICA on FICA-taxable wages.
+4. Calculates federal withholding using IRS 15-T data.
+5. Delegates state withholding to `StateCalculatorRegistry`.
+6. Computes net pay from gross pay minus deductions, federal tax, FICA, state tax, state disability / paid-leave premiums, and Additional Medicare.
 
-Every step also emits the `Explanation/` records that power the "Show Your Work" breakdowns in both front-ends.
+Money values use `decimal`. Gross pay, deductions, and withholding components are rounded to cents with `MidpointRounding.AwayFromZero`; net pay is computed so the displayed equation ties out to the cent.
 
-Both front-ends wire the engine up through `AddPaycheckCalcCore` (in `PaycheckCalc.Core/DependencyInjection/`), supplying an `ITaxDataReader` for their platform: the MAUI app reads the tax JSON from the app package (`MauiAppPackageTaxDataReader`), and the Blazor app reads it from a `TaxData/` folder in the build output (`FileSystemTaxDataReader`).
+`GrossUpCalculator` treats `PayCalculator` as the forward function and uses bisection to solve for the required gross that produces the requested target net.
+
+`AnnualProjectionCalculator` projects the paycheck result across the full pay year and estimates annualized totals, projected YTD totals, and over/under withholding.
 
 ## State Tax Coverage
 
-All 50 states and the District of Columbia are supported. The architecture uses a plugin-based registry where each state implements `IStateWithholdingCalculator` and is registered centrally in `StateCalculatorRegistry` (see `AddPaycheckCalcCore` in `PaycheckCoreServiceCollectionExtensions.cs`, called from both `MauiProgram.cs` and the Blazor `Program.cs`). Every state has a dedicated calculator under `PaycheckCalc.Core/Tax/<State>/`; the shared `NoIncomeTaxWithholdingAdapter` is used only for the plain no-income-tax states, and the generic `PercentageMethodWithholdingAdapter` is retained for tests and potential future use but is not wired to any production state.
+All 50 states and the District of Columbia are supported through `IStateWithholdingCalculator` implementations registered in `AddPaycheckCalcCore`.
 
-| Category | States |
+| Category | Jurisdictions |
 |---|---|
-| **No Income Tax** | AK, FL, NV, NH, SD, TN, TX (plus WA and WY, which have dedicated calculators — WA adds the WA Cares Fund 0.58% LTC premium with an opt-out toggle; WY has no state income tax and no employee-paid state payroll assessments) |
-| **Flat Rate** | PA (3.07%) |
-| **Dedicated state calculators with graduated / custom formulas** | AL, AR, AZ, CA (+ SDI), CO (+ FMLI), CT (+ PFMLI), DC, DE, GA, HI, IA, ID, IL, IN, KS, KY, LA, MA, MD, ME, MI, MN, MO, MS, MT, NC, ND, NE, NJ, NM, NY, OH, OK, OR, RI, SC, UT, VA, VT, WI, WV |
+| Shared no-income-tax adapter | AK, FL, NV, NH, SD, TN, TX |
+| Dedicated no-income-tax calculators | WA, WY |
+| Dedicated income-tax calculators | AL, AZ, AR, CA, CO, CT, DC, DE, GA, HI, IA, ID, IL, IN, KS, KY, LA, MA, MD, ME, MI, MN, MO, MS, MT, NC, ND, NE, NJ, NM, NY, OH, OK, OR, PA, RI, SC, UT, VA, VT, WI, WV |
 
-Notable state-specific details:
+Several calculators are JSON-backed: IRS 15-T, Arkansas, California, Colorado, Connecticut, and Oklahoma. All jurisdictions have schema files in `PaycheckCalc.Core/Data/Schemas/` for dynamic state inputs.
 
-- **AL** — graduated brackets with dependent deductions and annualized federal-withholding deduction.
-- **AR** — Arkansas DFA formula method (JSON-backed tables).
-- **CA** — Method B (EDD DE 44 percentage tables) plus State Disability Insurance.
-- **CO** — flat 4.4% with DR 0004 Table 1 standard allowance and Family and Medical Leave Insurance premium.
-- **CT** — TPG-211 table-driven withholding plus Paid Family & Medical Leave insurance.
-- **DE** — DE W-4, 7 graduated brackets, $110 personal credit.
-- **GA** — flat 5.19% per HB 111, G-4 filing statuses with allowance and dependent deductions.
-- **IL** — flat 4.95% with IL-W-4 allowances.
-- **OH** — IT-4 exemption ($650 annualized per exemption) with the two-bracket (0% up to $26,050, 2.75% over) Optional Computer Formula.
-- **OK** — OW-2 percentage method (JSON-backed) with whole-dollar rounding.
-- **OR** — OR-W-4 with a per-allowance tax *credit* (not deduction) and four graduated brackets.
-- **UT** — flat 4.5% with phase-out allowance credit.
+## Budgeting, Reports, and Sync
 
-## UI Overview
+The budgeting engine lives in `PaycheckCalc.Core/Budgeting/` and includes:
 
-### MAUI app
+- `Budget`, `BudgetCategory`, `BudgetTransaction`, and `BudgetCalculator`.
+- `BudgetMethod` templates for Custom, 50/30/20, Zero-Based, and Envelope budgets.
+- `RecurringBill` and `RecurrencePeriods` for monthly-equivalent bill normalization.
+- `SavingsGoal` for target-date contribution planning.
+- `BudgetReportCalculator` for spend-by-category and budget-vs-actual reporting.
 
-A five-tab Shell — **Inputs**, **Results**, **Paychecks**, **Budget**, and **Account**:
+The shared sync layer stores budgets, transactions, recurring bills, and savings goals as separate sets with tombstones. Budgets are keyed by case-insensitive name; transactions, recurring bills, and savings goals are keyed by stable GUID. `BudgetMerger` applies deterministic last-write-wins rules across all four collections.
 
-- **Inputs** — Four sub-tabs: Pay & Hours, Federal (W-4), State, and Deductions. The Pay & Hours sub-tab has a **Mode** selector that switches between a standard paycheck and a gross-up (enter a desired net pay to find the required gross), and a pay type of hourly or salary. The State sub-tab renders each state's input fields dynamically from its schema and surfaces state-specific validation errors. Every sub-tab has a Calculate button.
-- **Results** — A Per Paycheck / Annual sub-tab: the per-period summary (an income card of gross pay plus federal, FICA, and state taxable income, tax withholdings, deductions, net pay, and the doughnut chart, with tap-for-explanation info icons on each line) and the annual projection. **Print**, **Export PDF**, and **Export CSV** toolbar buttons save/print the results — including the annual projection and, when an A/B pair is selected, the comparison table — using the editable export file-name box. Before the first calculation the page shows a friendly empty state.
-- **Paychecks** — The saved-paychecks list and A/B side-by-side comparison, with its own comparison-only PDF/CSV export. Saved paychecks persist on device.
-- **Budget** — A monthly budget tracker: seed monthly income from the current paycheck, apply a 50/30/20 preset, edit Needs/Wants/Savings categories, and record expenses to see budgeted vs. spent vs. a projected month-end.
-- **Account** — Optional sign-in / account creation, manual sync, sign-out, and an editable sync server URL.
-
-### Blazor web app
-
-A single calculator page with the inputs panel and results panel side by side. Inputs mirror the MAUI app (including dynamic schema-driven state fields and the standard/gross-up calculation-mode selector) and add YTD Social Security / Medicare wage fields. Results are split into **Per Paycheck** (itemized taxes, deductions, net pay, an SVG doughnut chart, and "Show Your Work" explanation modals) and **Annual** (annualized totals, projected YTD by paycheck number, and estimated year-end over/under withholding). In gross-up mode the results lead with a summary card (desired net, taxes & deductions covered, required gross) above the full breakdown. **CSV**, **PDF**, and **Print** actions (with an editable file-name box) export both the per-period results and the annual projection — appending the A/B comparison when two saved paychecks are selected — and the comparison panel offers its own CSV/PDF export.
+The API persists those sets in PostgreSQL through `BudgetEntity`, `BudgetTransactionEntity`, `RecurringBillEntity`, and `SavingsGoalEntity` rows.
 
 ## Documentation
 
-- [Wiki](docs/wiki/Home.md) — Full project wiki covering architecture, tax engine, state coverage, budgeting, accounts & sync, UI guide, and contributing guidelines.
-- [UML Class Diagram](docs/class-diagram.md) — Mermaid-based class diagram of the architecture.
+- [Wiki](docs/wiki/Home.md) — Architecture, getting started, tax engine, state coverage, budgeting, accounts/sync, UI guide, and contributing notes.
+- [UML Class Diagram](docs/class-diagram.md) — Mermaid diagrams for the solution, core pipeline, MAUI layer, shared sync layer, and API persistence model.
