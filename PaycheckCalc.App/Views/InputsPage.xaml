@@ -160,6 +160,32 @@
                                    TextColor="#9E9E9E" FontSize="11" />
                         </VerticalStackLayout>
 
+                        <!-- Bonus / supplemental-wage input (shown when Mode = Bonus) -->
+                        <VerticalStackLayout Spacing="6" IsVisible="{Binding IsBonusMode}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Bonus Amount" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                <Entry Text="{Binding BonusAmount}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Prior Supplemental Wages (this year)" Grid.Column="0"
+                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                <Entry Text="{Binding YtdSupplementalWages}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Label Text="Bonuses use the federal flat supplemental rate — 22% (37% over $1,000,000) — plus FICA and your state's supplemental rate. Choose your work state on the State tab."
+                                   TextColor="#9E9E9E" FontSize="11" />
+                        </VerticalStackLayout>
+
                         <!-- Paycheck number (for annual projection) -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Paycheck # (this year)" Grid.Column="0"

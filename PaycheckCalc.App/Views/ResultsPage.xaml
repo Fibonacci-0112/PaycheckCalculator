@@ -113,6 +113,40 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Bonus summary (only shown for bonus / supplemental-wage results) -->
+                <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16,8"
+                        IsVisible="{Binding ResultCard.IsBonus}">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="BONUS / SUPPLEMENTAL WAGE" TextColor="#2E7D32"
+                               FontSize="10" FontAttributes="Bold" Margin="0,2,0,4" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,8">
+                            <Label Text="Bonus Amount" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ResultCard.GrossPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,8">
+                            <Label Text="Total Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ResultCard.TotalTaxes, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   FontSize="13" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,8">
+                            <Label Text="Net Bonus" TextColor="#1B5E20" FontSize="14"
+                                   FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ResultCard.NetPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="#1B5E20" FontAttributes="Bold"
+                                   FontSize="15" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Label Text="{Binding ResultCard.BonusStateDescription}"
+                               TextColor="#9E9E9E" FontSize="11" Margin="0,6,0,0"
+                               IsVisible="{Binding ResultCard.BonusStateUsesRegularMethod}" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- ═══════════════════════════════════════════════════ -->
                 <!-- Per-Period (per paycheck) Results                  -->
                 <!-- ═══════════════════════════════════════════════════ -->
