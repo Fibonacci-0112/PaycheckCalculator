@@ -1,143 +1,179 @@
 # Tax Calculation Engine
 
-This page describes the paycheck calculation pipeline implemented in `PayCalculator`.
+This page describes the paycheck calculation pipeline implemented by `PayCalculator` and the related Core calculators.
 
 ---
 
 ## Calculation Pipeline
 
-`PayCalculator.Calculate(PaycheckInput)` runs the following steps in order:
+`PayCalculator.Calculate(PaycheckInput)` runs one paycheck through the following steps.
 
 ### Step 1: Gross Pay
 
-Gross pay depends on the **pay type**:
+Gross pay depends on `PayType`:
 
-- **Hourly:**
+- **Hourly**
+  ```text
+  Gross Pay = (Regular Hours × Hourly Rate)
+            + (Overtime Hours × Hourly Rate × Overtime Multiplier)
   ```
-  Gross Pay = (Regular Hours × Hourly Rate) + (Overtime Hours × Hourly Rate × OT Multiplier)
-  ```
-  The default overtime multiplier is 1.5×.
-- **Salary:** an annual amount divided by the number of pay periods, or a per-period amount used directly
-  (`SalaryBasis` = `PerYear` or `PerPeriod`).
+  The default overtime multiplier is 1.5.
+
+- **Salary**
+  - `SalaryBasis.PerYear` divides annual salary by the selected pay frequency's periods per year.
+  - `SalaryBasis.PerPeriod` uses the entered salary amount as the current paycheck's gross pay.
 
 ### Step 2: Deductions
 
-Deductions are categorized as **pre-tax** or **post-tax**:
+Deductions can be fixed dollar amounts or percentages of gross pay.
 
-- **Pre-tax deductions** reduce taxable wages before federal and state tax calculations (e.g., 401(k), health insurance).
-- **Post-tax deductions** are subtracted after taxes (e.g., Roth 401(k), garnishments).
+| Deduction type | Effect |
+|---|---|
+| Pre-tax | Reduces one or more taxable wage bases before tax calculation |
+| Post-tax | Subtracted after taxes |
 
-Each deduction can be a **dollar amount** or a **percentage** of gross pay (`DeductionAmountType`).
+Pre-tax deductions carry independent flags:
 
-Pre-tax deductions carry three independent flags — `ReducesFederalTaxableWages`, `ReducesStateTaxableWages`,
-and `ReducesFicaWages` — because different deductions reduce different wage bases. For example, a
-traditional 401(k) reduces federal and state taxable wages but **not** FICA wages, whereas a Section 125
-cafeteria-plan benefit reduces all three.
+- `ReducesFederalTaxableWages`
+- `ReducesStateTaxableWages`
+- `ReducesFicaWages`
+
+This is intentional. A traditional 401(k) may reduce federal/state taxable wages but not FICA wages; a Section 125 cafeteria-plan benefit can reduce all three.
 
 ### Step 3: FICA Taxes
 
-`FicaCalculator` computes three components:
+`FicaCalculator` computes:
 
-| Component | Rate | Wage Base (2026) |
-|---|---|---|
-| Social Security | 6.2% | $184,500 cap (wages above this are exempt) |
-| Medicare | 1.45% | No cap |
-| Additional Medicare | 0.9% | Wages above $200,000 |
+| Component | Rule |
+|---|---|
+| Social Security | 6.2% up to the 2026 wage base |
+| Medicare | 1.45% with no cap |
+| Additional Medicare | 0.9% above the annual threshold |
 
-FICA is calculated on FICA-taxable wages (`Gross Pay` minus only the pre-tax deductions that carry
-`ReducesFicaWages`). Year-to-date (YTD) Social Security and Medicare wages are tracked to correctly apply
-the annual Social Security wage-base cap and the Additional Medicare threshold mid-year.
+FICA is calculated on FICA-taxable wages: gross pay minus only the pre-tax deductions that reduce FICA wages. YTD Social Security and Medicare wage inputs allow the calculator to handle wage-base and threshold crossings mid-year.
 
 ### Step 4: Federal Withholding
 
-`Irs15TPercentageCalculator` implements the IRS Publication 15-T (2026) percentage method for automated payroll systems:
+`Irs15TPercentageCalculator` implements the IRS Publication 15-T 2026 percentage method for automated payroll systems.
 
-1. Wages are **annualized** (multiplied by the number of pay periods per year).
-2. The **standard deduction** is subtracted based on filing status.
-3. W-4 **Step 4(b) adjustments** (additional deductions) are applied.
-4. **Graduated tax brackets** are applied to the adjusted annual wage.
-5. W-4 **Step 3 credits** (dependents) are subtracted from the computed tax.
-6. W-4 **Step 4(c) extra withholding** is added.
-7. The result is **de-annualized** back to the pay period.
+High-level flow:
+
+1. Annualize current-period wages.
+2. Apply W-4 Step 4(a) other income.
+3. Apply the filing-status / Step 2 branch from the 15-T data.
+4. Apply Step 4(b) deductions.
+5. Apply the annual percentage-method bracket table.
+6. Subtract Step 3 credits.
+7. De-annualize back to the pay period.
+8. Add Step 4(c) extra withholding.
 
 Supported W-4 inputs:
-- Filing status (`FederalFilingStatus`: `SingleOrMarriedSeparately`, `MarriedFilingJointly`, `HeadOfHousehold` — Single and MFS are folded into a single enum value to match Pub 15-T withholding tables)
-- Step 2 checkbox (two jobs / spouse works)
-- Step 3 credits (child/dependent tax credits)
+
+- `FederalFilingStatus.SingleOrMarriedSeparately`
+- `FederalFilingStatus.MarriedFilingJointly`
+- `FederalFilingStatus.HeadOfHousehold`
+- Step 2 checkbox
+- Step 3 credits
 - Step 4(a) other income
 - Step 4(b) deductions
 - Step 4(c) extra withholding
 
 ### Step 5: State Withholding
 
-The `StateCalculatorRegistry` looks up the `IStateWithholdingCalculator` for the selected state and delegates the calculation. Each state receives a `CommonWithholdingContext` containing:
+`StateCalculatorRegistry` maps the selected `UsState` to an `IStateWithholdingCalculator`.
 
-- State identifier
-- Gross wages
-- Pay frequency
-- Tax year (2026)
-- Pre-tax deductions that reduce state taxable wages
-- Federal withholding per period (used by states like Alabama that deduct federal tax)
+Each state calculator receives a `CommonWithholdingContext` containing current-period wages, pay frequency, tax year, state-taxable pre-tax deduction information, and federal withholding where states need it.
 
-The calculator returns a `StateWithholdingResult` with:
-- Taxable wages
-- State income tax withholding
-- Disability insurance (if applicable, e.g., CA SDI, CT PFMLI)
-- Display label for the disability line item
+Each state calculator returns a `StateWithholdingResult` containing:
 
-See [State Tax Coverage](State-Tax-Coverage.md) for details on each state's implementation.
+- State taxable wages.
+- State income tax withholding.
+- Employee-paid disability / paid-leave premium, if applicable.
+- Display label for the premium line.
+- Explanation steps.
+
+State-specific input fields come from `GetInputSchema()` and are populated by `StateInputValues`.
 
 ### Step 6: Net Pay
 
-```
-Net Pay = Gross Pay − Pre-Tax Deductions − Post-Tax Deductions − Federal Tax
-          − State Tax − State Disability Insurance − Social Security − Medicare
-          − Additional Medicare
+```text
+Net Pay = Gross Pay
+        − Pre-Tax Deductions
+        − Post-Tax Deductions
+        − Federal Withholding
+        − Social Security Withholding
+        − Medicare Withholding
+        − Additional Medicare Withholding
+        − State Withholding
+        − State Disability / Paid-Leave Premiums
 ```
 
 ---
 
 ## Rounding
 
-`PayCalculator` rounds gross pay, taxes, and deductions individually using `MidpointRounding.AwayFromZero` (round half away from zero). **Net pay is computed from the unrounded components and then rounded** so that the displayed net equals `gross − taxes − deductions` to the cent. Some state calculators apply additional internal rounding rules (e.g., Oklahoma uses whole-dollar rounding for intermediate values).
+Money values use `decimal`.
+
+The engine rounds gross pay, taxes, and deductions to cents using `MidpointRounding.AwayFromZero`. Net pay is computed so the displayed result ties out to the visible components: gross minus taxes and deductions equals net to the cent.
+
+Some state calculators also apply state-specific intermediate rounding rules. Example: Oklahoma's OW-2 path uses whole-dollar rounding where required by its table method.
 
 ---
 
 ## Pay Frequencies
 
 | Frequency | Periods/Year |
-|---|---|
+|---|---:|
 | Daily | 260 |
 | Weekly | 52 |
+| Weekly53 | 53 |
 | Biweekly | 26 |
+| Biweekly27 | 27 |
 | Semimonthly | 24 |
 | Monthly | 12 |
 | Quarterly | 4 |
 | Semiannual | 2 |
 | Annual | 1 |
-| Weekly53 | 53 |
-| Biweekly27 | 27 |
 
-`Weekly53` and `Biweekly27` cover payroll calendars with an extra pay period in some years. The mapping
-lives in `Pay/PayPeriods.cs`.
+The mapping lives in `Pay/PayPeriods.cs`. The 53-week and 27-biweekly variants support payroll calendar years with an extra pay period.
 
 ---
 
 ## Gross-Up
 
-`GrossUpCalculator` runs the pipeline **in reverse**: given a target net (take-home) amount, it
-binary-searches (bisection) for the gross pay that produces it, re-running the full `PayCalculator`
-pipeline at every probe so graduated brackets, FICA wage-base caps, and percentage-of-gross deductions are
-all honored. It returns a `GrossUpResult` (target net, required gross, the cost of taxes and deductions
-covered, and the full per-period `PaycheckResult` at the solved gross). It is surfaced in both front-ends
-via a calculation-mode toggle.
+`GrossUpCalculator` solves the inverse problem: given a target net pay, find the gross pay required to produce that net.
+
+It uses the full `PayCalculator` pipeline at every probe, rather than using a simplified tax rate estimate. That means the result honors:
+
+- Federal graduated brackets.
+- State-specific formulas.
+- FICA wage-base caps and Additional Medicare thresholds.
+- Pre-tax and post-tax deductions.
+- Percentage-of-gross deductions.
+- State disability / paid-leave premiums.
+
+The returned `GrossUpResult` contains the target net, solved gross, gross-up cost, convergence status, and the full `PaycheckResult` at the solved gross.
 
 ---
 
 ## Annual Projection
 
-`AnnualProjectionCalculator` extends the per-period result into a full-year estimate:
+`AnnualProjectionCalculator` converts a per-paycheck result into year-level estimates:
 
-- Multiplies the current period's taxes and net pay by the total number of periods.
-- Tracks the current paycheck number and remaining periods.
-- Estimates year-end over/under withholding relative to the projected annual tax liability.
+- Pay periods per year.
+- Current paycheck number.
+- Remaining paychecks.
+- Annualized gross, taxable wages, taxes, deductions, and net pay.
+- Projected YTD values through the current paycheck.
+- Estimated annual federal/FICA liability.
+- Projected over/under withholding.
+
+Both front-ends surface annual projection data alongside the per-paycheck result.
+
+---
+
+## Explanation Model
+
+`PaycheckResult` carries a `PaycheckExplanation`. Each important output line can expose a `LineExplanation` with a title, final amount, reference, and ordered calculation steps.
+
+Both front-ends use these records for the **Show Your Work** experience. The explanation model belongs in Core so MAUI, Blazor, tests, and exports can all rely on the same calculation trace.
