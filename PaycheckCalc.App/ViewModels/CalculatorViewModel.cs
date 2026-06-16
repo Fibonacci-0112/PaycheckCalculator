@@ -27,15 +27,16 @@ public record PickerItem<T>(T Value, string Text)
 }
 
 /// <summary>
-/// How the calculator turns inputs into a result: a standard paycheck (gross → net)
-/// or a gross-up (target net → required gross).
+/// How the calculator turns inputs into a result: a standard paycheck (gross → net),
+/// a gross-up (target net → required gross), or a bonus / supplemental-wage calculation.
 /// </summary>
-public enum CalculationMode { Standard, GrossUp }
+public enum CalculationMode { Standard, GrossUp, Bonus }
 
 public partial class CalculatorViewModel : ObservableObject
 {
     private readonly PayCalculator _calc;
     private readonly GrossUpCalculator _grossUp;
+    private readonly BonusCalculator _bonus;
     private readonly AnnualProjectionCalculator _annual;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
@@ -47,10 +48,11 @@ public partial class CalculatorViewModel : ObservableObject
     private UsState _previousState;
     private bool _initialized;
 
-    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
+    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, BonusCalculator bonus, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
     {
         _calc = calc;
         _grossUp = grossUp;
+        _bonus = bonus;
         _annual = annual;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
@@ -126,6 +128,7 @@ public partial class CalculatorViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsStandardMode));
         OnPropertyChanged(nameof(IsGrossUpMode));
+        OnPropertyChanged(nameof(IsBonusMode));
     }
 
     /// <summary>True when standard paycheck inputs (pay type, hours/salary) should be shown.</summary>
@@ -134,8 +137,17 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>True when the gross-up target-net input should be shown.</summary>
     public bool IsGrossUpMode => CalculationMode == CalculationMode.GrossUp;
 
+    /// <summary>True when the bonus / supplemental-wage inputs should be shown.</summary>
+    public bool IsBonusMode => CalculationMode == CalculationMode.Bonus;
+
     /// <summary>Desired net (take-home) pay for the gross-up calculation.</summary>
     [ObservableProperty] public partial decimal TargetNetPay { get; set; }
+
+    /// <summary>The supplemental payment (bonus) amount for the bonus calculation.</summary>
+    [ObservableProperty] public partial decimal BonusAmount { get; set; } = 5000m;
+
+    /// <summary>Supplemental wages already paid this year, for the federal $1,000,000 threshold.</summary>
+    [ObservableProperty] public partial decimal YtdSupplementalWages { get; set; }
 
     // ── Pay type (Hourly vs Salary) ─────────────────────────────
     public IReadOnlyList<PickerItem<PayType>> PayTypes { get; } =
@@ -854,6 +866,15 @@ public partial class CalculatorViewModel : ObservableObject
     [RelayCommand]
     private void Calculate()
     {
+        // Bonus mode is self-contained: flat supplemental withholding + FICA + state
+        // supplemental rate. It ignores hours/salary, W-4, and deductions, so it skips the
+        // paycheck-specific validation and state-schema fields below.
+        if (IsBonusMode)
+        {
+            CalculateBonus();
+            return;
+        }
+
         // Require a name on every deduction before proceeding.
         foreach (var d in Deductions) d.HasNameError = false;
         var unnamed = Deductions.Where(d => string.IsNullOrWhiteSpace(d.Name)).ToList();
@@ -915,6 +936,32 @@ public partial class CalculatorViewModel : ObservableObject
 
         // Prefill the export file name from the paycheck name (the user can edit it).
         ExportFileName = PaycheckName.Trim();
+
+        ExportPdfCommand.NotifyCanExecuteChanged();
+        ExportCsvCommand.NotifyCanExecuteChanged();
+        PrintCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Runs the bonus / supplemental-wage calculation and maps it to the result card. Bonus
+    /// results have no annual projection (Projection = null) and are not added to the saved
+    /// paychecks list, mirroring how gross-up keeps the per-period view focused.
+    /// </summary>
+    private void CalculateBonus()
+    {
+        var bonusResult = _bonus.Calculate(new BonusInput
+        {
+            BonusAmount = BonusAmount,
+            State = SelectedState,
+            YtdSupplementalWages = YtdSupplementalWages
+        });
+
+        ResultCard = ResultCardMapper.MapBonus(bonusResult);
+        Projection = null;
+        SelectedResultTab = 0;
+
+        // Prefill the export file name from the paycheck name (the user can edit it).
+        ExportFileName = string.IsNullOrWhiteSpace(PaycheckName) ? "Bonus-Summary" : PaycheckName.Trim();
 
         ExportPdfCommand.NotifyCanExecuteChanged();
         ExportCsvCommand.NotifyCanExecuteChanged();

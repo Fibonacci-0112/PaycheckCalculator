@@ -39,6 +39,10 @@
       <Link>TaxData\us_irs_15t_2026_percentage_automated.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\PaycheckCalc.Core\Data\state_supplemental_2026.json">
+      <Link>TaxData\state_supplemental_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <!-- State schemas — logical name prefix "schemas/" matches AddPaycheckCalcCore -->
     <None Include="..\PaycheckCalc.Core\Data\Schemas\*.json">
       <Link>TaxData\schemas\%(Filename)%(Extension)</Link>

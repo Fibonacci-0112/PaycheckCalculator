@@ -42,6 +42,7 @@ using PaycheckCalc.Core.Tax.Pennsylvania;
 using PaycheckCalc.Core.Tax.RhodeIsland;
 using PaycheckCalc.Core.Tax.SouthCarolina;
 using PaycheckCalc.Core.Tax.State;
+using PaycheckCalc.Core.Tax.Supplemental;
 using PaycheckCalc.Core.Tax.Utah;
 using PaycheckCalc.Core.Tax.Vermont;
 using PaycheckCalc.Core.Tax.Virginia;
@@ -67,6 +68,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         var caJson     = dataReader.ReadAllText("ca_method_b_2026.json");
         var coJson     = dataReader.ReadAllText("co_dr0004_2026.json");
         var ctJson     = dataReader.ReadAllText("connecticut_withholding_2026.json");
+        var suppJson   = dataReader.ReadAllText("state_supplemental_2026.json");
 
         var schemaJsonMap = new Dictionary<UsState, string>();
         foreach (var state in Enum.GetValues<UsState>())
@@ -167,6 +169,13 @@ public static class PaycheckCoreServiceCollectionExtensions
         services.AddSingleton(payCalculator);
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
         services.AddSingleton(new GrossUpCalculator(payCalculator));
+
+        var federalSupplemental = new FederalSupplementalCalculator();
+        var stateSupplemental = new StateSupplementalCalculator(suppJson);
+        services.AddSingleton(federalSupplemental);
+        services.AddSingleton(stateSupplemental);
+        services.AddSingleton(new BonusCalculator(federalSupplemental, fica, stateSupplemental));
+
         services.AddSingleton(new BudgetCalculator());
         services.AddSingleton(new BudgetReportCalculator());
 

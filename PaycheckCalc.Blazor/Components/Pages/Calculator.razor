@@ -6,6 +6,7 @@
 @inject PayCalculator Calc
 @inject AnnualProjectionCalculator ProjectionCalc
 @inject GrossUpCalculator GrossUpCalc
+@inject BonusCalculator BonusCalc
 @inject StateCalculatorRegistry StateRegistry
 @inject IStateSchemaProvider SchemaProvider
 @inject SessionPaycheckStore Store
@@ -47,10 +48,11 @@
                     <select @bind="_mode" @bind:after="OnModeChanged">
                         <option value="standard">Standard paycheck (gross &rarr; net)</option>
                         <option value="grossup">Gross-up (net &rarr; required gross)</option>
+                        <option value="bonus">Bonus / supplemental wage</option>
                     </select>
                 </div>
 
-                @if (!_grossUpMode)
+                @if (_mode == "standard")
                 {
                     <div class="form-row">
                         <div class="form-group">
@@ -73,7 +75,7 @@
                         </div>
                     </div>
                 }
-                else
+                else if (_grossUpMode)
                 {
                     <div class="form-group">
                         <label>Desired Net Pay &mdash; take-home this period ($)</label>
@@ -81,10 +83,25 @@
                     </div>
                     <p class="form-note">Enter the exact take-home amount. Gross-up finds the gross pay that nets it after taxes and deductions &mdash; used for net bonuses and relocation payments.</p>
                 }
-                <div class="form-group">
-                    <label>Paycheck # This Year</label>
-                    <input type="number" @bind="_paycheckNumber" min="1" max="365" />
-                </div>
+                else
+                {
+                    <div class="form-group">
+                        <label>Bonus Amount ($)</label>
+                        <input type="number" @bind="_bonusAmount" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label>Prior Supplemental Wages This Year ($)</label>
+                        <input type="number" @bind="_ytdSupplementalWages" min="0" step="0.01" />
+                    </div>
+                    <p class="form-note">Bonuses are withheld at the federal flat supplemental rate &mdash; 22% (37% on cumulative supplemental wages over $1,000,000) &mdash; plus FICA and your state's supplemental rate. Pick your work state on the State tab. Federal W-4 and deductions don't apply.</p>
+                }
+                @if (!_bonusMode)
+                {
+                    <div class="form-group">
+                        <label>Paycheck # This Year</label>
+                        <input type="number" @bind="_paycheckNumber" min="1" max="365" />
+                    </div>
+                }
                 <div class="form-section-title">Year-to-Date Wages (for FICA caps)</div>
                 <div class="form-row">
                     <div class="form-group">
@@ -287,7 +304,7 @@
             }
         </div>
 
-        @if (_result == null)
+        @if (_result == null && _bonusResult == null)
         {
             <div class="results-placeholder">
                 <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -299,7 +316,86 @@
                 <p>Enter your paycheck information and click <strong>Calculate</strong> to see your results.</p>
             </div>
         }
-        else
+        else if (_bonusResult != null)
+        {
+            <div class="results-scroll">
+                <div class="result-card card-refund">
+                    <div class="result-card-title">Bonus / Supplemental Wage</div>
+                    <div class="result-row">
+                        <span>Bonus Amount</span>
+                        <div class="result-right">
+                            <span class="result-value">@_bonusResult.BonusAmount.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenBonusExplanation(ExplanationLineKey.GrossPay)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Tax Withholdings</div>
+                    <div class="result-row">
+                        <span>Federal (supplemental @($"{PaycheckCalc.Core.Tax.Federal.FederalSupplementalCalculator.FlatRate:P0}"))</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_bonusResult.FederalWithholding.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenBonusExplanation(ExplanationLineKey.FederalWithholding)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span>Social Security</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_bonusResult.SocialSecurityWithholding.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenBonusExplanation(ExplanationLineKey.SocialSecurity)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span>Medicare</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_bonusResult.MedicareWithholding.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenBonusExplanation(ExplanationLineKey.Medicare)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    @if (_bonusResult.AdditionalMedicareWithholding > 0)
+                    {
+                        <div class="result-row">
+                            <span>Additional Medicare</span>
+                            <div class="result-right">
+                                <span class="result-value">-@_bonusResult.AdditionalMedicareWithholding.ToString("C")</span>
+                                <button class="btn-info" @onclick='() => OpenBonusExplanation(ExplanationLineKey.AdditionalMedicare)' title="Show calculation">?</button>
+                            </div>
+                        </div>
+                    }
+                    @if (!_bonusResult.StateUsesRegularMethod)
+                    {
+                        <div class="result-row">
+                            <span>@_bonusResult.State State</span>
+                            <div class="result-right">
+                                <span class="result-value">-@_bonusResult.StateWithholding.ToString("C")</span>
+                                <button class="btn-info" @onclick='() => OpenBonusExplanation(ExplanationLineKey.StateWithholding)' title="Show calculation">?</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (_bonusResult.StateUsesRegularMethod)
+                {
+                    <div class="result-card">
+                        <div class="result-card-title">@_bonusResult.State State Tax</div>
+                        <p class="form-note">@_bonusResult.StateWithholdingDescription The net below is before state income tax.</p>
+                    </div>
+                }
+
+                <div class="result-card">
+                    <div class="result-row">
+                        <span>Total Withholding</span>
+                        <span class="result-value">-@_bonusResult.TotalTaxes.ToString("C")</span>
+                    </div>
+                    <div class="result-row result-net-row">
+                        <span class="net-label">@(_bonusResult.StateUsesRegularMethod ? "Net Bonus (before state tax)" : "Net Bonus")</span>
+                        <span class="result-value net-value">@_bonusResult.NetBonus.ToString("C")</span>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (_result != null)
         {
             @if (_grossUpResult == null)
             {
@@ -716,10 +812,15 @@
     private decimal _ytdSsWages = 0m;
     private decimal _ytdMedWages = 0m;
 
-    // Calculation mode (standard paycheck vs. gross-up)
+    // Calculation mode (standard paycheck vs. gross-up vs. bonus / supplemental wage)
     private string _mode = "standard";
     private bool _grossUpMode => _mode == "grossup";
+    private bool _bonusMode => _mode == "bonus";
     private decimal _targetNet = 1000m;
+
+    // Bonus / supplemental wage
+    private decimal _bonusAmount = 5000m;
+    private decimal _ytdSupplementalWages = 0m;
 
     // Federal W-4
     private FederalFilingStatus _fedStatus = FederalFilingStatus.SingleOrMarriedSeparately;
@@ -741,6 +842,7 @@
     private PaycheckResult? _result;
     private AnnualProjection? _projection;
     private GrossUpResult? _grossUpResult;
+    private BonusResult? _bonusResult;
     private string? _calcError;
 
     // Modal
@@ -792,6 +894,15 @@
     {
         _calcError = null;
         _stateErrors.Clear();
+
+        // Bonus mode is self-contained: flat supplemental withholding + FICA + state
+        // supplemental rate. It ignores hourly/salary, W-4, and deductions, so it skips
+        // the paycheck-specific validation below.
+        if (_bonusMode)
+        {
+            CalculateBonus();
+            return;
+        }
 
         // Require a name on every deduction before proceeding.
         foreach (var d in _deductions) d.NameError = false;
@@ -862,6 +973,7 @@
 
         try
         {
+            _bonusResult = null;
             if (_grossUpMode)
             {
                 _grossUpResult = GrossUpCalc.Calculate(input, _targetNet);
@@ -1038,18 +1150,49 @@
         }
     }
 
+    private void CalculateBonus()
+    {
+        _result = null;
+        _projection = null;
+        _grossUpResult = null;
+        try
+        {
+            _bonusResult = BonusCalc.Calculate(new BonusInput
+            {
+                BonusAmount = _bonusAmount,
+                State = _state,
+                YtdSupplementalWages = _ytdSupplementalWages,
+                YtdSocialSecurityWages = _ytdSsWages,
+                YtdMedicareWages = _ytdMedWages
+            });
+        }
+        catch (Exception ex)
+        {
+            _calcError = $"Calculation error: {ex.Message}";
+            _bonusResult = null;
+        }
+    }
+
     private void OnModeChanged()
     {
         // Switching modes clears stale results so the panel doesn't mix views.
         _result = null;
         _projection = null;
         _grossUpResult = null;
+        _bonusResult = null;
         _calcError = null;
     }
 
     private void OpenExplanation(ExplanationLineKey key)
     {
         _modalExplanation = _result?.Explanation.Get(key);
+        if (_modalExplanation != null)
+            _showModal = true;
+    }
+
+    private void OpenBonusExplanation(ExplanationLineKey key)
+    {
+        _modalExplanation = _bonusResult?.Explanation.Get(key);
         if (_modalExplanation != null)
             _showModal = true;
     }

@@ -34,6 +34,7 @@ public static class EnumDisplay
     {
         "Standard" => "Standard Paycheck",
         "GrossUp" => "Gross-Up (net → gross)",
+        "Bonus" => "Bonus / Supplemental Wage",
         _ => SplitPascalCase(name)
     };
 

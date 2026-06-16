@@ -41,6 +41,19 @@ public sealed class ResultCardModel
     /// <summary>Extra gross beyond the target net that covers taxes and deductions (GrossPay − TargetNetPay).</summary>
     public decimal GrossUpCost { get; init; }
 
+    // ── Bonus / supplemental wage (only populated for a bonus result) ──
+    /// <summary>True when this result was produced by the bonus / supplemental-wage calculator.</summary>
+    public bool IsBonus { get; init; }
+
+    /// <summary>
+    /// True when the work state has no flat supplemental rate, so <see cref="StateWithholding"/>
+    /// is 0 and the net shown is before state income tax.
+    /// </summary>
+    public bool BonusStateUsesRegularMethod { get; init; }
+
+    /// <summary>Human-readable summary of how the bonus's state withholding was derived (or why it is 0).</summary>
+    public string BonusStateDescription { get; init; } = "";
+
     // ── Display helpers (UI-only concerns) ──────────────────
     /// <summary>True when state disability insurance is non-zero and should be shown.</summary>
     public bool ShowStateDisabilityInsurance => StateDisabilityInsurance > 0;

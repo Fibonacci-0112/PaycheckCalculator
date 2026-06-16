@@ -20,6 +20,34 @@ public static class ResultCardMapper
     public static ResultCardModel MapGrossUp(GrossUpResult result)
         => MapInternal(result.Paycheck, isGrossUp: true, targetNetPay: result.TargetNetPay);
 
+    /// <summary>
+    /// Maps a <see cref="BonusResult"/> for display. The bonus has no annualized W-4 figures,
+    /// so the taxable-income rows simply reflect the full bonus (the base each tax applies to).
+    /// </summary>
+    public static ResultCardModel MapBonus(BonusResult result)
+        => new()
+        {
+            GrossPay = result.BonusAmount,
+            FederalTaxableIncome = result.BonusAmount,
+            FicaTaxableWages = result.BonusAmount,
+            StateTaxableWages = result.BonusAmount,
+            FederalWithholding = result.FederalWithholding,
+            SocialSecurityWithholding = result.SocialSecurityWithholding,
+            MedicareWithholding = result.MedicareWithholding,
+            AdditionalMedicareWithholding = result.AdditionalMedicareWithholding,
+            StateWithholding = result.StateWithholding,
+            StateDisabilityInsurance = 0m,
+            PreTaxDeductions = 0m,
+            PostTaxDeductions = 0m,
+            TotalTaxes = result.TotalTaxes,
+            NetPay = result.NetBonus,
+            StateName = EnumDisplay.UsStateName(result.State.ToString()),
+            Explanation = result.Explanation,
+            IsBonus = true,
+            BonusStateUsesRegularMethod = result.StateUsesRegularMethod,
+            BonusStateDescription = result.StateWithholdingDescription
+        };
+
     private static ResultCardModel MapInternal(PaycheckResult result, bool isGrossUp, decimal targetNetPay)
     {
         return new ResultCardModel
