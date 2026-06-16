@@ -1,183 +1,170 @@
 # Architecture
 
-PaycheckCalc keeps a clean separation between UI and business logic. Two front-ends — a **.NET MAUI** app
-(MVVM with CommunityToolkit.Mvvm) and a **Blazor Server** web app — delegate all tax, projection, gross-up,
-and budgeting math to the UI-agnostic `PaycheckCalc.Core` library. Optional account/sync concerns live in
-`PaycheckCalc.Shared` (contracts) and `PaycheckCalc.Api` (the HTTP server).
+PaycheckCalc keeps a strict separation between domain logic, front-end presentation, shared sync contracts, and the optional sync API.
+
+The current solution has six projects:
+
+- `PaycheckCalc.Core` — UI-agnostic paycheck, tax, gross-up, annual projection, budgeting, and budget-report engines.
+- `PaycheckCalc.App` — .NET MAUI frontend for Android and Windows.
+- `PaycheckCalc.Blazor` — Blazor Server web frontend.
+- `PaycheckCalc.Shared` — sync DTOs, JSON options, deterministic mergers, HTTP client, store abstractions, and entitlement abstractions.
+- `PaycheckCalc.Api` — ASP.NET Core Web API for optional accounts and sync.
+- `PaycheckCalc.Tests` — xUnit test suite.
 
 ---
 
 ## Solution Structure
 
-```
+```text
 PaycheckCalc.slnx
-├── PaycheckCalc.Core/             # Business logic (no UI / HTTP / persistence dependencies)
+├── PaycheckCalc.Core/             # Business logic; no UI / HTTP / persistence dependencies
 │   ├── Models/                    # PaycheckInput/Result, Deduction, enums, UsState, AnnualProjection, GrossUpResult
 │   ├── Pay/                       # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator
-│   ├── Budgeting/                 # Budget engine: Budget, BudgetCategory, BudgetTransaction, BudgetCalculator,
-│   │                              #   BudgetSummary, AllocationRules (50/30/20), MonthlyIncomeNormalizer
-│   ├── Explanation/               # "Show Your Work" step-by-step breakdowns
-│   ├── DependencyInjection/       # AddPaycheckCalcCore (registry + calculator wiring) + ITaxDataReader
-│   ├── Data/                      # JSON tax bracket tables (federal + 5 states) and Schemas/*.json
-│   └── Tax/
-│       ├── Federal/               # IRS 15-T percentage calculator
-│       ├── Fica/                  # Social Security & Medicare
-│       ├── State/                 # State tax interfaces, registry, schema provider, adapters, shared steps
-│       └── <StateName>/           # One folder per state (50 + DC), each with a dedicated calculator
-├── PaycheckCalc.App/              # .NET MAUI frontend (Android & Windows), MVVM
-│   ├── Views/ ViewModels/ Mappers/ Models/ Controls/ Behaviors/ Helpers/
-│   └── Services/                  # Tax data reader, Pdf/Csv/Printing exporters, Storage, Sync/Auth
-├── PaycheckCalc.Blazor/           # Blazor Server frontend (web)
-│   ├── Components/Pages/          # Home, Calculator, Budget, StateLandingPage (per-state SEO)
-│   ├── Components/Shared/         # DoughnutChart (SVG), ExplanationModal
-│   └── Services/                  # FileSystemTaxDataReader, session stores, StateMetadata, Export/
-├── PaycheckCalc.Shared/           # Sync contracts, JSON, merge, HTTP client, store abstractions
-│   ├── Snapshots/                 # SavedPaycheckDto/ResultDto/Mapper/Tombstone/Set + SavedPaycheckMerger
-│   ├── Budgeting/                 # BudgetDto/CategoryDto/TransactionDto, sets, tombstones, BudgetMerger, IBudgetStore
-│   ├── Json/                      # PaycheckJson + StateInputValues/DateOnly converters
-│   ├── Client/                    # PaycheckApiClient, ApiResult, AuthTokens, ITokenStore, IApiBaseAddressProvider
-│   └── Sync/                      # ISavedPaycheckStore, PaycheckSyncService, sync contracts
-├── PaycheckCalc.Api/              # ASP.NET Core Web API: Identity accounts + sync (PostgreSQL/EF Core)
-│   ├── Data/                      # SyncDbContext (IdentityDbContext) + SavedPaycheck/Budget/Transaction entities
-│   ├── Endpoints/                 # PaycheckSyncEndpoints, BudgetSyncEndpoints (authorized minimal-API groups)
-│   └── Migrations/                # EF Core migrations (InitialCreate, AddBudgets)
-└── PaycheckCalc.Tests/            # xUnit suite (Core + Shared + Api + Blazor)
+│   ├── Budgeting/                 # Budget engine, recurring bills, savings goals, reports
+│   ├── Explanation/               # Show-your-work breakdowns
+│   ├── DependencyInjection/       # AddPaycheckCalcCore + ITaxDataReader
+│   ├── Data/                      # Federal/state tax JSON and Schemas/*.json
+│   └── Tax/                       # Federal, FICA, State contracts/registry, and dedicated jurisdiction calculators
+├── PaycheckCalc.App/              # MAUI frontend
+├── PaycheckCalc.Blazor/           # Blazor Server frontend
+├── PaycheckCalc.Shared/           # Shared contracts and client sync infrastructure
+├── PaycheckCalc.Api/              # ASP.NET Core Identity + sync API
+└── PaycheckCalc.Tests/            # xUnit suite
 ```
-
-`PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` are `net11.0`
-and build without the MAUI workload; `PaycheckCalc.Core` multi-targets `net11.0;net9.0`. See
-**[Accounts & Sync](Accounts-and-Sync.md)** for the account/sync design and **[Budgeting](Budgeting.md)**
-for the budget engine.
 
 ---
 
 ## Key Architectural Principles
 
-1. **Core stays UI-agnostic.** `PaycheckCalc.Core` has zero dependency on MAUI, XAML, HTTP, or any UI
-   framework. All tax, projection, gross-up, and budgeting math and models live here.
+1. **Core stays UI-agnostic.** `PaycheckCalc.Core` contains math, tax rules, domain models, explanations, and budget/report engines. It does not reference MAUI, Blazor, HTTP, EF Core, file-system persistence, or platform APIs.
 
-2. **PayCalculator is an orchestrator.** It composes gross pay, deductions, FICA, federal withholding,
-   state withholding, and net pay — but does not contain state-specific branching or tax rules.
+2. **PayCalculator is an orchestrator.** It composes gross pay, deductions, FICA, federal withholding, state withholding, state disability / paid-leave premiums, and net pay. It does not contain state-specific tax logic.
 
-3. **State calculators are plugins.** Each of the 50 states + DC implements `IStateWithholdingCalculator`
-   and is registered in `StateCalculatorRegistry`. The registry is built at startup in
-   `AddPaycheckCalcCore` (`PaycheckCalc.Core/DependencyInjection/PaycheckCoreServiceCollectionExtensions.cs`),
-   which both `MauiProgram.cs` and the Blazor `Program.cs` call with a platform `ITaxDataReader`.
+3. **State calculators are plugins.** Every state and DC implements `IStateWithholdingCalculator` and is registered in `StateCalculatorRegistry` by `AddPaycheckCalcCore`.
 
-4. **Schema-driven state UI.** State-specific input fields are not hard-coded in XAML/Razor. Each state
-   calculator declares its input schema via `GetInputSchema()` (backed by `JsonStateSchemaProvider` over
-   `Data/Schemas/*.json`), and both UIs render fields dynamically.
+4. **State UI is schema-driven.** State-specific fields are declared by state schema JSON and surfaced through `StateFieldDefinition`. Both front-ends render those fields dynamically instead of hard-coding per-state controls.
 
-5. **`decimal` everywhere for money.** All monetary values, rates, thresholds, and deductions use
-   `decimal`. No `double`/`float` in calculation code.
+5. **Money uses `decimal`.** Monetary values, rates, thresholds, deductions, and tax outputs use `decimal`; calculation paths should not introduce `double` or `float`.
 
-6. **Sync stays out of Core.** Account/sync wire and storage concerns live in `PaycheckCalc.Shared`; the
-   HTTP server lives in `PaycheckCalc.Api`. Core remains HTTP- and persistence-free, and
-   `PaycheckCalc.Api` never references the front-end projects.
+6. **Sync stays outside Core.** Sync DTOs, API client code, JSON options, and merge rules live in `PaycheckCalc.Shared`. HTTP endpoints and EF Core persistence live in `PaycheckCalc.Api`.
+
+7. **Mergers are deterministic.** Saved paychecks, budgets, transactions, recurring bills, and savings goals use last-write-wins merge rules with deletion markers so removals propagate.
 
 ---
 
-## Front-ends
+## Dependency Graph
 
-Both front-ends call `AddPaycheckCalcCore`, supplying a platform tax-data reader:
+```text
+PaycheckCalc.Core
+   ↑
+PaycheckCalc.Shared
+   ↑
+PaycheckCalc.Api
 
-- **MAUI** (`PaycheckCalc.App`) — a five-tab Shell (Inputs, Results, Paychecks, Budget, Account). Pages are
-  thin; the shared `CalculatorViewModel` owns calculator state, and `BudgetViewModel`/`AccountViewModel`
-  own their tabs. **Mappers** translate between domain types and presentation models. Tax JSON is read
-  from the app package via `MauiAppPackageTaxDataReader`. See [UI Guide](UI-Guide.md).
-- **Blazor** (`PaycheckCalc.Blazor`) — an interactive Server-rendered calculator page, a `/budget` page,
-  per-state SEO landing pages (`/{state}-paycheck-calculator` via `StateMetadata`), a sitemap, and a
-  "Saved Paychecks & Account" panel. Tax JSON is read from a `TaxData/` folder in the build output via
-  `FileSystemTaxDataReader`.
-
----
-
-## Accounts, Sync & Budgeting
-
-Saved **paychecks** and **budgets** can optionally sync across the two front-ends via a user account. The
-shared mergers (`SavedPaycheckMerger`, `BudgetMerger` — deterministic last-write-wins, paychecks/budgets
-keyed by case-insensitive name and transactions by GUID) run server-side and are reused by both clients and
-the tests. The `ISavedPaycheckStore` and `IBudgetStore` abstractions each have implementations for on-device
-JSON (MAUI), circuit memory (Blazor, so anonymous data dies with the tab), and EF Core PostgreSQL rows
-(server). Full design in **[Accounts & Sync](Accounts-and-Sync.md)**.
-
----
-
-## MVVM Data Flow (MAUI)
-
-```
-User Input (InputsPage)
-    ↓
-CalculatorViewModel  ←  builds PaycheckInput from UI state (PaycheckInputMapper)
-    ↓
-PayCalculator.Calculate(input)  →  PaycheckResult        (or GrossUpCalculator for gross-up mode)
-    ↓
-ResultCardMapper  →  ResultCardModel (UI presentation)
-AnnualProjectionCalculator.Calculate(input, result)  →  AnnualProjectionMapper  →  AnnualProjectionModel
-    ↓
-ResultsPage (XAML binding)
+PaycheckCalc.App     → PaycheckCalc.Core + PaycheckCalc.Shared
+PaycheckCalc.Blazor  → PaycheckCalc.Core + PaycheckCalc.Shared
+PaycheckCalc.Tests   → Core + Shared + Api + Blazor
 ```
 
-### View Models
-
-| View Model | Responsibility |
-|---|---|
-| `CalculatorViewModel` | Central VM shared by the Inputs and Results pages: input state, standard/gross-up calculation, result/projection mapping, exports, and "Show Your Work" explanations. |
-| `StateFieldViewModel` | Wraps a single `StateFieldDefinition` for dynamic state input rendering. |
-| `DeductionItemViewModel` | Wraps a single deduction entry. |
-| `SavedPaycheckViewModel` | Wraps a saved paycheck (name + result card + snapshot) on the Paychecks page. |
-| `BudgetViewModel` / `BudgetCategoryViewModel` / `BudgetTransactionViewModel` | Own the Budget tab: categories, transactions, and summaries. |
-| `AccountViewModel` | Sign-in/out, server URL, and sync status on the Account tab. |
-
-### Mappers
-
-| Mapper | From → To |
-|---|---|
-| `PaycheckInputMapper` | UI state → `PaycheckInput` |
-| `ResultCardMapper` | `PaycheckResult` → `ResultCardModel` (standard and gross-up) |
-| `AnnualProjectionMapper` | `AnnualProjection` → `AnnualProjectionModel` |
-| `SavedPaycheckSnapshotMapper` | `ResultCardModel` + `PaycheckInput` ↔ `SavedPaycheckDto` |
+`PaycheckCalc.App` and `PaycheckCalc.Blazor` communicate with `PaycheckCalc.Api` over HTTP through `PaycheckApiClient`; they do not reference the API project directly.
 
 ---
 
-## Dependency Injection
+## Core Engine
 
-Core services are registered by `AddPaycheckCalcCore`, called from
-[`MauiProgram.cs`](../../PaycheckCalc.App/MauiProgram.cs) and the Blazor
-[`Program.cs`](../../PaycheckCalc.Blazor/Program.cs).
+`AddPaycheckCalcCore` is the composition root for Core. It:
 
-### Core Services
+- Reads IRS 15-T and state tax JSON through `ITaxDataReader`.
+- Reads every available `schemas/<state>.json` file into `JsonStateSchemaProvider`.
+- Registers FICA, federal, state, pay, gross-up, annual projection, budget, and budget-report calculators.
+- Builds the `StateCalculatorRegistry` and registers all 50 states plus DC.
 
-- `FicaCalculator` — Social Security and Medicare computation.
-- `Irs15TPercentageCalculator` — Federal income tax (loaded from JSON at startup).
-- `StateCalculatorRegistry` — Central registry of all 51 state calculators.
-- `IStateSchemaProvider` → `JsonStateSchemaProvider` — per-state input schemas from `Data/Schemas/*.json`.
-- `PayCalculator` — Main paycheck calculation orchestrator; consumes the state registry.
-- `AnnualProjectionCalculator` — Annualized totals, projected YTD, and year-end over/under estimate.
-- `GrossUpCalculator` — Inverse solver: bisects on gross to deliver a target net.
-- `BudgetCalculator` — Monthly budget summary and month-end projection.
+Important Core services:
 
-### JSON-Backed Calculators
+| Service | Role |
+|---|---|
+| `PayCalculator` | Main paycheck calculation orchestrator |
+| `FicaCalculator` | Social Security, Medicare, Additional Medicare |
+| `Irs15TPercentageCalculator` | Federal withholding using IRS 15-T data |
+| `StateCalculatorRegistry` | Maps `UsState` to `IStateWithholdingCalculator` |
+| `AnnualProjectionCalculator` | Full-year annualization and over/under estimate |
+| `GrossUpCalculator` | Inverse solver for target net pay |
+| `BudgetCalculator` | Monthly budget summary with categories, transactions, recurring bills, and savings goals |
+| `BudgetReportCalculator` | Spend-by-category and budget-vs-actual report data |
 
-- `Irs15TPercentageCalculator` ← `us_irs_15t_2026_percentage_automated.json`
-- `ArkansasFormulaCalculator` ← `ar_withholding_2026.json`
-- `OklahomaOw2PercentageCalculator` ← `ok_ow2_2026_percentage.json`
-- `CaliforniaPercentageCalculator` ← `ca_method_b_2026.json`
-- `ColoradoWithholdingCalculator` ← `co_dr0004_2026.json`
-- `ConnecticutWithholdingCalculator` ← `connecticut_withholding_2026.json`
+---
 
-Each per-state wrapper (`ArkansasWithholdingCalculator`, `CaliforniaWithholdingCalculator`,
-`OklahomaWithholdingCalculator`) composes the corresponding JSON-backed calculator. Every other state has a
-dedicated calculator; the generic `PercentageMethodWithholdingAdapter` (driven by `StateTaxConfigs2026`,
-now empty) is retained only for tests.
+## MAUI Frontend
 
-### Front-end registrations
+`PaycheckCalc.App` uses .NET MAUI Shell and MVVM with CommunityToolkit.Mvvm.
 
-The MAUI app additionally registers its pages and view models (singletons), the PDF/CSV/print export
-services, the on-device stores (`JsonFilePaycheckStore`, `JsonFileBudgetStore`), and the sync/auth services
-(`PaycheckApiClient`, `SecureStorageTokenStore`, `PreferencesApiBaseAddressProvider`, `SyncCoordinator`).
-The Blazor app registers interactive server components, the circuit-scoped session stores
-(`SessionPaycheckStore`, `SessionBudgetStore`), `CircuitAccountSession`, and `ConfigApiBaseAddressProvider`.
+Main tabs:
+
+| Tab | Page | Responsibility |
+|---|---|---|
+| Inputs | `InputsPage` | Pay, federal, state, and deduction inputs |
+| Results | `ResultsPage` | Per-paycheck and annual results, chart, explanations, export/print |
+| Paychecks | `PaychecksPage` | Saved paycheck list and A/B comparison |
+| Budget | `BudgetPage` | Budget methods, categories, transactions, recurring bills, savings goals, reports |
+| Account | `AccountPage` | Optional sign-in, sync, sign-out, and server URL |
+
+`CalculatorViewModel` is shared by the Inputs, Results, and Paychecks pages. `BudgetViewModel` owns budget state and uses `IBudgetStore`, `BudgetCalculator`, `BudgetReportCalculator`, `IEntitlementProvider`, and CSV export services. `AccountViewModel` owns account and sync state.
+
+The MAUI app reads tax JSON from package assets through `MauiAppPackageTaxDataReader`, persists saved paychecks and budgets on device, and syncs through `SyncCoordinator`.
+
+---
+
+## Blazor Frontend
+
+`PaycheckCalc.Blazor` is an interactive Blazor Server app. It includes:
+
+- Home page and state SEO landing pages.
+- Calculator page with inputs, per-paycheck results, annual projection, saved paychecks/account panel, exports, and print support.
+- Budget page with income normalization, budgeting methods, category bars, recurring bills, savings goals, expenses, and Pro-gated reports.
+- Session stores for anonymous saved paychecks and budgets.
+
+The Blazor app reads tax JSON from a `TaxData/` build-output folder using `FileSystemTaxDataReader`. Account and sync calls are made server-side from the Blazor circuit.
+
+---
+
+## Budgeting, Reports, and Entitlements
+
+Budgeting lives in `PaycheckCalc.Core/Budgeting/`.
+
+Core models include:
+
+- `Budget`, `BudgetCategory`, `BudgetTransaction`, and `BudgetSummary`.
+- `BudgetMethod`: `Custom`, `FiftyThirtyTwenty`, `ZeroBased`, and `Envelope`.
+- `RecurringBill`, `RecurrenceFrequency`, and `RecurrencePeriods` for monthly-equivalent bills.
+- `SavingsGoal` for target amount, current amount, optional target date, and monthly contribution needed.
+- `BudgetReport`, `SpendByCategoryPoint`, `BudgetVsActualPoint`, and `BudgetReportCalculator`.
+
+`IEntitlementProvider` in Shared reports whether Pro features are available. The current default provider is `FreeEntitlementProvider`, so report UI is present but gated until a paid entitlement implementation is wired.
+
+---
+
+## Accounts and Sync
+
+`PaycheckCalc.Shared` owns the portable sync model:
+
+- Saved paycheck snapshots and deletion markers.
+- Budget DTOs and deletion markers.
+- Transaction DTOs and deletion markers.
+- Recurring bill DTOs and deletion markers.
+- Savings goal DTOs and deletion markers.
+- Deterministic last-write-wins mergers.
+- `PaycheckApiClient`.
+- Store abstractions used by MAUI, Blazor, and sync orchestration.
+
+`PaycheckCalc.Api` exposes account endpoints through ASP.NET Core Identity and authorized sync endpoints for paychecks and budgets. The budget sync endpoint merges four independent collections: budgets, transactions, recurring bills, and savings goals.
+
+The server persists sync state through `SyncDbContext` using PostgreSQL entities:
+
+- `SavedPaycheckEntity`
+- `BudgetEntity`
+- `BudgetTransactionEntity`
+- `RecurringBillEntity`
+- `SavingsGoalEntity`
 
 ---
 
