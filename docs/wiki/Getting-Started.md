@@ -1,59 +1,71 @@
 # Getting Started
 
-This page covers everything you need to build, test, and run PaycheckCalc.
+This page covers the prerequisites, layout, and commands needed to build, test, and run PaycheckCalc.
 
 ---
 
 ## Prerequisites
 
-- **[.NET 11 SDK](https://dotnet.microsoft.com/)** (preview) — the SDK version is pinned in
-  [`global.json`](../../global.json) (`11.0.100-preview.5.26302.115`, `latestPatch` roll-forward,
-  prerelease allowed).
-- **.NET MAUI workload** (required only for the MAUI App project):
+- **.NET 11 SDK preview** pinned in [`global.json`](../../global.json): `11.0.100-preview.5.26302.115`, `latestPatch` roll-forward, prerelease allowed.
+- **.NET MAUI workload** only when building or running `PaycheckCalc.App`:
   ```bash
   dotnet workload install maui
   ```
-- **Android SDK** or **Windows 10+ SDK** — depending on your MAUI target platform.
-- **PostgreSQL** — only required to *run* the sync API (`PaycheckCalc.Api`). The integration tests use an
-  in-memory SQLite database instead, so you don't need PostgreSQL just to build and test.
+- **Android SDK** or **Windows 10+ SDK** depending on the MAUI target platform.
+- **PostgreSQL** only when running `PaycheckCalc.Api` with its default provider. The integration tests use a SQLite-backed test path and do not require PostgreSQL.
 
-`PaycheckCalc.Core`, `PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and
-`PaycheckCalc.Tests` build **without** the MAUI workload on any OS supported by the .NET 11 SDK. Only
-`PaycheckCalc.App` (MAUI) needs the workload. `PaycheckCalc.Core` multi-targets `net11.0;net9.0` when the
-.NET 11 SDK is present (otherwise `net9.0` only); the other non-MAUI projects are `net11.0`.
+`PaycheckCalc.Core`, `PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` build without the MAUI workload. `PaycheckCalc.App` requires the MAUI workload.
+
+`PaycheckCalc.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is available and falls back to `net9.0` on older SDKs. The other non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android` and `net11.0-windows10.0.19041.0`.
 
 ---
 
 ## Repository Layout
 
+```text
+PaycheckCalc.slnx
+├── global.json                   # .NET 11 preview SDK pin
+├── PaycheckCalc.Core/            # UI-agnostic tax, pay, gross-up, projection, budget, and report engines
+├── PaycheckCalc.App/             # .NET MAUI frontend for Android and Windows
+├── PaycheckCalc.Blazor/          # Blazor Server web frontend
+├── PaycheckCalc.Shared/          # Sync contracts, JSON config, mergers, API client, stores, entitlements
+├── PaycheckCalc.Api/             # ASP.NET Core Web API for Identity accounts and sync
+├── PaycheckCalc.Tests/           # xUnit tests for Core, Shared, Api, and Blazor export paths
+└── docs/                         # Wiki and Mermaid class diagrams
 ```
-PaycheckCalc.slnx                  ← Solution file
-├── PaycheckCalc.Core/             ← Business logic (no UI dependencies); tax + budget engines
-├── PaycheckCalc.App/              ← .NET MAUI frontend (Android & Windows)
-├── PaycheckCalc.Blazor/           ← Blazor Server web frontend
-├── PaycheckCalc.Shared/           ← Sync contracts, JSON, merge, HTTP client, store abstractions
-├── PaycheckCalc.Api/              ← ASP.NET Core Web API: Identity accounts + sync (PostgreSQL/EF Core)
-├── PaycheckCalc.Tests/            ← xUnit test suite (Core + Shared + Api + Blazor)
-└── docs/                          ← Documentation and class diagrams
+
+The solution file includes all six projects:
+
+```text
+PaycheckCalc.Api
+PaycheckCalc.App
+PaycheckCalc.Blazor
+PaycheckCalc.Core
+PaycheckCalc.Shared
+PaycheckCalc.Tests
 ```
 
 ---
 
 ## Build
 
-### Build a single non-MAUI project (no MAUI workload required)
+### Build a single non-MAUI project
 
 ```bash
 dotnet build PaycheckCalc.Core
+dotnet build PaycheckCalc.Shared
 dotnet build PaycheckCalc.Blazor
 dotnet build PaycheckCalc.Api
+dotnet build PaycheckCalc.Tests
 ```
 
-### Build the full solution (requires the MAUI workload)
+### Build the full solution
 
 ```bash
 dotnet build PaycheckCalc.slnx
 ```
+
+The full solution build includes `PaycheckCalc.App`, so it requires the MAUI workload and a compatible platform SDK.
 
 ---
 
@@ -63,86 +75,88 @@ dotnet build PaycheckCalc.slnx
 dotnet test PaycheckCalc.Tests
 ```
 
-The suite has **1,200+** xUnit tests (currently ~1,248 `[Fact]`/`[Theory]` methods across ~70 files)
-covering federal tax, FICA, every state calculator, gross-up, annual projection, budgeting, account/sync
-merge, JSON round-trips, and the CSV/PDF exporters. CI (`.github/workflows/dotnet.yml`) restores, builds,
-and tests `PaycheckCalc.Tests` on Linux (CodeQL runs separately in `codeql.yml`).
+The test suite covers federal withholding, FICA, all state calculators, dynamic state schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, budget reports, snapshot JSON round-trips, deterministic merge behavior, sync API integration, and CSV/PDF export renderers.
+
+CI (`.github/workflows/dotnet.yml`) restores, builds, and tests `PaycheckCalc.Tests` on Linux with the pinned .NET 11 preview SDK. CodeQL runs separately.
 
 ---
 
 ## Run the Apps
 
-### Blazor web app (no MAUI workload needed)
+### Blazor web app
 
 ```bash
 dotnet run --project PaycheckCalc.Blazor
 ```
 
-### Sync API (no MAUI workload needed)
+The Blazor app does not require the MAUI workload. It reads tax data from a `TaxData/` folder copied into the build output.
+
+### Sync API
 
 ```bash
-dotnet run --project PaycheckCalc.Api      # defaults to http://localhost:5201; needs PostgreSQL
+dotnet run --project PaycheckCalc.Api
 ```
 
-Configure the database with `ConnectionStrings:Sync` (default
-`Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres`). EF Core migrations
-are applied automatically at startup. Run the API and Blazor together for end-to-end account/sync testing.
+The API defaults to `http://localhost:5201` and reads its database connection from `ConnectionStrings:Sync`:
 
-### MAUI app (Android / Windows)
+```text
+Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres
+```
+
+When running against PostgreSQL, EF Core migrations are applied at startup. Run the API and Blazor app together for manual end-to-end account/sync testing.
+
+### MAUI app
 
 ```bash
 dotnet build PaycheckCalc.App
-dotnet run --project PaycheckCalc.App
 ```
 
-> **Note:** The MAUI app requires the `maui` workload and a supported target platform.
+Target-specific run examples:
 
 ```bash
 # Android
 dotnet build PaycheckCalc.App -t:Run -f net11.0-android
+
 # Windows
 dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
 ```
+
+The MAUI app packages tax JSON as `MauiAsset` files and reads them through `MauiAppPackageTaxDataReader`.
 
 ---
 
 ## Project Dependencies
 
-```
-PaycheckCalc.Shared  →  PaycheckCalc.Core
-PaycheckCalc.App     →  PaycheckCalc.Core, PaycheckCalc.Shared
-PaycheckCalc.Blazor  →  PaycheckCalc.Core, PaycheckCalc.Shared
-PaycheckCalc.Api     →  PaycheckCalc.Shared
-PaycheckCalc.Tests   →  PaycheckCalc.Core, PaycheckCalc.Shared, PaycheckCalc.Api, PaycheckCalc.Blazor
+```text
+PaycheckCalc.Core     →  no project references
+PaycheckCalc.Shared   →  PaycheckCalc.Core
+PaycheckCalc.App      →  PaycheckCalc.Core, PaycheckCalc.Shared
+PaycheckCalc.Blazor   →  PaycheckCalc.Core, PaycheckCalc.Shared
+PaycheckCalc.Api      →  PaycheckCalc.Shared
+PaycheckCalc.Tests    →  PaycheckCalc.Core, PaycheckCalc.Shared, PaycheckCalc.Api, PaycheckCalc.Blazor
 ```
 
-- **PaycheckCalc.Core** has no dependency on any UI project, MAUI, HTTP, or persistence. It can be built
-  and tested independently and multi-targets `net11.0;net9.0`.
-- **PaycheckCalc.Shared** references only Core; it owns the sync wire/storage contracts and the merge logic
-  reused by the API and both clients.
-- **PaycheckCalc.Api** references Shared (never the front-ends); Core stays HTTP- and persistence-free.
-- **PaycheckCalc.Tests** references Core, Shared, Api, and Blazor (the last via an `blazor` alias, so it can
-  exercise the Blazor export renderers).
+Layering rules:
+
+- `PaycheckCalc.Core` has no UI, HTTP, MAUI, database, or persistence dependency.
+- `PaycheckCalc.Shared` references Core and owns DTOs, JSON serialization, deterministic mergers, API client code, store abstractions, and entitlement abstractions.
+- `PaycheckCalc.Api` references Shared and persists sync state with EF Core/PostgreSQL.
+- Front-ends reference Core and Shared, not each other.
 
 ---
 
 ## JSON Tax Data
 
-Tax tables are stored as JSON files in [`PaycheckCalc.Core/Data/`](../../PaycheckCalc.Core/Data/):
+Tax data lives in [`PaycheckCalc.Core/Data/`](../../PaycheckCalc.Core/Data/):
 
 | File | Description |
 |---|---|
-| `us_irs_15t_2026_percentage_automated.json` | IRS Publication 15-T 2026 percentage method brackets |
-| `ok_ow2_2026_percentage.json` | Oklahoma OW-2 withholding tables |
-| `ca_method_b_2026.json` | California Method B (EDD DE 44) brackets |
-| `ca_2026_method_b_calculator_ready.json` | California pre-processed calculator data |
-| `ar_withholding_2026.json` | Arkansas DFA formula method tables |
+| `us_irs_15t_2026_percentage_automated.json` | IRS Publication 15-T 2026 percentage-method data |
+| `ar_withholding_2026.json` | Arkansas withholding tables |
+| `ca_method_b_2026.json` | California Method B withholding data |
 | `co_dr0004_2026.json` | Colorado DR 0004 Table 1 allowance data |
-| `connecticut_withholding_2026.json` | Connecticut TPG-211 withholding tables |
-| `Schemas/*.json` | One file per state (51 files) declaring its dynamic input schema |
+| `connecticut_withholding_2026.json` | Connecticut withholding tables |
+| `ok_ow2_2026_percentage.json` | Oklahoma OW-2 withholding tables |
+| `Schemas/*.json` | Dynamic state-input schema files for every state / DC |
 
-`AddPaycheckCalcCore` reads six of these at startup (`us_irs_15t…`, `ar_…`, `ok_…`, `ca_method_b…`,
-`co_…`, `connecticut_…`) plus every `Schemas/*.json`, and caches them for the process lifetime. The files
-are content-linked into the consumers via each `.csproj`: `MauiAsset` items in `PaycheckCalc.App`, linked
-into the `TaxData/` build output in `PaycheckCalc.Blazor`, and linked `None`/copy items in
-`PaycheckCalc.Tests`. **If you rename a JSON file, update every linker entry and the loader.**
+`AddPaycheckCalcCore` reads the JSON files at startup and registers the corresponding calculators and schema provider. If a JSON file is renamed or moved, update all consumers: Core loader, MAUI assets, Blazor `TaxData` links, test project links, and any tests or documentation that reference the old name.
