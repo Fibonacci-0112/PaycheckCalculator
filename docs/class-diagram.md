@@ -1,14 +1,10 @@
 # UML Class Diagram
 
-> High-level Mermaid class diagram for the **PaycheckCalc** solution.
-> Render with any Mermaid-compatible viewer (GitHub markdown, VS Code extension, etc.).
+> High-level Mermaid class diagrams for the current **PaycheckCalc** solution.
 >
-> The diagram below is intentionally architectural rather than exhaustive: each
-> per-state withholding calculator (50 states + DC) implements the
-> registry-driven interfaces shown here, so they are elided in favor of the
-> contracts and registries that wire them together.
+> These diagrams are architectural rather than exhaustive. State calculators are represented by their shared contracts and registry instead of listing every state class.
 
-## Package overview
+## Package Overview
 
 ```mermaid
 classDiagram
@@ -16,26 +12,27 @@ classDiagram
 
     class Core["PaycheckCalc.Core"] {
         <<library>>
-        UI-agnostic tax + budget engine
+        tax + pay + budget + report engine
     }
     class Shared["PaycheckCalc.Shared"] {
         <<library>>
-        Sync contracts, JSON, merge, HTTP client
+        DTOs + JSON + merge + API client + stores + entitlements
     }
-    class App["PaycheckCalc.App (MAUI)"] {
-        <<head>>
-        Android & Windows MVVM
+    class App["PaycheckCalc.App"] {
+        <<MAUI head>>
+        Android + Windows MVVM
     }
     class Blazor["PaycheckCalc.Blazor"] {
-        <<head>>
-        Blazor Server web app
+        <<web head>>
+        Blazor Server
     }
     class Api["PaycheckCalc.Api"] {
         <<service>>
-        Identity accounts + paycheck/budget sync (PostgreSQL)
+        Identity + sync API + PostgreSQL
     }
     class Tests["PaycheckCalc.Tests"] {
         <<xUnit>>
+        Core + Shared + Api + Blazor tests
     }
 
     Shared ..> Core : ProjectReference
@@ -48,19 +45,17 @@ classDiagram
     Tests ..> Shared : ProjectReference
     Tests ..> Api : ProjectReference
     Tests ..> Blazor : ProjectReference
-    App ..> Api : HTTP (sync)
-    Blazor ..> Api : HTTP (sync)
+    App ..> Api : HTTP sync
+    Blazor ..> Api : HTTP sync
 ```
 
-## Core — paycheck pipeline
+## Core — Paycheck Pipeline
 
 ```mermaid
 classDiagram
     direction TB
 
-    %% ── Domain models ───────────────────────────────────────
     class PaycheckInput {
-        <<sealed>>
         +PayFrequency Frequency
         +PayType PayType
         +decimal HourlyRate
@@ -79,21 +74,16 @@ classDiagram
     }
 
     class PaycheckResult {
-        <<sealed>>
         +decimal GrossPay
-        +decimal PreTaxDeductions
-        +decimal PostTaxDeductions
         +decimal FederalTaxableIncome
-        +decimal FederalWithholding
         +decimal FicaTaxableWages
+        +decimal StateTaxableWages
+        +decimal FederalWithholding
         +decimal SocialSecurityWithholding
         +decimal MedicareWithholding
         +decimal AdditionalMedicareWithholding
-        +UsState State
-        +decimal StateTaxableWages
         +decimal StateWithholding
         +decimal StateDisabilityInsurance
-        +string StateDisabilityInsuranceLabel
         +decimal TotalTaxes
         +decimal NetPay
         +PaycheckExplanation Explanation
@@ -109,67 +99,57 @@ classDiagram
         +bool ReducesFicaWages
     }
 
+    class PayCalculator {
+        +Calculate(PaycheckInput) PaycheckResult
+    }
+    class FicaCalculator {
+        +Calculate(...) FicaResult
+    }
+    class Irs15TPercentageCalculator {
+        +Calculate(...) decimal
+    }
+    class AnnualProjectionCalculator {
+        +Calculate(PaycheckInput, PaycheckResult) AnnualProjection
+    }
+    class GrossUpCalculator {
+        +Calculate(...) GrossUpResult
+    }
     class AnnualProjection {
-        <<sealed>>
         +int PayPeriodsPerYear
         +int CurrentPaycheckNumber
         +int RemainingPaychecks
         +decimal AnnualizedGrossPay
         +decimal AnnualizedNetPay
-        +decimal AnnualizedTotalWithholding
-        +decimal EstimatedAnnualFederalLiability
-        +decimal EstimatedAnnualFicaLiability
         +decimal OverUnderWithholding
     }
-
-    %% ── Calculators ─────────────────────────────────────────
-    class PayCalculator {
-        +Calculate(PaycheckInput) PaycheckResult
-    }
-
-    class FicaCalculator {
-        +Calculate(...) FicaResult
-    }
-
-    class Irs15TPercentageCalculator {
-        +Calculate(...) decimal
-    }
-
-    class AnnualProjectionCalculator {
-        +Calculate(PaycheckInput, PaycheckResult) AnnualProjection
-    }
-
-    class GrossUpCalculator {
-        +Calculate(target, PaycheckInput) GrossUpResult
-    }
-
     class GrossUpResult {
-        <<sealed>>
         +decimal TargetNetPay
         +decimal GrossUpPay
-        +PaycheckResult Paycheck
         +decimal GrossUpCost
         +bool Converged
+        +PaycheckResult Paycheck
     }
 
-    %% ── Budget engine ───────────────────────────────────────
-    class BudgetCalculator {
-        +Calculate(Budget, transactions, today) BudgetSummary
-    }
+    PayCalculator --> StateCalculatorRegistry
+    PayCalculator --> FicaCalculator
+    PayCalculator --> Irs15TPercentageCalculator
+    PayCalculator ..> PaycheckInput
+    PayCalculator ..> PaycheckResult
+    AnnualProjectionCalculator --> Irs15TPercentageCalculator
+    AnnualProjectionCalculator --> FicaCalculator
+    AnnualProjectionCalculator ..> AnnualProjection
+    GrossUpCalculator --> PayCalculator : re-runs pipeline
+    GrossUpCalculator ..> GrossUpResult
+    PaycheckInput o-- Deduction
+    GrossUpResult o-- PaycheckResult
+```
 
-    class Budget {
-        +string Name
-        +decimal MonthlyNetIncome
-        +IReadOnlyList~BudgetCategory~ Categories
-    }
+## Core — State Tax Plugin Model
 
-    class BudgetSummary {
-        +decimal TotalBudgeted
-        +decimal TotalSpent
-        +IReadOnlyList~CategorySummary~ Categories
-    }
+```mermaid
+classDiagram
+    direction TB
 
-    %% ── State plugin model ──────────────────────────────────
     class IStateWithholdingCalculator {
         <<interface>>
         +UsState State
@@ -191,211 +171,367 @@ classDiagram
     }
 
     class JsonStateSchemaProvider {
-        loads Data/Schemas/*.json
+        +GetSchema(UsState) IReadOnlyList~StateFieldDefinition~
     }
 
-    %% ── Explanations ────────────────────────────────────────
+    class StateFieldDefinition {
+        +string Key
+        +string Label
+        +StateFieldType FieldType
+        +bool Required
+    }
+
+    class StateInputValues {
+        +GetString(key) string?
+        +GetBool(key) bool
+        +GetInt32(key) int
+        +GetDecimal(key) decimal
+    }
+
+    class StateWithholdingResult {
+        +decimal TaxableWages
+        +decimal Withholding
+        +decimal DisabilityInsurance
+        +string DisabilityInsuranceLabel
+    }
+
+    StateCalculatorRegistry o-- IStateWithholdingCalculator : registered calculators
+    IStateWithholdingCalculator ..> StateInputValues
+    IStateWithholdingCalculator ..> StateWithholdingResult
+    IStateWithholdingCalculator ..> StateFieldDefinition
+    JsonStateSchemaProvider ..|> IStateSchemaProvider
+    JsonStateSchemaProvider ..> StateFieldDefinition
+```
+
+## Core — Budgeting and Reports
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Budget {
+        +string Name
+        +decimal MonthlyNetIncome
+        +BudgetMethod Method
+        +IReadOnlyList~BudgetCategory~ Categories
+    }
+    class BudgetCategory {
+        +string Name
+        +BudgetType BudgetType
+        +decimal Amount
+        +BudgetAmountType AmountType
+        +EffectiveMonthlyBudget(decimal) decimal
+    }
+    class BudgetTransaction {
+        +Guid Id
+        +string CategoryName
+        +decimal Amount
+        +DateOnly Date
+        +string Description
+    }
+    class RecurringBill {
+        +Guid Id
+        +string Name
+        +string CategoryName
+        +decimal Amount
+        +RecurrenceFrequency Frequency
+        +int? DueDayOfMonth
+        +decimal MonthlyEquivalent
+    }
+    class SavingsGoal {
+        +Guid Id
+        +string Name
+        +decimal TargetAmount
+        +decimal CurrentAmount
+        +DateOnly? TargetDate
+        +decimal Remaining
+        +MonthlyContributionNeeded(DateOnly) decimal
+    }
+    class BudgetCalculator {
+        +Calculate(Budget, transactions, today, bills, goals) BudgetSummary
+    }
+    class BudgetSummary {
+        +decimal MonthlyNetIncome
+        +decimal TotalBudgeted
+        +decimal TotalSpent
+        +decimal TotalRecurring
+        +decimal TotalSavingsContribution
+        +decimal Unallocated
+        +bool IsFullyAllocated
+        +decimal Remaining
+    }
+    class CategorySummary {
+        +string Name
+        +decimal Budgeted
+        +decimal Spent
+        +decimal Recurring
+        +decimal Remaining
+        +decimal ProjectedMonthEnd
+    }
+    class BudgetReportCalculator {
+        +Compute(Budget, transactions, through, monthsBack) BudgetReport
+    }
+    class BudgetReport {
+        +string BudgetName
+        +IReadOnlyList~DateOnly~ Months
+        +IReadOnlyList~SpendByCategoryPoint~ SpendByCategory
+        +IReadOnlyList~BudgetVsActualPoint~ BudgetVsActual
+        +DateOnly GeneratedThrough
+    }
+    class RecurrencePeriods {
+        +PerYear(RecurrenceFrequency) int
+        +MonthlyEquivalent(decimal, RecurrenceFrequency) decimal
+    }
+
+    Budget o-- BudgetCategory
+    BudgetCalculator ..> Budget
+    BudgetCalculator ..> BudgetTransaction
+    BudgetCalculator ..> RecurringBill
+    BudgetCalculator ..> SavingsGoal
+    BudgetCalculator ..> BudgetSummary
+    BudgetSummary o-- CategorySummary
+    BudgetReportCalculator ..> Budget
+    BudgetReportCalculator ..> BudgetTransaction
+    BudgetReportCalculator ..> BudgetReport
+    RecurringBill ..> RecurrencePeriods
+```
+
+## Core — Explanations
+
+```mermaid
+classDiagram
+    direction TB
+
     class PaycheckExplanation {
         +Get(ExplanationLineKey) LineExplanation?
     }
-
     class LineExplanation {
         +string Title
         +decimal FinalAmount
         +IReadOnlyList~ExplanationStep~ Steps
         +string? Reference
     }
+    class ExplanationStep {
+        +string Label
+        +string Formula
+        +decimal? Amount
+    }
 
-    %% ── Relationships ───────────────────────────────────────
-    PayCalculator --> StateCalculatorRegistry
-    PayCalculator --> FicaCalculator
-    PayCalculator --> Irs15TPercentageCalculator
-    PayCalculator ..> PaycheckInput
-    PayCalculator ..> PaycheckResult
-    AnnualProjectionCalculator --> Irs15TPercentageCalculator
-    AnnualProjectionCalculator --> FicaCalculator
-    AnnualProjectionCalculator ..> AnnualProjection
-    GrossUpCalculator --> PayCalculator : re-runs at each probe
-    GrossUpCalculator ..> GrossUpResult
-    GrossUpResult o-- PaycheckResult
-    BudgetCalculator ..> Budget
-    BudgetCalculator ..> BudgetSummary
-    StateCalculatorRegistry o-- IStateWithholdingCalculator : 51 registered
-    IStateWithholdingCalculator ..> IStateSchemaProvider : schema lookup
-    JsonStateSchemaProvider ..|> IStateSchemaProvider
-    PaycheckInput o-- Deduction
     PaycheckResult o-- PaycheckExplanation
     PaycheckExplanation o-- LineExplanation
+    LineExplanation o-- ExplanationStep
 ```
 
-## MAUI head — MVVM layer
+## MAUI Head — MVVM Layer
 
 ```mermaid
 classDiagram
     direction TB
 
-    class InputsPage {
-        <<ContentPage>>
-        four-section input form
-    }
-
-    class ResultsPage {
-        <<ContentPage>>
-        Period + Annual tabs, doughnut chart
-    }
-
-    class PaychecksPage {
-        <<ContentPage>>
-        Saved list + A/B comparison
-    }
-
-    class BudgetPage {
-        <<ContentPage>>
-        50/30/20, categories, transactions
-    }
-
-    class AccountPage {
-        <<ContentPage>>
-        Sign-in / sync / server URL
-    }
+    class InputsPage
+    class ResultsPage
+    class PaychecksPage
+    class BudgetPage
+    class AccountPage
 
     class CalculatorViewModel {
-        +Frequency / HourlyRate / Hours / OT
-        +FederalW4 step properties
-        +SelectedState + StateFields
-        +Deductions ObservableCollection
-        +ResultCard ResultCardModel?
-        +Projection AnnualProjectionModel?
         +CalculateCommand
         +ShowExplanationCommand
+        +SavePaycheckCommand
+        +Compare selected paychecks
+        +ResultCardModel? ResultCard
+        +AnnualProjectionModel? Projection
     }
-
-    class StateFieldViewModel {
-        wraps one StateFieldDefinition
-    }
-
-    class DeductionItemViewModel {
-        wraps one Deduction entry
-    }
-
     class BudgetViewModel {
-        +Categories / Transactions
-        +Apply 50/30/20 + summary
+        +BudgetMethod Method
+        +Categories
+        +Transactions
+        +RecurringBills
+        +SavingsGoals
+        +BudgetReport? Report
+        +ApplyMethodTemplateCommand
+        +GenerateReportCommand
     }
-
     class AccountViewModel {
-        +sign-in / sync / server URL
+        +SignInCommand
+        +CreateAccountCommand
+        +SyncCommand
+        +SignOutCommand
     }
-
-    class SavedPaycheckViewModel {
-        wraps one saved paycheck
-    }
-
-    class PaycheckInputMapper {
-        +Map(vm, stateValues) PaycheckInput
-    }
-
-    class ResultCardMapper {
-        +Map(PaycheckResult) ResultCardModel
-    }
-
-    class AnnualProjectionMapper {
-        +Map(AnnualProjection) AnnualProjectionModel
-    }
-
-    class ResultCardModel {
-        presentation-ready paycheck card
-    }
-
-    class AnnualProjectionModel {
-        presentation-ready projection card
-    }
-
-    class DoughnutChartDrawable {
-        +ResultCardModel? Result
-        +Draw(canvas, rect)
-    }
+    class StateFieldViewModel
+    class DeductionItemViewModel
+    class SavedPaycheckViewModel
+    class RecurringBillViewModel
+    class SavingsGoalViewModel
+    class PaycheckInputMapper
+    class ResultCardMapper
+    class AnnualProjectionMapper
+    class DoughnutChartDrawable
 
     InputsPage --> CalculatorViewModel : BindingContext
     ResultsPage --> CalculatorViewModel : BindingContext
     PaychecksPage --> CalculatorViewModel : BindingContext
     BudgetPage --> BudgetViewModel : BindingContext
     AccountPage --> AccountViewModel : BindingContext
-    ResultsPage --> DoughnutChartDrawable
     CalculatorViewModel o-- StateFieldViewModel
     CalculatorViewModel o-- DeductionItemViewModel
     CalculatorViewModel o-- SavedPaycheckViewModel
+    BudgetViewModel o-- RecurringBillViewModel
+    BudgetViewModel o-- SavingsGoalViewModel
     CalculatorViewModel ..> PaycheckInputMapper
     CalculatorViewModel ..> ResultCardMapper
     CalculatorViewModel ..> AnnualProjectionMapper
-    ResultCardMapper ..> ResultCardModel
-    AnnualProjectionMapper ..> AnnualProjectionModel
-    DoughnutChartDrawable ..> ResultCardModel
+    ResultsPage --> DoughnutChartDrawable
 ```
 
-## Shared — accounts, sync & storage
+## Blazor Head — Server UI Layer
+
+```mermaid
+classDiagram
+    direction TB
+
+    class CalculatorRazor["Calculator.razor"] {
+        paycheck calculator UI
+    }
+    class BudgetRazor["Budget.razor"] {
+        budget UI + reports
+    }
+    class HomeRazor["Home.razor"]
+    class StateLandingPage
+    class DoughnutChart
+    class ExplanationModal
+    class SessionPaycheckStore
+    class SessionBudgetStore
+    class StateMetadata
+    class FileSystemTaxDataReader
+    class PaycheckExportService
+    class BudgetReportCsvRenderer
+    class BudgetReportPdfRenderer
+    class CircuitAccountSession
+
+    CalculatorRazor --> PayCalculator
+    CalculatorRazor --> GrossUpCalculator
+    CalculatorRazor --> AnnualProjectionCalculator
+    CalculatorRazor --> SessionPaycheckStore
+    CalculatorRazor --> DoughnutChart
+    CalculatorRazor --> ExplanationModal
+    BudgetRazor --> BudgetCalculator
+    BudgetRazor --> BudgetReportCalculator
+    BudgetRazor --> SessionBudgetStore
+    BudgetRazor --> BudgetReportCsvRenderer
+    BudgetRazor --> BudgetReportPdfRenderer
+    StateLandingPage --> StateMetadata
+    FileSystemTaxDataReader ..> Core : TaxData files
+    CircuitAccountSession ..> PaycheckApiClient
+```
+
+## Shared — Sync, Stores, Client, Entitlements
 
 ```mermaid
 classDiagram
     direction TB
 
     class PaycheckApiClient {
-        +RegisterAsync() / LoginAsync() / LogoutAsync()
+        +RegisterAsync()
+        +LoginAsync()
         +SyncAsync(SyncRequest) SyncResponse
         +SyncBudgetsAsync(BudgetSyncRequest) BudgetSyncResponse
     }
-
-    class ITokenStore {
-        <<interface>>
-        +GetTokensAsync() / SetTokensAsync()
-    }
-    class IApiBaseAddressProvider {
-        <<interface>>
-        +Uri? BaseAddress
-    }
-
     class ISavedPaycheckStore {
         <<interface>>
-        +LoadAsync() / UpsertAsync() / RemoveAsync()
-        +ReplaceAllAsync(SavedPaycheckSet)
+        +LoadAsync()
+        +UpsertAsync()
+        +RemoveAsync()
+        +ReplaceAllAsync()
     }
     class IBudgetStore {
         <<interface>>
-        +Load/Upsert/Remove/ReplaceAll (budgets + transactions)
+        +LoadBudgetsAsync()
+        +LoadTransactionsAsync()
+        +LoadRecurringBillsAsync()
+        +LoadSavingsGoalsAsync()
+        +ReplaceAll...Async()
     }
-
+    class SavedPaycheckMerger {
+        +Merge(existing, incoming) SavedPaycheckSet
+    }
+    class BudgetMerger {
+        +MergeBudgets(...)
+        +MergeTransactions(...)
+        +MergeRecurringBills(...)
+        +MergeSavingsGoals(...)
+    }
     class PaycheckSyncService {
         +SyncAsync() SyncOutcome
     }
     class BudgetSyncService {
         +SyncAsync() BudgetSyncOutcome
     }
-
-    class SavedPaycheckMerger {
-        +Merge(existing, incoming) SavedPaycheckSet
+    class PaycheckJson {
+        +Options JsonSerializerOptions
+        +AddConverters(options)
     }
-    class BudgetMerger {
-        +MergeBudgets(...) / MergeTransactions(...)
+    class IEntitlementProvider {
+        <<interface>>
+        +bool IsPro
+    }
+    class FreeEntitlementProvider {
+        +bool IsPro
     }
 
-    class SyncDbContext {
-        <<IdentityDbContext>>
-        SavedPaychecks / Budgets / BudgetTransactions
-    }
-
-    PaycheckApiClient --> ITokenStore
-    PaycheckApiClient --> IApiBaseAddressProvider
     PaycheckSyncService --> ISavedPaycheckStore
     PaycheckSyncService --> PaycheckApiClient
     BudgetSyncService --> IBudgetStore
     BudgetSyncService --> PaycheckApiClient
-    PaycheckApiClient ..> SavedPaycheckMerger : server-side merge
-    PaycheckApiClient ..> BudgetMerger : server-side merge
-    SavedPaycheckMerger ..> SyncDbContext
-    BudgetMerger ..> SyncDbContext
+    PaycheckApiClient ..> PaycheckJson
+    SavedPaycheckMerger ..> PaycheckJson
+    BudgetMerger ..> PaycheckJson
+    FreeEntitlementProvider ..|> IEntitlementProvider
 ```
 
-> Store implementations: MAUI persists to on-device JSON (`JsonFilePaycheckStore`,
-> `JsonFileBudgetStore`); Blazor uses circuit memory (`SessionPaycheckStore`, `SessionBudgetStore`); the
-> server persists EF Core rows in PostgreSQL. The mergers are defined once in `PaycheckCalc.Shared` and
-> reused by the API and clients.
+## API — Persistence and Endpoints
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Program {
+        MapIdentityApi
+        MapPaycheckSyncEndpoints
+        MapBudgetSyncEndpoints
+    }
+    class SyncDbContext {
+        <<IdentityDbContext>>
+        +DbSet~SavedPaycheckEntity~ SavedPaychecks
+        +DbSet~BudgetEntity~ Budgets
+        +DbSet~BudgetTransactionEntity~ BudgetTransactions
+        +DbSet~RecurringBillEntity~ RecurringBills
+        +DbSet~SavingsGoalEntity~ SavingsGoals
+    }
+    class PaycheckSyncEndpoints {
+        +POST /api/paychecks/sync
+        +GET /api/paychecks/
+    }
+    class BudgetSyncEndpoints {
+        +POST /api/budgets/sync
+        +GET /api/budgets/
+    }
+    class SavedPaycheckEntity
+    class BudgetEntity
+    class BudgetTransactionEntity
+    class RecurringBillEntity
+    class SavingsGoalEntity
+
+    Program --> SyncDbContext
+    Program --> PaycheckSyncEndpoints
+    Program --> BudgetSyncEndpoints
+    PaycheckSyncEndpoints --> SyncDbContext
+    PaycheckSyncEndpoints --> SavedPaycheckMerger
+    BudgetSyncEndpoints --> SyncDbContext
+    BudgetSyncEndpoints --> BudgetMerger
+    SyncDbContext o-- SavedPaycheckEntity
+    SyncDbContext o-- BudgetEntity
+    SyncDbContext o-- BudgetTransactionEntity
+    SyncDbContext o-- RecurringBillEntity
+    SyncDbContext o-- SavingsGoalEntity
+```
