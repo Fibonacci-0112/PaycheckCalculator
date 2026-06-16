@@ -1,13 +1,12 @@
 # Accounts & Sync
 
-Saved **paychecks** and **budgets** can optionally sync between the MAUI app and the Blazor web app
-through a user account. Accounts are **entirely optional** — both front-ends work fully without one.
+Saved paychecks and budget data can optionally sync between the MAUI app and the Blazor web app through a user account.
 
-- **MAUI app:** saved paychecks and budgets are persisted **on the device** (JSON files in app data), so
-  they survive restarts with or without an account.
-- **Blazor app:** anonymous saved paychecks and budgets live **only until the browser tab closes** (they
-  are held in circuit memory). Signing in syncs them to the server, which retains them across sessions.
-- **With an account:** signing in on either client merges and syncs the same data.
+Accounts are optional. Both front-ends work without an account:
+
+- **MAUI app:** saved paychecks and budgets persist locally on the device.
+- **Blazor app:** anonymous saved paychecks and budgets live in circuit memory for the browser session.
+- **With an account:** either client can push local state to the API, receive the merged state, and replace its local state.
 
 ---
 
@@ -15,29 +14,38 @@ through a user account. Accounts are **entirely optional** — both front-ends w
 
 | Project | Role |
 |---|---|
-| `PaycheckCalc.Shared` | Wire/storage contracts, JSON serialization, the merge rules, the typed HTTP client, and the `ISavedPaycheckStore` / `IBudgetStore` abstractions. References `PaycheckCalc.Core` only. |
-| `PaycheckCalc.Api` | Standalone ASP.NET Core Web API: ASP.NET Core Identity accounts (email/password, bearer tokens) over EF Core **PostgreSQL**, plus the `/api/paychecks/sync` and `/api/budgets/sync` endpoints. |
+| `PaycheckCalc.Shared` | DTOs, JSON options, merge rules, typed API client, store abstractions, sync services, and entitlement abstractions. |
+| `PaycheckCalc.Api` | ASP.NET Core Web API with Identity accounts, EF Core PostgreSQL persistence, and sync endpoints. |
+| `PaycheckCalc.App` | Local device stores plus account/sync UI. |
+| `PaycheckCalc.Blazor` | Circuit-scoped stores plus account/sync UI. |
 
-Both front-ends call the API over HTTP via the shared `PaycheckApiClient`. The Blazor app makes these
-calls **server-side** (from its circuit), so no CORS configuration is needed.
+`PaycheckCalc.Shared` references Core only. `PaycheckCalc.Api` references Shared and does not reference the front-end projects.
 
 ---
 
-## Request flow
+## Request Flow
 
+```text
+MAUI app  ─┐                         ┌─ /api/account/{register,login,refresh}
+           ├─ PaycheckApiClient ──▶  │─ /api/paychecks/sync
+Blazor app ─┘                         └─ /api/budgets/sync
+                                           ↓
+                                    Shared merger logic
+                                           ↓
+                                      PostgreSQL rows
 ```
-MAUI app  ─┐                         ┌─ /api/account/{register,login,refresh}  (ASP.NET Core Identity)
-           ├─ PaycheckApiClient ──▶  │─ /api/paychecks/sync  ──▶  SavedPaycheckMerger ─┐
-Blazor app ─┘   (bearer token)       └─ /api/budgets/sync    ──▶  BudgetMerger ────────┴─▶ PostgreSQL
-```
 
-1. The client loads its local set (live entries + delete tombstones).
-2. It POSTs that set to `/api/paychecks/sync` (or `/api/budgets/sync`) with a bearer token.
-3. The server merges the pushed set with the user's stored set using the shared merger, persists the
-   result, and returns the full merged set.
-4. The client replaces its local state with the merged set (`ReplaceAll…Async`).
+General sync sequence:
 
-Because the merge runs server-side and the client replaces, clients need no conflict-resolution logic.
+1. Client loads its local set.
+2. Client posts the local set to the matching `/sync` endpoint.
+3. Server loads the stored set for the account.
+4. Server merges the client set and server set with the shared merger.
+5. Server persists the merged state.
+6. Server returns the full merged state.
+7. Client replaces local state with the returned state.
+
+Clients do not implement separate conflict-resolution logic; they reuse the shared sync services and accept the server's merged result.
 
 ---
 
@@ -45,115 +53,144 @@ Because the merge runs server-side and the client replaces, clients need no conf
 
 | Method | Route | Auth | Purpose |
 |---|---|---|---|
-| `POST` | `/api/account/register` | none | Create an account (email + password). |
-| `POST` | `/api/account/login` | none | Get a bearer access token + refresh token. |
-| `POST` | `/api/account/refresh` | none | Exchange a refresh token for a new access token. |
-| `POST` | `/api/paychecks/sync` | bearer | Push a `SyncRequest`, merge, and return the merged `SyncResponse`. |
-| `GET` | `/api/paychecks/` | bearer | Pull the stored paycheck set without writing. |
-| `POST` | `/api/budgets/sync` | bearer | Push a `BudgetSyncRequest` (budgets + transactions), merge, and return the merged `BudgetSyncResponse`. |
-| `GET` | `/api/budgets/` | bearer | Pull the stored budgets + transactions without writing. |
+| `POST` | `/api/account/register` | None | Create an account. |
+| `POST` | `/api/account/login` | None | Sign in and receive Identity bearer credentials. |
+| `POST` | `/api/account/refresh` | None | Refresh the Identity session. |
+| `POST` | `/api/paychecks/sync` | Required | Push saved paycheck state, merge, return merged state. |
+| `GET` | `/api/paychecks/` | Required | Return saved paycheck state without writing. |
+| `POST` | `/api/budgets/sync` | Required | Push budget, transaction, recurring bill, and savings goal state, merge, return merged state. |
+| `GET` | `/api/budgets/` | Required | Return budget-related state without writing. |
 
-Account endpoints are the standard `MapIdentityApi<IdentityUser>` endpoints. The default Identity password
-policy applies (≥ 6 chars with upper, lower, digit, and non-alphanumeric). Email confirmation is **not**
-required (no email sender is configured), so register → login works immediately. Access tokens last
-~1 hour; the client transparently refreshes once on a `401` before retrying. The sync endpoints validate
-input: at most **500** entries per collection and names **1–100** characters.
+Account endpoints are mapped through ASP.NET Core Identity. The sync endpoints validate collection sizes and budget names before merging.
 
 ---
 
-## Snapshot model
+## Saved Paycheck Snapshot Model
 
-### Paychecks
+A saved paycheck carries:
 
-A saved paycheck (`SavedPaycheckDto`) carries:
+- `Name` — user-facing label and case-insensitive merge identity.
+- `UpdatedAtUtc` — conflict-resolution timestamp.
+- `SchemaVersion` — forward-compatible schema marker.
+- `Input` — full `PaycheckInput` used to produce the result.
+- `Result` — flattened result numbers, including gross-up fields when applicable.
 
-- `Name` — the user-facing label and the **case-insensitive identity** used for upsert/merge.
-- `UpdatedAtUtc` — drives last-write-wins.
-- `SchemaVersion` — currently `1`, for forward-compatible migrations.
-- `Input` — the full domain `PaycheckInput` that produced the result (so it can be reloaded later).
-- `Result` — flattened result numbers (`SavedPaycheckResultDto`, built by `SavedPaycheckResultMapper`),
-  including gross-up fields (`IsGrossUp`, `TargetNetPay`, `GrossUpCost`). The "Show Your Work" explanation
-  is **not** stored (it is regenerated on demand).
-
-### Budgets & transactions
-
-- `BudgetDto` — `Name` (case-insensitive identity), `UpdatedAtUtc`, `SchemaVersion`, `MonthlyNetIncome`,
-  and a list of `BudgetCategoryDto` (name, type, amount, dollar/percentage).
-- `TransactionDto` — a stable `Id` (GUID, the merge key), `BudgetName`, `CategoryName`, `Amount`, `Date`
-  (a `DateOnly`, serialized ISO-8601 via `DateOnlyJsonConverter`), `Description`, and `UpdatedAtUtc`.
-
-Serialization uses one shared configuration (`PaycheckJson.Options`): Web defaults, enums as **names**
-(never ordinals), a custom `StateInputValuesJsonConverter` that materializes the dynamic `StateInputValues`
-bag as real CLR primitives (`string`/`bool`/`int`/`decimal`) rather than `JsonElement`, and the
-`DateOnlyJsonConverter` for transaction dates.
-
-### Merge semantics (last-write-wins)
-
-Per identity key, `SavedPaycheckMerger` and `BudgetMerger` pick the winner the same way:
-
-1. later timestamp wins;
-2. on an exact timestamp tie, a live entry beats a delete tombstone;
-3. on a tie between two of the same kind, the incoming side wins (idempotent re-sync).
-
-Paychecks and budgets are keyed by **case-insensitive name**; transactions are keyed by their **GUID**.
-Deletes are recorded as **tombstones** (kept even for anonymous users) so a delete propagates to other
-devices on the next sync instead of being resurrected by a stale copy.
+The show-your-work explanation is not stored; it is regenerated from the saved input when needed.
 
 ---
 
-## Storage per client
+## Budget Sync Model
+
+Budget sync is split into four independent collections.
+
+| Collection | DTO | Removal record | Identity |
+|---|---|---|---|
+| Budgets | `BudgetDto` | `BudgetTombstone` | Case-insensitive budget name |
+| Transactions | `TransactionDto` | `TransactionTombstone` | GUID |
+| Recurring bills | `RecurringBillDto` | `RecurringBillTombstone` | GUID |
+| Savings goals | `SavingsGoalDto` | `SavingsGoalTombstone` | GUID |
+
+`BudgetDto` is currently schema version 2 and includes the budget method. Recurring bills and savings goals sync as separate GUID-keyed sets instead of being embedded inside the budget DTO.
+
+`BudgetSyncRequest` carries all four live collections plus their removal records. `BudgetSyncResponse` returns the merged state for all four collections plus server time.
+
+---
+
+## JSON Configuration
+
+Serialization uses `PaycheckJson.Options` from Shared:
+
+- Web-style JSON defaults.
+- Enums serialized as names, not ordinals.
+- `DateOnlyJsonConverter` for budget transaction and savings goal dates.
+- `StateInputValuesJsonConverter` so dynamic state inputs round-trip as concrete CLR values instead of `JsonElement` values.
+
+The same JSON options are used by clients and the API minimal-API JSON pipeline.
+
+---
+
+## Merge Semantics
+
+Saved paychecks and budget-related collections use deterministic last-write-wins behavior:
+
+1. Later timestamp wins.
+2. On exact timestamp ties, a live entry beats a removal record.
+3. On exact same-kind ties, the incoming side wins.
+
+Identity keys:
+
+| Data | Identity |
+|---|---|
+| Saved paychecks | Case-insensitive name |
+| Budgets | Case-insensitive name |
+| Transactions | GUID |
+| Recurring bills | GUID |
+| Savings goals | GUID |
+
+Removal records are retained so removals propagate to other devices during later syncs.
+
+---
+
+## Storage by Client
 
 | Client | Backing store | Lifetime |
 |---|---|---|
-| MAUI | `JsonFilePaycheckStore` → `saved-paychecks.json` and `JsonFileBudgetStore` → `budgets.json`, both in `FileSystem.AppDataDirectory` | Durable on device. Tokens in `SecureStorage` (falls back to `Preferences` on unpackaged Windows). |
-| Blazor | `SessionPaycheckStore` and `SessionBudgetStore` (in-memory) | Circuit-scoped — discarded when the tab closes. Tokens in circuit memory only (`CircuitAccountSession`). |
-| Server | `SavedPaycheckEntity` (PK `UserId,NameKey`), `BudgetEntity` (PK `UserId,NameKey`), and `BudgetTransactionEntity` (PK `UserId,Id`) rows in PostgreSQL | Persistent. Each row stores the serialized DTO in `PayloadJson` (empty for tombstones). |
+| MAUI | `JsonFilePaycheckStore` and `JsonFileBudgetStore` in app data | Durable on device |
+| Blazor | `SessionPaycheckStore` and `SessionBudgetStore` | Circuit-scoped |
+| Server | EF Core rows in PostgreSQL | Persistent |
 
-The MAUI server URL is editable on the Account page (`PreferencesApiBaseAddressProvider`, stored in
-`Preferences`, default `http://localhost:5201`). From the Android emulator, the host machine is reachable
-at `http://10.0.2.2:5201`. The Blazor app reads its API base address from configuration
-(`PaycheckApi:BaseUrl`) via `ConfigApiBaseAddressProvider`.
+The MAUI Account page exposes the sync server URL. The default local API URL is `http://localhost:5201`; Android emulator access to the host machine commonly uses `http://10.0.2.2:5201`.
+
+The Blazor app reads its API base URL from configuration through `ConfigApiBaseAddressProvider`.
 
 ---
 
 ## Database
 
-`SyncDbContext : IdentityDbContext<IdentityUser>` holds the Identity tables plus `SavedPaychecks`,
-`Budgets`, and `BudgetTransactions`. Production runs on **PostgreSQL** (Npgsql); the connection string
-comes from `ConnectionStrings:Sync` (env override `ConnectionStrings__Sync`), defaulting to
-`Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres`.
+`SyncDbContext` derives from `IdentityDbContext<IdentityUser>` and contains Identity tables plus sync tables.
 
-At startup the app **applies EF Core migrations** when running against PostgreSQL (`Database.Migrate()`) so
-the schema can evolve as tables/columns are added (`Migrations/` currently holds `InitialCreate` and
-`AddBudgets`). The integration tests swap in **SQLite**, which the Npgsql-targeted migrations don't apply
-to, so that path builds the schema directly from the model via `EnsureCreated()` instead. A
-`SyncDbContextDesignTimeFactory` lets the EF CLI add new migrations. Runtime `*.db` files are git-ignored.
+Current sync entity sets:
+
+- `SavedPaycheckEntity`
+- `BudgetEntity`
+- `BudgetTransactionEntity`
+- `RecurringBillEntity`
+- `SavingsGoalEntity`
+
+Production-style runs use PostgreSQL through Npgsql. The connection string is `ConnectionStrings:Sync`, with environment-variable override support through standard .NET configuration.
+
+At startup:
+
+- PostgreSQL uses EF Core migrations via `Database.Migrate()`.
+- Non-PostgreSQL test paths use `EnsureCreated()`.
+
+`SyncDbContextDesignTimeFactory` supports EF CLI migration creation.
 
 ---
 
-## Known limitations
+## Known Limitations
 
-- **Device clock skew** affects last-write-wins, since timestamps are set by the writing client.
-- **No "reload into form" UI yet.** The full `PaycheckInput` is stored, but reloading a saved paycheck back
-  into the calculator form is a future enhancement.
-- **Cleartext HTTP on Android.** The dev default is plain `http://`. Android blocks cleartext to
-  non-localhost hosts by default on API 28+; use an `https://` server or add a network security config.
-- **No server-side rate limiting** on the account or sync endpoints.
+- Last-write-wins uses client-provided timestamps, so device clock skew can affect conflict resolution.
+- Server-side rate limiting is not currently implemented.
+- Development defaults use plain local HTTP; production deployment should use HTTPS.
+- Budget reports are wired in Core/UI/export paths but gated by the entitlement provider until a paid entitlement implementation is added.
 
 ---
 
 ## Testing
 
-- `SavedPaycheckMergerTest`, `BudgetMergerTest`, and `PaycheckSnapshotJsonTest` (unit) cover the merge
-  rules and the JSON round-trip, including a calculation-equivalence check.
-- `SyncApiTest` (integration, `WebApplicationFactory` + in-memory SQLite) covers register/login, `401`
-  without a token, last-write-wins across two clients, tombstone propagation, and a full `StateInputValues`
-  server round-trip.
+Relevant tests include:
 
-Run the API and Blazor together for a manual end-to-end check (the API needs a reachable PostgreSQL
-instance):
+- Saved paycheck merge and JSON round-trip tests.
+- Budget merger tests across budgets, transactions, recurring bills, and savings goals.
+- Sync API integration tests using `WebApplicationFactory`.
+- Budget calculator and report calculator tests.
+
+Manual end-to-end check:
 
 ```bash
-dotnet run --project PaycheckCalc.Api      # http://localhost:5201
-dotnet run --project PaycheckCalc.Blazor   # then sign in from the "Saved Paychecks & Account" panel
+dotnet run --project PaycheckCalc.Api
+dotnet run --project PaycheckCalc.Blazor
 ```
+
+Then sign in from the web app's account area and verify paycheck/budget sync.
