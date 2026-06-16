@@ -10,30 +10,26 @@
 classDiagram
     direction TB
 
-    class Core["PaycheckCalc.Core"] {
-        <<library>>
-        tax + pay + budget + report engine
-    }
-    class Shared["PaycheckCalc.Shared"] {
-        <<library>>
-        DTOs + JSON + merge + API client + stores + entitlements
-    }
-    class App["PaycheckCalc.App"] {
-        <<MAUI head>>
-        Android + Windows MVVM
-    }
-    class Blazor["PaycheckCalc.Blazor"] {
-        <<web head>>
-        Blazor Server
-    }
-    class Api["PaycheckCalc.Api"] {
-        <<service>>
-        Identity + sync API + PostgreSQL
-    }
-    class Tests["PaycheckCalc.Tests"] {
-        <<xUnit>>
-        Core + Shared + Api + Blazor tests
-    }
+    class Core
+    class Shared
+    class App
+    class Blazor
+    class Api
+    class Tests
+
+    <<library>> Core
+    <<library>> Shared
+    <<MAUI>> App
+    <<BlazorServer>> Blazor
+    <<WebAPI>> Api
+    <<xUnit>> Tests
+
+    note for Core "PaycheckCalc.Core: tax, pay, gross-up, projection, budget, and report engine"
+    note for Shared "PaycheckCalc.Shared: DTOs, JSON, merge, API client, stores, entitlements"
+    note for App "PaycheckCalc.App: Android and Windows MVVM frontend"
+    note for Blazor "PaycheckCalc.Blazor: Blazor Server frontend"
+    note for Api "PaycheckCalc.Api: Identity, sync endpoints, EF Core PostgreSQL"
+    note for Tests "PaycheckCalc.Tests: Core, Shared, Api, and Blazor tests"
 
     Shared ..> Core : ProjectReference
     App ..> Core : ProjectReference
@@ -65,7 +61,7 @@ classDiagram
         +decimal SalaryAmount
         +SalaryBasis SalaryBasis
         +UsState State
-        +StateInputValues? StateInputValues
+        +StateInputValues StateInputValues
         +FederalW4Input FederalW4
         +IReadOnlyList~Deduction~ Deductions
         +decimal YtdSocialSecurityWages
@@ -103,16 +99,16 @@ classDiagram
         +Calculate(PaycheckInput) PaycheckResult
     }
     class FicaCalculator {
-        +Calculate(...) FicaResult
+        +Calculate() FicaResult
     }
     class Irs15TPercentageCalculator {
-        +Calculate(...) decimal
+        +Calculate() decimal
     }
     class AnnualProjectionCalculator {
         +Calculate(PaycheckInput, PaycheckResult) AnnualProjection
     }
     class GrossUpCalculator {
-        +Calculate(...) GrossUpResult
+        +Calculate() GrossUpResult
     }
     class AnnualProjection {
         +int PayPeriodsPerYear
@@ -182,10 +178,10 @@ classDiagram
     }
 
     class StateInputValues {
-        +GetString(key) string?
-        +GetBool(key) bool
-        +GetInt32(key) int
-        +GetDecimal(key) decimal
+        +GetString(string) string
+        +GetBool(string) bool
+        +GetInt32(string) int
+        +GetDecimal(string) decimal
     }
 
     class StateWithholdingResult {
@@ -235,7 +231,7 @@ classDiagram
         +string CategoryName
         +decimal Amount
         +RecurrenceFrequency Frequency
-        +int? DueDayOfMonth
+        +int DueDayOfMonth
         +decimal MonthlyEquivalent
     }
     class SavingsGoal {
@@ -243,12 +239,12 @@ classDiagram
         +string Name
         +decimal TargetAmount
         +decimal CurrentAmount
-        +DateOnly? TargetDate
+        +DateOnly TargetDate
         +decimal Remaining
         +MonthlyContributionNeeded(DateOnly) decimal
     }
     class BudgetCalculator {
-        +Calculate(Budget, transactions, today, bills, goals) BudgetSummary
+        +Calculate(Budget, IReadOnlyList, DateOnly, IReadOnlyList, IReadOnlyList) BudgetSummary
     }
     class BudgetSummary {
         +decimal MonthlyNetIncome
@@ -269,7 +265,7 @@ classDiagram
         +decimal ProjectedMonthEnd
     }
     class BudgetReportCalculator {
-        +Compute(Budget, transactions, through, monthsBack) BudgetReport
+        +Compute(Budget, IReadOnlyList, DateOnly, int) BudgetReport
     }
     class BudgetReport {
         +string BudgetName
@@ -303,18 +299,18 @@ classDiagram
     direction TB
 
     class PaycheckExplanation {
-        +Get(ExplanationLineKey) LineExplanation?
+        +Get(ExplanationLineKey) LineExplanation
     }
     class LineExplanation {
         +string Title
         +decimal FinalAmount
         +IReadOnlyList~ExplanationStep~ Steps
-        +string? Reference
+        +string Reference
     }
     class ExplanationStep {
         +string Label
         +string Formula
-        +decimal? Amount
+        +decimal Amount
     }
 
     PaycheckResult o-- PaycheckExplanation
@@ -338,17 +334,16 @@ classDiagram
         +CalculateCommand
         +ShowExplanationCommand
         +SavePaycheckCommand
-        +Compare selected paychecks
-        +ResultCardModel? ResultCard
-        +AnnualProjectionModel? Projection
+        +ResultCardModel ResultCard
+        +AnnualProjectionModel Projection
     }
     class BudgetViewModel {
         +BudgetMethod Method
-        +Categories
-        +Transactions
-        +RecurringBills
-        +SavingsGoals
-        +BudgetReport? Report
+        +ObservableCollection Categories
+        +ObservableCollection Transactions
+        +ObservableCollection RecurringBills
+        +ObservableCollection SavingsGoals
+        +BudgetReport Report
         +ApplyMethodTemplateCommand
         +GenerateReportCommand
     }
@@ -390,13 +385,9 @@ classDiagram
 classDiagram
     direction TB
 
-    class CalculatorRazor["Calculator.razor"] {
-        paycheck calculator UI
-    }
-    class BudgetRazor["Budget.razor"] {
-        budget UI + reports
-    }
-    class HomeRazor["Home.razor"]
+    class CalculatorPage
+    class BudgetPageRazor
+    class HomePage
     class StateLandingPage
     class DoughnutChart
     class ExplanationModal
@@ -409,17 +400,20 @@ classDiagram
     class BudgetReportPdfRenderer
     class CircuitAccountSession
 
-    CalculatorRazor --> PayCalculator
-    CalculatorRazor --> GrossUpCalculator
-    CalculatorRazor --> AnnualProjectionCalculator
-    CalculatorRazor --> SessionPaycheckStore
-    CalculatorRazor --> DoughnutChart
-    CalculatorRazor --> ExplanationModal
-    BudgetRazor --> BudgetCalculator
-    BudgetRazor --> BudgetReportCalculator
-    BudgetRazor --> SessionBudgetStore
-    BudgetRazor --> BudgetReportCsvRenderer
-    BudgetRazor --> BudgetReportPdfRenderer
+    note for CalculatorPage "Calculator.razor"
+    note for BudgetPageRazor "Budget.razor"
+
+    CalculatorPage --> PayCalculator
+    CalculatorPage --> GrossUpCalculator
+    CalculatorPage --> AnnualProjectionCalculator
+    CalculatorPage --> SessionPaycheckStore
+    CalculatorPage --> DoughnutChart
+    CalculatorPage --> ExplanationModal
+    BudgetPageRazor --> BudgetCalculator
+    BudgetPageRazor --> BudgetReportCalculator
+    BudgetPageRazor --> SessionBudgetStore
+    BudgetPageRazor --> BudgetReportCsvRenderer
+    BudgetPageRazor --> BudgetReportPdfRenderer
     StateLandingPage --> StateMetadata
     FileSystemTaxDataReader ..> Core : TaxData files
     CircuitAccountSession ..> PaycheckApiClient
@@ -450,16 +444,19 @@ classDiagram
         +LoadTransactionsAsync()
         +LoadRecurringBillsAsync()
         +LoadSavingsGoalsAsync()
-        +ReplaceAll...Async()
+        +ReplaceAllBudgetsAsync()
+        +ReplaceAllTransactionsAsync()
+        +ReplaceAllRecurringBillsAsync()
+        +ReplaceAllSavingsGoalsAsync()
     }
     class SavedPaycheckMerger {
-        +Merge(existing, incoming) SavedPaycheckSet
+        +Merge(SavedPaycheckSet, SavedPaycheckSet) SavedPaycheckSet
     }
     class BudgetMerger {
-        +MergeBudgets(...)
-        +MergeTransactions(...)
-        +MergeRecurringBills(...)
-        +MergeSavingsGoals(...)
+        +MergeBudgets(BudgetSet, BudgetSet) BudgetSet
+        +MergeTransactions(TransactionSet, TransactionSet) TransactionSet
+        +MergeRecurringBills(RecurringBillSet, RecurringBillSet) RecurringBillSet
+        +MergeSavingsGoals(SavingsGoalSet, SavingsGoalSet) SavingsGoalSet
     }
     class PaycheckSyncService {
         +SyncAsync() SyncOutcome
@@ -469,7 +466,7 @@ classDiagram
     }
     class PaycheckJson {
         +Options JsonSerializerOptions
-        +AddConverters(options)
+        +AddConverters(JsonSerializerOptions)
     }
     class IEntitlementProvider {
         <<interface>>
@@ -495,11 +492,7 @@ classDiagram
 classDiagram
     direction TB
 
-    class Program {
-        MapIdentityApi
-        MapPaycheckSyncEndpoints
-        MapBudgetSyncEndpoints
-    }
+    class Program
     class SyncDbContext {
         <<IdentityDbContext>>
         +DbSet~SavedPaycheckEntity~ SavedPaychecks
@@ -509,12 +502,10 @@ classDiagram
         +DbSet~SavingsGoalEntity~ SavingsGoals
     }
     class PaycheckSyncEndpoints {
-        +POST /api/paychecks/sync
-        +GET /api/paychecks/
+        +MapPaycheckSyncEndpoints(RouteGroupBuilder) RouteGroupBuilder
     }
     class BudgetSyncEndpoints {
-        +POST /api/budgets/sync
-        +GET /api/budgets/
+        +MapBudgetSyncEndpoints(RouteGroupBuilder) RouteGroupBuilder
     }
     class SavedPaycheckEntity
     class BudgetEntity
