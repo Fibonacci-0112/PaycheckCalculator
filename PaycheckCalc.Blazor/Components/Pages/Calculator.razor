@@ -7,6 +7,7 @@
 @inject AnnualProjectionCalculator ProjectionCalc
 @inject GrossUpCalculator GrossUpCalc
 @inject BonusCalculator BonusCalc
+@inject SelfEmploymentCalculator SelfEmpCalc
 @inject StateCalculatorRegistry StateRegistry
 @inject IStateSchemaProvider SchemaProvider
 @inject SessionPaycheckStore Store
@@ -49,6 +50,7 @@
                         <option value="standard">Standard paycheck (gross &rarr; net)</option>
                         <option value="grossup">Gross-up (net &rarr; required gross)</option>
                         <option value="bonus">Bonus / supplemental wage</option>
+                        <option value="selfemployment">Self-employment / 1099</option>
                     </select>
                 </div>
 
@@ -83,6 +85,14 @@
                     </div>
                     <p class="form-note">Enter the exact take-home amount. Gross-up finds the gross pay that nets it after taxes and deductions &mdash; used for net bonuses and relocation payments.</p>
                 }
+                else if (_selfEmpMode)
+                {
+                    <div class="form-group">
+                        <label>Net Self-Employment Income &mdash; annual ($)</label>
+                        <input type="number" @bind="_selfEmpEarnings" min="0" step="0.01" />
+                    </div>
+                    <p class="form-note">Enter your annual net profit (Schedule C: gross receipts minus business expenses). Self-employment tax is 15.3% &mdash; 12.4% Social Security (to the $184,500 cap) + 2.9% Medicare &mdash; on 92.35% of it. Pick your state on the State tab for an income-tax estimate. There is no separate state self-employment tax; the W-4 and deductions don't apply.</p>
+                }
                 else
                 {
                     <div class="form-group">
@@ -95,7 +105,7 @@
                     </div>
                     <p class="form-note">Bonuses are withheld at the federal flat supplemental rate &mdash; 22% (37% on cumulative supplemental wages over $1,000,000) &mdash; plus FICA and your state's supplemental rate. Pick your work state on the State tab. Federal W-4 and deductions don't apply.</p>
                 }
-                @if (!_bonusMode)
+                @if (!_bonusMode && !_selfEmpMode)
                 {
                     <div class="form-group">
                         <label>Paycheck # This Year</label>
@@ -304,7 +314,7 @@
             }
         </div>
 
-        @if (_result == null && _bonusResult == null)
+        @if (_result == null && _bonusResult == null && _selfEmpResult == null)
         {
             <div class="results-placeholder">
                 <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -392,6 +402,117 @@
                         <span class="net-label">@(_bonusResult.StateUsesRegularMethod ? "Net Bonus (before state tax)" : "Net Bonus")</span>
                         <span class="result-value net-value">@_bonusResult.NetBonus.ToString("C")</span>
                     </div>
+                </div>
+            </div>
+        }
+        else if (_selfEmpResult != null)
+        {
+            <div class="results-scroll">
+                <div class="result-card card-refund">
+                    <div class="result-card-title">Self-Employment / 1099 (annual)</div>
+                    <div class="result-row">
+                        <span>Net Self-Employment Income</span>
+                        <div class="result-right">
+                            <span class="result-value">@_selfEmpResult.AnnualNetEarnings.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.GrossPay)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Self-Employment Tax (15.3%)</div>
+                    <div class="result-row">
+                        <span>Net Earnings Subject to SE Tax (92.35%)</span>
+                        <div class="result-right">
+                            <span class="result-value">@_selfEmpResult.NetEarningsSubjectToSeTax.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.FicaTaxableWages)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span>Social Security (12.4%)</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_selfEmpResult.SocialSecurityTax.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.SocialSecurity)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span>Medicare (2.9%)</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_selfEmpResult.MedicareTax.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.Medicare)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    @if (_selfEmpResult.AdditionalMedicareTax > 0)
+                    {
+                        <div class="result-row">
+                            <span>Additional Medicare (0.9%)</span>
+                            <div class="result-right">
+                                <span class="result-value">-@_selfEmpResult.AdditionalMedicareTax.ToString("C")</span>
+                                <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.AdditionalMedicare)' title="Show calculation">?</button>
+                            </div>
+                        </div>
+                    }
+                    <div class="result-row result-sub">
+                        <span>Total Self-Employment Tax</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_selfEmpResult.SelfEmploymentTax.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.FederalWithholding)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Estimated State Income Tax (@_selfEmpResult.State)</div>
+                    <div class="result-row">
+                        <span>@_selfEmpResult.State income tax</span>
+                        <div class="result-right">
+                            <span class="result-value">-@_selfEmpResult.StateIncomeTax.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.StateWithholding)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                    <p class="form-note">No U.S. state levies a separate self-employment tax &mdash; self-employment income is taxed as ordinary state income (estimate; before any federal income tax).</p>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-row">
+                        <span>Total Estimated Tax</span>
+                        <span class="result-value">-@_selfEmpResult.TotalTax.ToString("C")</span>
+                    </div>
+                    <div class="result-row result-net-row">
+                        <span class="net-label">Take-Home (before federal income tax)</span>
+                        <div class="result-right">
+                            <span class="result-value net-value">@_selfEmpResult.TakeHome.ToString("C")</span>
+                            <button class="btn-info" @onclick='() => OpenSelfEmpExplanation(ExplanationLineKey.NetPay)' title="Show calculation">?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Quarterly Estimated Payments (Form 1040-ES)</div>
+                    <table class="compare-table">
+                        <thead>
+                            <tr>
+                                <th class="compare-metric">Quarter</th>
+                                <th class="compare-num">Due</th>
+                                <th class="compare-num">Federal</th>
+                                <th class="compare-num">State</th>
+                                <th class="compare-num">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var q in _selfEmpResult.QuarterlyEstimates)
+                            {
+                                <tr>
+                                    <td class="compare-metric">@q.Label</td>
+                                    <td class="compare-num">@q.DueDate.ToString("MMM d, yyyy")</td>
+                                    <td class="compare-num">@q.FederalAmount.ToString("C")</td>
+                                    <td class="compare-num">@q.StateAmount.ToString("C")</td>
+                                    <td class="compare-num">@q.TotalAmount.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <p class="form-note">Equal installments of your estimated annual tax. The federal portion is paid to the IRS; the state portion, when shown, goes to your state. Most states use these same due dates.</p>
                 </div>
             </div>
         }
@@ -816,11 +937,15 @@
     private string _mode = "standard";
     private bool _grossUpMode => _mode == "grossup";
     private bool _bonusMode => _mode == "bonus";
+    private bool _selfEmpMode => _mode == "selfemployment";
     private decimal _targetNet = 1000m;
 
     // Bonus / supplemental wage
     private decimal _bonusAmount = 5000m;
     private decimal _ytdSupplementalWages = 0m;
+
+    // Self-employment / 1099 (annual net profit)
+    private decimal _selfEmpEarnings = 80000m;
 
     // Federal W-4
     private FederalFilingStatus _fedStatus = FederalFilingStatus.SingleOrMarriedSeparately;
@@ -843,6 +968,7 @@
     private AnnualProjection? _projection;
     private GrossUpResult? _grossUpResult;
     private BonusResult? _bonusResult;
+    private SelfEmploymentResult? _selfEmpResult;
     private string? _calcError;
 
     // Modal
@@ -907,7 +1033,7 @@
         // Require a name on every deduction before proceeding.
         foreach (var d in _deductions) d.NameError = false;
         var unnamed = _deductions.Where(d => string.IsNullOrWhiteSpace(d.Name)).ToList();
-        if (unnamed.Count > 0)
+        if (unnamed.Count > 0 && !_selfEmpMode)
         {
             foreach (var d in unnamed) d.NameError = true;
             _calcError = unnamed.Count == 1
@@ -945,6 +1071,13 @@
                 _inputTab = 2;
                 return;
             }
+        }
+
+        // Self-employment mode reuses the validated state inputs but its own engine.
+        if (_selfEmpMode)
+        {
+            CalculateSelfEmployment(stateValues);
+            return;
         }
 
         var input = new PaycheckInput
@@ -1173,6 +1306,30 @@
         }
     }
 
+    private void CalculateSelfEmployment(StateInputValues stateValues)
+    {
+        _result = null;
+        _projection = null;
+        _grossUpResult = null;
+        _bonusResult = null;
+        try
+        {
+            _selfEmpResult = SelfEmpCalc.Calculate(new SelfEmploymentInput
+            {
+                AnnualNetEarnings = _selfEmpEarnings,
+                State = _state,
+                StateInputValues = stateValues,
+                YtdSocialSecurityWages = _ytdSsWages,
+                YtdMedicareWages = _ytdMedWages
+            });
+        }
+        catch (Exception ex)
+        {
+            _calcError = $"Calculation error: {ex.Message}";
+            _selfEmpResult = null;
+        }
+    }
+
     private void OnModeChanged()
     {
         // Switching modes clears stale results so the panel doesn't mix views.
@@ -1180,6 +1337,7 @@
         _projection = null;
         _grossUpResult = null;
         _bonusResult = null;
+        _selfEmpResult = null;
         _calcError = null;
     }
 
@@ -1193,6 +1351,13 @@
     private void OpenBonusExplanation(ExplanationLineKey key)
     {
         _modalExplanation = _bonusResult?.Explanation.Get(key);
+        if (_modalExplanation != null)
+            _showModal = true;
+    }
+
+    private void OpenSelfEmpExplanation(ExplanationLineKey key)
+    {
+        _modalExplanation = _selfEmpResult?.Explanation.Get(key);
         if (_modalExplanation != null)
             _showModal = true;
     }

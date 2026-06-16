@@ -125,6 +125,30 @@ classDiagram
         +bool Converged
         +PaycheckResult Paycheck
     }
+    class SelfEmploymentCalculator {
+        +Calculate(SelfEmploymentInput) SelfEmploymentResult
+    }
+    class SelfEmploymentInput {
+        +decimal AnnualNetEarnings
+        +UsState State
+        +decimal YtdSocialSecurityWages
+        +decimal YtdMedicareWages
+    }
+    class SelfEmploymentResult {
+        +decimal AnnualNetEarnings
+        +decimal NetEarningsSubjectToSeTax
+        +decimal SelfEmploymentTax
+        +decimal StateIncomeTax
+        +decimal TakeHome
+        +IReadOnlyList~QuarterlyEstimate~ QuarterlyEstimates
+    }
+    class QuarterlyEstimate {
+        +string Label
+        +DateOnly DueDate
+        +decimal FederalAmount
+        +decimal StateAmount
+        +decimal TotalAmount
+    }
 
     PayCalculator --> StateCalculatorRegistry
     PayCalculator --> FicaCalculator
@@ -136,6 +160,11 @@ classDiagram
     AnnualProjectionCalculator ..> AnnualProjection
     GrossUpCalculator --> PayCalculator : re-runs pipeline
     GrossUpCalculator ..> GrossUpResult
+    SelfEmploymentCalculator --> StateCalculatorRegistry : state income-tax estimate
+    SelfEmploymentCalculator --> FicaCalculator : SS wage base / threshold
+    SelfEmploymentCalculator ..> SelfEmploymentInput
+    SelfEmploymentCalculator ..> SelfEmploymentResult
+    SelfEmploymentResult o-- QuarterlyEstimate
     PaycheckInput o-- Deduction
     GrossUpResult o-- PaycheckResult
 ```
@@ -405,6 +434,7 @@ classDiagram
 
     CalculatorPage --> PayCalculator
     CalculatorPage --> GrossUpCalculator
+    CalculatorPage --> SelfEmploymentCalculator
     CalculatorPage --> AnnualProjectionCalculator
     CalculatorPage --> SessionPaycheckStore
     CalculatorPage --> DoughnutChart

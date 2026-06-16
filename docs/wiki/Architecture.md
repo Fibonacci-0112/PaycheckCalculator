@@ -18,8 +18,8 @@ The current solution has six projects:
 ```text
 PaycheckCalc.slnx
 ├── PaycheckCalc.Core/             # Business logic; no UI / HTTP / persistence dependencies
-│   ├── Models/                    # PaycheckInput/Result, Deduction, enums, UsState, AnnualProjection, GrossUpResult
-│   ├── Pay/                       # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator
+│   ├── Models/                    # PaycheckInput/Result, Deduction, enums, UsState, AnnualProjection, GrossUpResult, SelfEmploymentInput/Result
+│   ├── Pay/                       # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/                 # Budget engine, recurring bills, savings goals, reports
 │   ├── Explanation/               # Show-your-work breakdowns
 │   ├── DependencyInjection/       # AddPaycheckCalcCore + ITaxDataReader
@@ -89,6 +89,7 @@ Important Core services:
 | `StateCalculatorRegistry` | Maps `UsState` to `IStateWithholdingCalculator` |
 | `AnnualProjectionCalculator` | Full-year annualization and over/under estimate |
 | `GrossUpCalculator` | Inverse solver for target net pay |
+| `SelfEmploymentCalculator` | Self-employment (1099) tax, state income-tax estimate, and quarterly estimated payments |
 | `BudgetCalculator` | Monthly budget summary with categories, transactions, recurring bills, and savings goals |
 | `BudgetReportCalculator` | Spend-by-category and budget-vs-actual report data |
 

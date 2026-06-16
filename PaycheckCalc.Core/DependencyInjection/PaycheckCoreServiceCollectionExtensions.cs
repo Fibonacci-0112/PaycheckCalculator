@@ -169,6 +169,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         services.AddSingleton(payCalculator);
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
         services.AddSingleton(new GrossUpCalculator(payCalculator));
+        services.AddSingleton(new SelfEmploymentCalculator(stateRegistry, fica));
         services.AddSingleton(new HourlySalaryCalculator());
 
         var federalSupplemental = new FederalSupplementalCalculator();
