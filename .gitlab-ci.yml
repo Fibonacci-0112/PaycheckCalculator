@@ -1,0 +1,84 @@
+# ---------------------------------------------------------------------------
+# PaycheckCalc — GitLab CI/CD pipeline  (Alternative 2: lean single-job)
+#
+# Same goal as the staged plan: on every merge request and on the default
+# branch, build the non-MAUI projects and run the xUnit suite, surfacing
+# pass/fail in the MR via GitLab's test-report widget. No secrets required.
+#
+# How this differs from the build -> test plan (Alternative 1):
+#   * ONE job, not two. `dotnet test PaycheckCalc.Tests` already restores and
+#     builds the entire non-MAUI graph (Tests -> Core, Shared, Api, Blazor),
+#     so a separate build job that hands compiled bin/obj to a test job over
+#     GitLab artifacts is redundant and slower. Collapsing them removes that
+#     handoff and keeps the pipeline graph flat.
+#   * DETERMINISTIC SDK. The exact build from global.json is installed with
+#     dotnet-install, rather than trusting the floating `:11.0-preview` image
+#     tag (which can drift to a different preview and break global.json's
+#     roll-forward). This mirrors what `actions/setup-dotnet` pins in the
+#     existing GitHub Actions workflow.
+#   * CACHE THAT WORKS. Packages are restored *inside* the project directory
+#     (NUGET_PACKAGES) so GitLab's cache — which only persists paths under the
+#     project — can actually keep them; caching `~/.nuget/packages` does not.
+#   * JUNIT WITHOUT A PROJECT CHANGE. PaycheckCalc.Tests references no JUnit
+#     logger package, so we emit the native TRX log and convert it to JUnit in
+#     CI, leaving the test project untouched.
+#
+# PaycheckCalc.App (MAUI) is intentionally never referenced: it needs the MAUI
+# workload + a platform target and is excluded from CI (see AGENTS.md).
+# ---------------------------------------------------------------------------
+
+variables:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  # Restore packages under the project dir so GitLab's cache can persist them.
+  NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
+  # The exact SDK pinned in global.json (kept in sync with that file).
+  DOTNET_SDK_VERSION: "11.0.100-preview.5.26302.115"
+
+# Run on merge requests and on the default branch; skip the redundant branch
+# pipeline so an open MR is not built twice.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - when: never
+
+default:
+  image: mcr.microsoft.com/dotnet/sdk:11.0-preview
+  interruptible: true
+  cache:
+    # Keyed on the leaf project (it pulls in every non-MAUI dependency) plus
+    # the SDK pin, so the package cache is reused until either one changes.
+    key:
+      files:
+        - PaycheckCalc.Tests/PaycheckCalc.Tests.csproj
+        - global.json
+    paths:
+      - .nuget/packages/
+
+stages:
+  - test
+
+build_and_test:
+  stage: test
+  before_script:
+    # Pin the exact SDK from global.json; the image's bundled preview may differ.
+    - command -v curl >/dev/null || (apt-get update && apt-get install -y --no-install-recommends curl)
+    - curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+    - bash /tmp/dotnet-install.sh --version "$DOTNET_SDK_VERSION" --install-dir /usr/share/dotnet --no-path
+    - dotnet --info
+  script:
+    # Restores + builds Core, Shared, Api, and Blazor transitively, then runs xUnit.
+    - dotnet test PaycheckCalc.Tests --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory "$CI_PROJECT_DIR/TestResults"
+    # Convert the native TRX result into JUnit XML for GitLab's MR test widget.
+    # DOTNET_ROLL_FORWARD lets the tool (built for an older TFM) run on the net11 runtime.
+    - dotnet tool install --global trx2junit
+    - DOTNET_ROLL_FORWARD=LatestMajor "$HOME/.dotnet/tools/trx2junit" "$CI_PROJECT_DIR/TestResults/test-results.trx"
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - TestResults/
+    reports:
+      junit: TestResults/test-results.xml
