@@ -1,3 +1,4 @@
+using PaycheckCalc.Core.Tax.TaxYears;
 namespace PaycheckCalc.Shared.Snapshots;
 
 /// <summary>
@@ -8,6 +9,8 @@ namespace PaycheckCalc.Shared.Snapshots;
 /// </summary>
 public sealed record SavedPaycheckResultDto
 {
+    public int TaxYear { get; init; } = FixedTaxYearProvider.BundledTaxYear;
+
     public decimal GrossPay { get; init; }
     public decimal FederalTaxableIncome { get; init; }
     public decimal FicaTaxableWages { get; init; }

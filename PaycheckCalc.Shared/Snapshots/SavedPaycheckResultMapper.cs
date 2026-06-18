@@ -12,6 +12,7 @@ public static class SavedPaycheckResultMapper
     public static SavedPaycheckResultDto FromResult(PaycheckResult result, bool isGrossUp = false, decimal targetNetPay = 0m)
         => new()
         {
+            TaxYear = result.TaxYear,
             GrossPay = result.GrossPay,
             FederalTaxableIncome = result.FederalTaxableIncome,
             FicaTaxableWages = result.FicaTaxableWages,

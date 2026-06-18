@@ -1,10 +1,14 @@
 using PaycheckCalc.Core.Tax.Federal;
 using PaycheckCalc.Core.Tax.State;
+using PaycheckCalc.Core.Tax.TaxYears;
 
 namespace PaycheckCalc.Core.Models;
 
 public sealed class PaycheckInput
 {
+    /// <summary>Tax year whose tables and limits should be used for this calculation.</summary>
+    public int TaxYear { get; init; } = FixedTaxYearProvider.BundledTaxYear;
+
     public PayFrequency Frequency { get; init; }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using PaycheckCalc.Core.Explanation;
 using PaycheckCalc.Core.Models;
+using PaycheckCalc.Core.Tax.TaxYears;
 
 namespace PaycheckCalc.App.Models;
 
@@ -10,6 +11,8 @@ namespace PaycheckCalc.App.Models;
 /// </summary>
 public sealed class ResultCardModel
 {
+    public int TaxYear { get; init; } = FixedTaxYearProvider.BundledTaxYear;
+
     // ── Income ──────────────────────────────────────────────
     public decimal GrossPay { get; init; }
     public decimal FederalTaxableIncome { get; init; }

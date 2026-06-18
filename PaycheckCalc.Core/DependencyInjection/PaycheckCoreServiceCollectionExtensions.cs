@@ -42,7 +42,9 @@ using PaycheckCalc.Core.Tax.Pennsylvania;
 using PaycheckCalc.Core.Tax.RhodeIsland;
 using PaycheckCalc.Core.Tax.SouthCarolina;
 using PaycheckCalc.Core.Tax.State;
+using PaycheckCalc.Core.Tax.Sources;
 using PaycheckCalc.Core.Tax.Supplemental;
+using PaycheckCalc.Core.Tax.TaxYears;
 using PaycheckCalc.Core.Tax.Utah;
 using PaycheckCalc.Core.Tax.Vermont;
 using PaycheckCalc.Core.Tax.Virginia;
@@ -87,6 +89,8 @@ public static class PaycheckCoreServiceCollectionExtensions
         services.AddSingleton<IStateSchemaProvider>(schemaProvider);
 
         services.AddSingleton(dataReader);
+        services.AddSingleton<ITaxYearProvider>(new FixedTaxYearProvider());
+        services.AddSingleton<ITaxSourceMetadataProvider, StaticTaxSourceMetadataProvider>();
 
         var fica = new FicaCalculator();
         services.AddSingleton(fica);

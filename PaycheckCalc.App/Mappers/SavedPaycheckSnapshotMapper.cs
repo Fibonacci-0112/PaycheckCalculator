@@ -18,9 +18,11 @@ public static class SavedPaycheckSnapshotMapper
         {
             Name = name,
             UpdatedAtUtc = updatedAtUtc,
+            TaxYear = input.TaxYear,
             Input = input,
             Result = new SavedPaycheckResultDto
             {
+                TaxYear = input.TaxYear,
                 GrossPay = card.GrossPay,
                 FederalTaxableIncome = card.FederalTaxableIncome,
                 FicaTaxableWages = card.FicaTaxableWages,
@@ -47,6 +49,7 @@ public static class SavedPaycheckSnapshotMapper
         var r = dto.Result;
         return new ResultCardModel
         {
+            TaxYear = r.TaxYear,
             GrossPay = r.GrossPay,
             FederalTaxableIncome = r.FederalTaxableIncome,
             FicaTaxableWages = r.FicaTaxableWages,

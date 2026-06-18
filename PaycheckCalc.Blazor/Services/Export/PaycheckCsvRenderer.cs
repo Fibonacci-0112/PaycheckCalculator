@@ -40,6 +40,8 @@ public static class PaycheckCsvRenderer
         var sb = new StringBuilder();
         Line(sb, "Section", "Item", "Value");
 
+        Line(sb, "Summary", "Tax Year", result.TaxYear.ToString(Invariant));
+
         if (!string.IsNullOrEmpty(stateLabel))
             Line(sb, "Summary", "State", stateLabel);
 

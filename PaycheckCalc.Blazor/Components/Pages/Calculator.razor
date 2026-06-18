@@ -1149,6 +1149,7 @@
         {
             Name = name,
             UpdatedAtUtc = DateTimeOffset.UtcNow,
+            TaxYear = input.TaxYear,
             Input = input,
             Result = SavedPaycheckResultMapper.FromResult(
                 _result, isGrossUp, isGrossUp ? _grossUpResult!.TargetNetPay : 0m)

@@ -1,0 +1,44 @@
+@page "/accuracy-and-sources"
+@using PaycheckCalc.Core.Tax.Sources
+@using PaycheckCalc.Core.Tax.TaxYears
+@inject ITaxYearProvider TaxYearProvider
+@inject ITaxSourceMetadataProvider SourceMetadata
+
+<PageTitle>Accuracy &amp; Sources</PageTitle>
+
+<section class="card accuracy-card">
+    <h1>Accuracy &amp; Sources</h1>
+    <p>
+        PaycheckCalc keeps each saved paycheck tied to its tax year so historical calculations remain reproducible
+        when future-year tables are added. Current new calculations use tax year @TaxYearProvider.CurrentTaxYear.
+    </p>
+    <p>
+        Results are estimates for payroll planning, not tax, legal, accounting, or payroll advice. Always verify with
+        your employer, payroll provider, or tax professional before making filing or withholding decisions.
+    </p>
+
+    <h2>Bundled source metadata</h2>
+    <table class="sources-table">
+        <thead>
+            <tr>
+                <th>Tax year</th>
+                <th>Jurisdiction</th>
+                <th>Source</th>
+                <th>Retrieved</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var source in SourceMetadata.GetSources(TaxYearProvider.CurrentTaxYear))
+        {
+            <tr>
+                <td>@source.TaxYear</td>
+                <td>@source.Jurisdiction</td>
+                <td><a href="@source.SourceUrl" target="_blank" rel="noopener noreferrer">@source.SourceName</a></td>
+                <td>@source.RetrievedOn.ToString("yyyy-MM-dd")</td>
+                <td>@source.Notes</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>

@@ -1,9 +1,12 @@
 using PaycheckCalc.Core.Explanation;
+using PaycheckCalc.Core.Tax.TaxYears;
 
 namespace PaycheckCalc.Core.Models;
 
 public sealed class PaycheckResult
 {
+    public int TaxYear { get; init; } = FixedTaxYearProvider.BundledTaxYear;
+
     public decimal GrossPay { get; init; }
     public decimal PreTaxDeductions { get; init; }
     public decimal PostTaxDeductions { get; init; }

@@ -1,3 +1,5 @@
+using PaycheckCalc.Core.Tax.TaxYears;
+
 namespace PaycheckCalc.Core.Models;
 
 /// <summary>
@@ -7,6 +9,8 @@ namespace PaycheckCalc.Core.Models;
 /// </summary>
 public sealed class AnnualProjection
 {
+    public int TaxYear { get; init; } = FixedTaxYearProvider.BundledTaxYear;
+
     // ── Pay period info ─────────────────────────────────────
     public int PayPeriodsPerYear { get; init; }
     public int CurrentPaycheckNumber { get; init; }

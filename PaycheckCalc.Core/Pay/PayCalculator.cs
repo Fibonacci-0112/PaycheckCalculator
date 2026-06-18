@@ -59,7 +59,7 @@ public sealed class PayCalculator
             input.State,
             gross,
             input.Frequency,
-            Year: 2026,
+            Year: input.TaxYear,
             PreTaxDeductionsReducingStateWages: preTaxState,
             FederalWithholdingPerPeriod: RoundMoney(federal));
         var stateValues = input.StateInputValues ?? new StateInputValues();
@@ -96,6 +96,7 @@ public sealed class PayCalculator
 
         return new PaycheckResult
         {
+            TaxYear = input.TaxYear,
             GrossPay = RoundMoney(gross),
             PreTaxDeductions = RoundMoney(preTax),
             PostTaxDeductions = RoundMoney(postTax),

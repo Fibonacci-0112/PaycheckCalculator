@@ -1,4 +1,5 @@
 using PaycheckCalc.Core.Models;
+using PaycheckCalc.Core.Tax.TaxYears;
 
 namespace PaycheckCalc.Shared.Snapshots;
 
@@ -18,6 +19,9 @@ public sealed record SavedPaycheckDto
 
     /// <summary>Snapshot schema version, for forward-compatible migrations.</summary>
     public int SchemaVersion { get; init; } = 1;
+
+    /// <summary>Tax year used to produce this saved calculation. Defaults migrate legacy snapshots.</summary>
+    public int TaxYear { get; init; } = FixedTaxYearProvider.BundledTaxYear;
 
     /// <summary>The exact input the calculator ran.</summary>
     public required PaycheckInput Input { get; init; }

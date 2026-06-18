@@ -79,6 +79,7 @@ public sealed class AnnualProjectionCalculator
 
         return new AnnualProjection
         {
+            TaxYear = input.TaxYear,
             PayPeriodsPerYear = periods,
             CurrentPaycheckNumber = paycheckNum,
             RemainingPaychecks = remaining,

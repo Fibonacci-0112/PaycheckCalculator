@@ -68,6 +68,7 @@ public sealed class PaycheckPdfRendererTest
         var text = AsText(pdf);
 
         Assert.Contains("Paycheck Summary - CA", text);
+        Assert.Contains("2026 tax tables", text);
     }
 
     [Fact]

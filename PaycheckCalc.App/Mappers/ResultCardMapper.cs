@@ -81,6 +81,7 @@ public static class ResultCardMapper
     {
         return new ResultCardModel
         {
+            TaxYear = result.TaxYear,
             GrossPay = result.GrossPay,
             FederalTaxableIncome = result.FederalTaxableIncome,
             FicaTaxableWages = result.FicaTaxableWages,
