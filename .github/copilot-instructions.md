@@ -67,7 +67,7 @@ All 50 states plus DC have dedicated modules under `PaycheckCalc.Core/Tax/<State
 Saved paychecks and budgets can sync across front-ends via an optional account:
 - `PaycheckCalc.Shared` owns all DTOs (`SavedPaycheckDto`, `BudgetDto`, etc.), JSON converters, deterministic last-write-wins merge (`SavedPaycheckMerger`, `BudgetMerger`), the typed `PaycheckApiClient`, and the `ISavedPaycheckStore`/`IBudgetStore` abstractions.
 - `PaycheckCalc.Api` provides `/api/account` (ASP.NET Core Identity), `/api/paychecks`, and `/api/budgets` endpoints backed by EF Core + PostgreSQL. Tests use SQLite via `EnsureCreated`.
-- Local persistence: MAUI uses `JsonFilePaycheckStore`; Blazor uses circuit-scoped `SessionPaycheckStore`/`SessionBudgetStore`.
+- Local persistence: MAUI uses `JsonFilePaycheckStore`/`JsonFileBudgetStore`; Blazor uses circuit-scoped `SessionPaycheckStore`/`SessionBudgetStore`.
 - Merge logic lives once in Shared and is reused by the API and both clients. Do not duplicate or move it.
 - `StateInputValues` must round-trip as real CLR primitives; `StateInputValuesJsonConverter` enforces this — never allow `JsonElement` to leak into consumers.
 
