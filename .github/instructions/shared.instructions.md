@@ -23,6 +23,6 @@ applyTo: "PaycheckCalc.Shared/**/*.cs"
 
 ## Abstractions
 
-- Keep persistence abstractions (`ISavedPaycheckStore`, `IBudgetStore`) here; concrete implementations belong in the consuming project (MAUI) or the API.
+- Keep persistence abstractions (`ISavedPaycheckStore`, `IBudgetStore`) here; concrete implementations belong in the consuming projects (MAUI/Blazor) or the API.
 - Keep HTTP transport isolated in `PaycheckApiClient` and the `ITokenStore`/`IApiBaseAddressProvider` abstractions. Do not leak server or UI implementation details into client contracts.
 - `IEntitlementProvider` and its implementations belong here. Keep entitlement checks lightweight and side-effect-free.
