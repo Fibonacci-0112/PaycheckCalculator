@@ -14,7 +14,7 @@ applyTo: "PaycheckCalc.Blazor/**/*.cs,PaycheckCalc.Blazor/**/*.razor"
 
 ## Session scope and persistence
 
-- Anonymous saved-paycheck state is circuit/session-scoped (`SessionPaycheckStore`). Anonymous budget state uses `SessionBudgetStore`. Neither persists across browser tabs or reconnections by design.
+- Anonymous saved-paycheck state is circuit/session-scoped (`SessionPaycheckStore`). Anonymous budget state uses `SessionBudgetStore`. Neither persists across browser tabs or new circuits (e.g., refresh/tab close) by design.
 - Server-side calls to the sync API (`PaycheckApiClient`) must remain server-side. Do not introduce CORS-dependent browser fetch calls unless an explicit requirement forces it.
 
 ## Exports and print
