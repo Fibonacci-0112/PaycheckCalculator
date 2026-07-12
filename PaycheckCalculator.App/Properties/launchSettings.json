@@ -1,0 +1,6 @@
+{
+  "profiles": {
+    "Debug executable": { "commandName": "Project" },
+    "PaycheckCalculator.App (Windows)": { "commandName": "Project" }
+  }
+}

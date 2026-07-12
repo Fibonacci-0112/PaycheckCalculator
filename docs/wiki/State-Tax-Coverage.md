@@ -2,7 +2,7 @@
 
 PaycheckCalc supports all 50 US states plus the District of Columbia.
 
-Every jurisdiction is represented by an `IStateWithholdingCalculator` registered in `StateCalculatorRegistry` during `AddPaycheckCalcCore`. Dynamic state-specific UI fields are defined by schema JSON files in `PaycheckCalc.Core/Data/Schemas/`.
+Every jurisdiction is represented by an `IStateWithholdingCalculator` registered in `StateCalculatorRegistry` during `AddPaycheckCalcCore`. Dynamic state-specific UI fields are defined by schema JSON files in `PaycheckCalculator.Core/Data/Schemas/`.
 
 ---
 
@@ -23,7 +23,7 @@ The following states have no state income tax and share `NoIncomeTaxWithholdingA
 
 ### Dedicated income-tax calculators
 
-Every income-tax jurisdiction has a dedicated calculator under `PaycheckCalc.Core/Tax/<StateName>/`.
+Every income-tax jurisdiction has a dedicated calculator under `PaycheckCalculator.Core/Tax/<StateName>/`.
 
 | State | Calculator | Notes |
 |---|---|---|
@@ -110,7 +110,7 @@ The registry maps `UsState` to the corresponding calculator. `PayCalculator` ask
 
 ### Dynamic state schemas
 
-State field definitions come from `PaycheckCalc.Core/Data/Schemas/*.json` through `JsonStateSchemaProvider`. Both front-ends use these schemas to render state-specific fields.
+State field definitions come from `PaycheckCalculator.Core/Data/Schemas/*.json` through `JsonStateSchemaProvider`. Both front-ends use these schemas to render state-specific fields.
 
 Do not hard-code a state-specific control in the UI when the schema can express the field.
 
@@ -146,10 +146,10 @@ Do not add new production state logic to the generic path unless the architectur
 
 For new or changed state withholding logic:
 
-1. Create or update `PaycheckCalc.Core/Tax/<StateName>/`.
+1. Create or update `PaycheckCalculator.Core/Tax/<StateName>/`.
 2. Implement or update the `IStateWithholdingCalculator`.
-3. Add or update the matching schema file in `PaycheckCalc.Core/Data/Schemas/<state>.json`.
-4. Add or update tax-table JSON in `PaycheckCalc.Core/Data/` if the calculator is table-driven.
+3. Add or update the matching schema file in `PaycheckCalculator.Core/Data/Schemas/<state>.json`.
+4. Add or update tax-table JSON in `PaycheckCalculator.Core/Data/` if the calculator is table-driven.
 5. Register the calculator in `AddPaycheckCalcCore`.
 6. Update MAUI, Blazor, and test project asset/link entries if a new JSON data file is introduced.
 7. Add or update xUnit tests with explicit expected dollar amounts.

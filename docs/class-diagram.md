@@ -24,12 +24,12 @@ classDiagram
     <<WebAPI>> Api
     <<xUnit>> Tests
 
-    note for Core "PaycheckCalc.Core: tax, pay, gross-up, projection, budget, and report engine"
-    note for Shared "PaycheckCalc.Shared: DTOs, JSON, merge, API client, stores, entitlements"
-    note for App "PaycheckCalc.App: Android and Windows MVVM frontend"
-    note for Blazor "PaycheckCalc.Blazor: Blazor Server frontend"
-    note for Api "PaycheckCalc.Api: Identity, sync endpoints, EF Core PostgreSQL"
-    note for Tests "PaycheckCalc.Tests: Core, Shared, Api, and Blazor tests"
+    note for Core "PaycheckCalculator.Core: tax, pay, gross-up, projection, budget, and report engine"
+    note for Shared "PaycheckCalculator.Shared: DTOs, JSON, merge, API client, stores, entitlements"
+    note for App "PaycheckCalculator.App: Android and Windows MVVM frontend"
+    note for Blazor "PaycheckCalculator.Blazor: Blazor Server frontend"
+    note for Api "PaycheckCalculator.Api: Identity, sync endpoints, EF Core PostgreSQL"
+    note for Tests "PaycheckCalculator.Tests: Core, Shared, Api, and Blazor tests"
 
     Shared ..> Core : ProjectReference
     App ..> Core : ProjectReference

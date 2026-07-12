@@ -8,7 +8,7 @@ The budget module can normalize paycheck net pay into monthly income, apply budg
 
 ## Core Domain
 
-Budgeting lives in `PaycheckCalc.Core/Budgeting/`.
+Budgeting lives in `PaycheckCalculator.Core/Budgeting/`.
 
 | Type | Purpose |
 |---|---|
@@ -156,7 +156,7 @@ Anonymous Blazor budget state lives in `SessionBudgetStore` for the lifetime of 
 
 ## Sync Model
 
-Budget sync lives in `PaycheckCalc.Shared/Budgeting/`.
+Budget sync lives in `PaycheckCalculator.Shared/Budgeting/`.
 
 The sync payload includes four independent collections:
 

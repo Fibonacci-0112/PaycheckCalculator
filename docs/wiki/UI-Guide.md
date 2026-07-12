@@ -2,8 +2,8 @@
 
 PaycheckCalc ships two front-ends that share the same Core engine:
 
-- **PaycheckCalc.App** — .NET MAUI app for Android and Windows.
-- **PaycheckCalc.Blazor** — Blazor Server web app.
+- **PaycheckCalculator.App** — .NET MAUI app for Android and Windows.
+- **PaycheckCalculator.Blazor** — Blazor Server web app.
 
 Both front-ends expose the paycheck calculator, gross-up mode, annual projection, saved paycheck comparison, exports, budgeting, and optional account sync. The layouts differ, but the calculation and sync models are shared.
 
@@ -177,7 +177,7 @@ The Account page is optional. It supports:
 - Sign-out.
 - Editable sync server URL.
 
-Without an account, the app still works locally. With an account, saved paychecks and budget-related state sync through `PaycheckCalc.Api`.
+Without an account, the app still works locally. With an account, saved paychecks and budget-related state sync through `PaycheckCalculator.Api`.
 
 ---
 

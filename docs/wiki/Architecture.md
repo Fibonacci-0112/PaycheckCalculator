@@ -4,20 +4,20 @@ PaycheckCalc keeps a strict separation between domain logic, front-end presentat
 
 The current solution has six projects:
 
-- `PaycheckCalc.Core` — UI-agnostic paycheck, tax, gross-up, annual projection, budgeting, and budget-report engines.
-- `PaycheckCalc.App` — .NET MAUI frontend for Android and Windows.
-- `PaycheckCalc.Blazor` — Blazor Server web frontend.
-- `PaycheckCalc.Shared` — sync DTOs, JSON options, deterministic mergers, HTTP client, store abstractions, and entitlement abstractions.
-- `PaycheckCalc.Api` — ASP.NET Core Web API for optional accounts and sync.
-- `PaycheckCalc.Tests` — xUnit test suite.
+- `PaycheckCalculator.Core` — UI-agnostic paycheck, tax, gross-up, annual projection, budgeting, and budget-report engines.
+- `PaycheckCalculator.App` — .NET MAUI frontend for Android and Windows.
+- `PaycheckCalculator.Blazor` — Blazor Server web frontend.
+- `PaycheckCalculator.Shared` — sync DTOs, JSON options, deterministic mergers, HTTP client, store abstractions, and entitlement abstractions.
+- `PaycheckCalculator.Api` — ASP.NET Core Web API for optional accounts and sync.
+- `PaycheckCalculator.Tests` — xUnit test suite.
 
 ---
 
 ## Solution Structure
 
 ```text
-PaycheckCalc.slnx
-├── PaycheckCalc.Core/             # Business logic; no UI / HTTP / persistence dependencies
+PaycheckCalculator.slnx
+├── PaycheckCalculator.Core/             # Business logic; no UI / HTTP / persistence dependencies
 │   ├── Models/                    # PaycheckInput/Result, Deduction, enums, UsState, AnnualProjection, GrossUpResult, SelfEmploymentInput/Result
 │   ├── Pay/                       # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/                 # Budget engine, recurring bills, savings goals, reports
@@ -25,18 +25,18 @@ PaycheckCalc.slnx
 │   ├── DependencyInjection/       # AddPaycheckCalcCore + ITaxDataReader
 │   ├── Data/                      # Federal/state tax JSON and Schemas/*.json
 │   └── Tax/                       # Federal, FICA, State contracts/registry, and dedicated jurisdiction calculators
-├── PaycheckCalc.App/              # MAUI frontend
-├── PaycheckCalc.Blazor/           # Blazor Server frontend
-├── PaycheckCalc.Shared/           # Shared contracts and client sync infrastructure
-├── PaycheckCalc.Api/              # ASP.NET Core Identity + sync API
-└── PaycheckCalc.Tests/            # xUnit suite
+├── PaycheckCalculator.App/              # MAUI frontend
+├── PaycheckCalculator.Blazor/           # Blazor Server frontend
+├── PaycheckCalculator.Shared/           # Shared contracts and client sync infrastructure
+├── PaycheckCalculator.Api/              # ASP.NET Core Identity + sync API
+└── PaycheckCalculator.Tests/            # xUnit suite
 ```
 
 ---
 
 ## Key Architectural Principles
 
-1. **Core stays UI-agnostic.** `PaycheckCalc.Core` contains math, tax rules, domain models, explanations, and budget/report engines. It does not reference MAUI, Blazor, HTTP, EF Core, file-system persistence, or platform APIs.
+1. **Core stays UI-agnostic.** `PaycheckCalculator.Core` contains math, tax rules, domain models, explanations, and budget/report engines. It does not reference MAUI, Blazor, HTTP, EF Core, file-system persistence, or platform APIs.
 
 2. **PayCalculator is an orchestrator.** It composes gross pay, deductions, FICA, federal withholding, state withholding, state disability / paid-leave premiums, and net pay. It does not contain state-specific tax logic.
 
@@ -46,7 +46,7 @@ PaycheckCalc.slnx
 
 5. **Money uses `decimal`.** Monetary values, rates, thresholds, deductions, and tax outputs use `decimal`; calculation paths should not introduce `double` or `float`.
 
-6. **Sync stays outside Core.** Sync DTOs, API client code, JSON options, and merge rules live in `PaycheckCalc.Shared`. HTTP endpoints and EF Core persistence live in `PaycheckCalc.Api`.
+6. **Sync stays outside Core.** Sync DTOs, API client code, JSON options, and merge rules live in `PaycheckCalculator.Shared`. HTTP endpoints and EF Core persistence live in `PaycheckCalculator.Api`.
 
 7. **Mergers are deterministic.** Saved paychecks, budgets, transactions, recurring bills, and savings goals use last-write-wins merge rules with deletion markers so removals propagate.
 
@@ -55,18 +55,18 @@ PaycheckCalc.slnx
 ## Dependency Graph
 
 ```text
-PaycheckCalc.Core
+PaycheckCalculator.Core
    ↑
-PaycheckCalc.Shared
+PaycheckCalculator.Shared
    ↑
-PaycheckCalc.Api
+PaycheckCalculator.Api
 
-PaycheckCalc.App     → PaycheckCalc.Core + PaycheckCalc.Shared
-PaycheckCalc.Blazor  → PaycheckCalc.Core + PaycheckCalc.Shared
-PaycheckCalc.Tests   → Core + Shared + Api + Blazor
+PaycheckCalculator.App     → PaycheckCalculator.Core + PaycheckCalculator.Shared
+PaycheckCalculator.Blazor  → PaycheckCalculator.Core + PaycheckCalculator.Shared
+PaycheckCalculator.Tests   → Core + Shared + Api + Blazor
 ```
 
-`PaycheckCalc.App` and `PaycheckCalc.Blazor` communicate with `PaycheckCalc.Api` over HTTP through `PaycheckApiClient`; they do not reference the API project directly.
+`PaycheckCalculator.App` and `PaycheckCalculator.Blazor` communicate with `PaycheckCalculator.Api` over HTTP through `PaycheckApiClient`; they do not reference the API project directly.
 
 ---
 
@@ -99,7 +99,7 @@ Important Core services:
 
 ## MAUI Frontend
 
-`PaycheckCalc.App` uses .NET MAUI Shell and MVVM with CommunityToolkit.Mvvm.
+`PaycheckCalculator.App` uses .NET MAUI Shell and MVVM with CommunityToolkit.Mvvm.
 
 Main tabs:
 
@@ -119,7 +119,7 @@ The MAUI app reads tax JSON from package assets through `MauiAppPackageTaxDataRe
 
 ## Blazor Frontend
 
-`PaycheckCalc.Blazor` is an interactive Blazor Server app. It includes:
+`PaycheckCalculator.Blazor` is an interactive Blazor Server app. It includes:
 
 - Home page and state SEO landing pages.
 - Calculator page with inputs, per-paycheck results, annual projection, saved paychecks/account panel, exports, and print support.
@@ -132,7 +132,7 @@ The Blazor app reads tax JSON from a `TaxData/` build-output folder using `FileS
 
 ## Budgeting, Reports, and Entitlements
 
-Budgeting lives in `PaycheckCalc.Core/Budgeting/`.
+Budgeting lives in `PaycheckCalculator.Core/Budgeting/`.
 
 Core models include:
 
@@ -148,7 +148,7 @@ Core models include:
 
 ## Accounts and Sync
 
-`PaycheckCalc.Shared` owns the portable sync model:
+`PaycheckCalculator.Shared` owns the portable sync model:
 
 - Saved paycheck snapshots and deletion markers.
 - Budget DTOs and deletion markers.
@@ -159,7 +159,7 @@ Core models include:
 - `PaycheckApiClient`.
 - Store abstractions used by MAUI, Blazor, and sync orchestration.
 
-`PaycheckCalc.Api` exposes account endpoints through ASP.NET Core Identity and authorized sync endpoints for paychecks and budgets. The budget sync endpoint merges four independent collections: budgets, transactions, recurring bills, and savings goals.
+`PaycheckCalculator.Api` exposes account endpoints through ASP.NET Core Identity and authorized sync endpoints for paychecks and budgets. The budget sync endpoint merges four independent collections: budgets, transactions, recurring bills, and savings goals.
 
 The server persists sync state through `SyncDbContext` using PostgreSQL entities:
 

@@ -14,12 +14,12 @@ Accounts are optional. Both front-ends work without an account:
 
 | Project | Role |
 |---|---|
-| `PaycheckCalc.Shared` | DTOs, JSON options, merge rules, typed API client, store abstractions, sync services, and entitlement abstractions. |
-| `PaycheckCalc.Api` | ASP.NET Core Web API with Identity accounts, EF Core PostgreSQL persistence, and sync endpoints. |
-| `PaycheckCalc.App` | Local device stores plus account/sync UI. |
-| `PaycheckCalc.Blazor` | Circuit-scoped stores plus account/sync UI. |
+| `PaycheckCalculator.Shared` | DTOs, JSON options, merge rules, typed API client, store abstractions, sync services, and entitlement abstractions. |
+| `PaycheckCalculator.Api` | ASP.NET Core Web API with Identity accounts, EF Core PostgreSQL persistence, and sync endpoints. |
+| `PaycheckCalculator.App` | Local device stores plus account/sync UI. |
+| `PaycheckCalculator.Blazor` | Circuit-scoped stores plus account/sync UI. |
 
-`PaycheckCalc.Shared` references Core only. `PaycheckCalc.Api` references Shared and does not reference the front-end projects.
+`PaycheckCalculator.Shared` references Core only. `PaycheckCalculator.Api` references Shared and does not reference the front-end projects.
 
 ---
 
@@ -189,8 +189,8 @@ Relevant tests include:
 Manual end-to-end check:
 
 ```bash
-dotnet run --project PaycheckCalc.Api
-dotnet run --project PaycheckCalc.Blazor
+dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.Blazor
 ```
 
 Then sign in from the web app's account area and verify paycheck/budget sync.

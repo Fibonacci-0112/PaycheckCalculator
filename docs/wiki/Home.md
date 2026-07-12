@@ -38,13 +38,13 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 |---|---|
 | README | [`README.md`](../../README.md) |
 | UML Class Diagram | [`docs/class-diagram.md`](../class-diagram.md) |
-| Solution file | [`PaycheckCalc.slnx`](../../PaycheckCalc.slnx) |
-| Core Library | [`PaycheckCalc.Core/`](../../PaycheckCalc.Core/) |
-| MAUI App | [`PaycheckCalc.App/`](../../PaycheckCalc.App/) |
-| Blazor Web App | [`PaycheckCalc.Blazor/`](../../PaycheckCalc.Blazor/) |
-| Shared contracts / sync | [`PaycheckCalc.Shared/`](../../PaycheckCalc.Shared/) |
-| Sync API | [`PaycheckCalc.Api/`](../../PaycheckCalc.Api/) |
-| Test Suite | [`PaycheckCalc.Tests/`](../../PaycheckCalc.Tests/) |
+| Solution file | [`PaycheckCalculator.slnx`](../../PaycheckCalculator.slnx) |
+| Core Library | [`PaycheckCalculator.Core/`](../../PaycheckCalculator.Core/) |
+| MAUI App | [`PaycheckCalculator.App/`](../../PaycheckCalculator.App/) |
+| Blazor Web App | [`PaycheckCalculator.Blazor/`](../../PaycheckCalculator.Blazor/) |
+| Shared contracts / sync | [`PaycheckCalculator.Shared/`](../../PaycheckCalculator.Shared/) |
+| Sync API | [`PaycheckCalculator.Api/`](../../PaycheckCalculator.Api/) |
+| Test Suite | [`PaycheckCalculator.Tests/`](../../PaycheckCalculator.Tests/) |
 
 ---
 

@@ -1,12 +1,12 @@
 ---
-applyTo: "PaycheckCalc.Api/**/*.cs"
+applyTo: "PaycheckCalculator.Api/**/*.cs"
 ---
 
 # API project instructions
 
-- `PaycheckCalc.Api` is the optional sync server. It provides ASP.NET Core Identity email/password accounts and minimal API endpoints for syncing saved paychecks, budgets, transactions, recurring bills, and savings goals.
-- Do not reference `PaycheckCalc.App`, `PaycheckCalc.Blazor`, or any client UI model from this project.
-- Do not duplicate DTOs, merge algorithms, or serialization logic already defined in `PaycheckCalc.Shared`. Use Shared types directly.
+- `PaycheckCalculator.Api` is the optional sync server. It provides ASP.NET Core Identity email/password accounts and minimal API endpoints for syncing saved paychecks, budgets, transactions, recurring bills, and savings goals.
+- Do not reference `PaycheckCalculator.App`, `PaycheckCalculator.Blazor`, or any client UI model from this project.
+- Do not duplicate DTOs, merge algorithms, or serialization logic already defined in `PaycheckCalculator.Shared`. Use Shared types directly.
 - Do not put calculation logic in endpoint handlers. The API syncs stored results; Core remains the calculation engine.
 
 ## Endpoint design
@@ -25,5 +25,5 @@ applyTo: "PaycheckCalc.Api/**/*.cs"
 
 ## Testing
 
-- Add or update integration tests in `PaycheckCalc.Tests` for new or changed endpoint behavior, auth requirements, merge persistence, tombstones, and budget sync.
+- Add or update integration tests in `PaycheckCalculator.Tests` for new or changed endpoint behavior, auth requirements, merge persistence, tombstones, and budget sync.
 - Use the existing test host / in-memory or SQLite-backed paths. Do not require a developer PostgreSQL instance for tests to pass.

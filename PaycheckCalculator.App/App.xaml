@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PaycheckCalculator.App.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Compact sizing so inputs and results fit better on small mobile
+                 screens. Controls without an explicit FontSize inherit these
+                 slightly smaller defaults; the pages set reduced FontSize values
+                 to match. -->
+            <Style TargetType="Label">
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+            <Style TargetType="Entry">
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+            <Style TargetType="Editor">
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+            <Style TargetType="Picker">
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

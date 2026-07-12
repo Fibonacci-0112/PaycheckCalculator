@@ -1,23 +1,23 @@
 # Contributing
 
-This page covers the development workflow, testing expectations, and project conventions for PaycheckCalc.
+This page covers the development workflow, testing expectations, and project conventions for PaycheckCalculator.
 
 ---
 
 ## Development Workflow
 
 1. Install the .NET 11 preview SDK pinned in `global.json`.
-2. Install the MAUI workload only if working on `PaycheckCalc.App`.
+2. Install the MAUI workload only if working on `PaycheckCalculator.App`.
 3. Build a non-MAUI baseline:
    ```bash
-   dotnet build PaycheckCalc.Core
-   dotnet build PaycheckCalc.Shared
-   dotnet build PaycheckCalc.Blazor
-   dotnet build PaycheckCalc.Api
+   dotnet build PaycheckCalculator.Core
+   dotnet build PaycheckCalculator.Shared
+   dotnet build PaycheckCalculator.Blazor
+   dotnet build PaycheckCalculator.Api
    ```
 4. Run tests before changing behavior:
    ```bash
-   dotnet test PaycheckCalc.Tests
+   dotnet test PaycheckCalculator.Tests
    ```
 5. Make focused changes. Prefer small, reviewable commits, especially in tax logic.
 6. Run the relevant tests again.
@@ -26,21 +26,21 @@ This page covers the development workflow, testing expectations, and project con
 For manual app checks:
 
 ```bash
-dotnet run --project PaycheckCalc.Api
-dotnet run --project PaycheckCalc.Blazor
-dotnet build PaycheckCalc.App -t:Run -f net11.0-android
-dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
+dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.Blazor
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
 ```
 
 ---
 
 ## Project Boundaries
 
-- `PaycheckCalc.Core` must stay free of MAUI, Blazor, HTTP, EF Core, and persistence dependencies.
-- `PaycheckCalc.Shared` owns DTOs, JSON options, merge logic, API client code, store abstractions, sync services, and entitlement abstractions.
-- `PaycheckCalc.Api` owns HTTP endpoints and EF Core persistence. It references Shared, not the front-ends.
-- `PaycheckCalc.App` and `PaycheckCalc.Blazor` own presentation and platform-specific storage/export behavior.
-- `PaycheckCalc.Tests` should cover domain, sync, API, and export behavior.
+- `PaycheckCalculator.Core` must stay free of MAUI, Blazor, HTTP, EF Core, and persistence dependencies.
+- `PaycheckCalculator.Shared` owns DTOs, JSON options, merge logic, API client code, store abstractions, sync services, and entitlement abstractions.
+- `PaycheckCalculator.Api` owns HTTP endpoints and EF Core persistence. It references Shared, not the front-ends.
+- `PaycheckCalculator.App` and `PaycheckCalculator.Blazor` own presentation and platform-specific storage/export behavior.
+- `PaycheckCalculator.Tests` should cover domain, sync, API, and export behavior.
 
 ---
 
@@ -110,13 +110,13 @@ Intentional examples that should not be removed casually:
 
 ## Adding or Changing State Withholding
 
-1. Add or update `PaycheckCalc.Core/Tax/<StateName>/`.
+1. Add or update `PaycheckCalculator.Core/Tax/<StateName>/`.
 2. Implement or update `IStateWithholdingCalculator`.
-3. Add or update `PaycheckCalc.Core/Data/Schemas/<state>.json`.
+3. Add or update `PaycheckCalculator.Core/Data/Schemas/<state>.json`.
 4. Add or update tax-table JSON when needed.
 5. Register the calculator and any data-backed helper in `AddPaycheckCalcCore`.
 6. Update MAUI, Blazor, and test project data-file wiring if a new JSON file is introduced.
-7. Add or update tests in `PaycheckCalc.Tests`.
+7. Add or update tests in `PaycheckCalculator.Tests`.
 8. Update documentation.
 
 Tests should cover filing statuses, bracket boundaries, exemptions/allowances, extra withholding, pre-tax deduction effects, rounding, and state-specific premium lines.
@@ -125,7 +125,7 @@ Tests should cover filing statuses, bracket boundaries, exemptions/allowances, e
 
 ## Budgeting and Reports
 
-Budgeting logic belongs in `PaycheckCalc.Core/Budgeting/`.
+Budgeting logic belongs in `PaycheckCalculator.Core/Budgeting/`.
 
 When changing budgeting behavior, consider all affected areas:
 

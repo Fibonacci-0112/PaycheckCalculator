@@ -4,12 +4,12 @@ A US paycheck calculator for 2026 withholding rules (federal, FICA, state, disab
 
 ## Solution layout
 
-- `PaycheckCalc.Core` — UI-agnostic tax/pay/budget calculation engines.
-- `PaycheckCalc.Shared` — sync DTOs, JSON config, API client, entitlement abstractions.
-- `PaycheckCalc.Blazor` — Blazor Server web front-end (runs in Replit).
-- `PaycheckCalc.Api` — optional ASP.NET Core Web API for account sync (runs in Replit).
-- `PaycheckCalc.App` — .NET MAUI app for Android/Windows (cannot run in Replit's preview; build/run it on your own machine or CI).
-- `PaycheckCalc.Tests` — unit + integration tests.
+- `PaycheckCalculator.Core` — UI-agnostic tax/pay/budget calculation engines.
+- `PaycheckCalculator.Shared` — sync DTOs, JSON config, API client, entitlement abstractions.
+- `PaycheckCalculator.Blazor` — Blazor Server web front-end (runs in Replit).
+- `PaycheckCalculator.Api` — optional ASP.NET Core Web API for account sync (runs in Replit).
+- `PaycheckCalculator.App` — .NET MAUI app for Android/Windows (cannot run in Replit's preview; build/run it on your own machine or CI).
+- `PaycheckCalculator.Tests` — unit + integration tests.
 
 ## Running in Replit
 
@@ -32,12 +32,12 @@ If `global.json` is ever bumped to a newer preview build, re-run `dotnet-install
 
 ### Database
 
-`PaycheckCalc.Api` uses EF Core migrations against PostgreSQL. It's wired to Replit's built-in Postgres database via the standard `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` environment variables (composed into `ConnectionStrings__Sync` inside `start-api.sh`, not hardcoded). Migrations apply automatically on startup (`db.Database.Migrate()` in `Program.cs`).
+`PaycheckCalculator.Api` uses EF Core migrations against PostgreSQL. It's wired to Replit's built-in Postgres database via the standard `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` environment variables (composed into `ConnectionStrings__Sync` inside `start-api.sh`, not hardcoded). Migrations apply automatically on startup (`db.Database.Migrate()` in `Program.cs`).
 
 ### Notes
 
-- HTTPS redirection in `PaycheckCalc.Blazor/Program.cs` is skipped only in Development — Replit terminates TLS at its edge proxy and forwards plain HTTP there, so an HTTPS redirect would break the proxied preview. It stays enabled in all other environments as a safety net.
-- The MAUI app (`PaycheckCalc.App`) is untouched and not part of the Replit run setup.
+- HTTPS redirection in `PaycheckCalculator.Blazor/Program.cs` is skipped only in Development — Replit terminates TLS at its edge proxy and forwards plain HTTP there, so an HTTPS redirect would break the proxied preview. It stays enabled in all other environments as a safety net.
+- The MAUI app (`PaycheckCalculator.App`) is untouched and not part of the Replit run setup.
 
 ## User preferences
 
