@@ -89,6 +89,8 @@ Important Core services:
 | `StateCalculatorRegistry` | Maps `UsState` to `IStateWithholdingCalculator` |
 | `AnnualProjectionCalculator` | Full-year annualization and over/under estimate |
 | `GrossUpCalculator` | Inverse solver for target net pay |
+| `BonusCalculator` | Supplemental-wage (bonus) take-home using flat-rate federal + FICA + state supplemental rates |
+| `HourlySalaryCalculator` | Pure hourly ↔ salary rate converter across pay frequencies |
 | `SelfEmploymentCalculator` | Self-employment (1099) tax, state income-tax estimate, and quarterly estimated payments |
 | `BudgetCalculator` | Monthly budget summary with categories, transactions, recurring bills, and savings goals |
 | `BudgetReportCalculator` | Spend-by-category and budget-vs-actual report data |

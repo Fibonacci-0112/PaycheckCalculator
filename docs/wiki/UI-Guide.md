@@ -31,8 +31,8 @@ The Inputs page has four sections.
 
 ### Pay & Hours
 
-- Calculation mode: standard paycheck or gross-up.
-- Pay type: hourly or salary.
+- Calculation mode: standard paycheck, gross-up, bonus / supplemental wage, or self-employment / 1099.
+- Pay type: hourly or salary (shown when mode is Standard or Gross-Up).
 - Pay frequency: Daily, Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, plus 53-week and 27-biweekly variants.
 - Hourly fields: rate, regular hours, overtime hours, overtime multiplier.
 - Salary fields: salary amount and salary basis.
@@ -89,6 +89,8 @@ The per-paycheck result includes:
 - Net pay.
 
 Gross-up mode also shows the desired net pay, required gross pay, and gross-up cost.
+
+Bonus / supplemental-wage mode shows the bonus amount, federal flat-rate withholding (22% or 37%), Social Security, Medicare, Additional Medicare, state supplemental withholding (or a caveat when the state has no flat supplemental rate), and net bonus.
 
 Self-employment / 1099 mode shows the net self-employment income, self-employment tax (Social Security + Medicare on 92.35% of earnings), estimated state income tax, take-home (before federal income tax), and a quarterly estimated-payment (Form 1040-ES) schedule with federal and state amounts per due date.
 
@@ -192,7 +194,7 @@ Main areas:
 - Budget page.
 - Sitemap and robots endpoints.
 
-The calculator page displays inputs and results side by side. It includes YTD Social Security and Medicare wage inputs, exports, printing, saved paycheck comparison, and annual projection.
+The calculator page displays inputs and results side by side. It includes four calculation modes (standard, gross-up, bonus/supplemental wage, self-employment), YTD Social Security and Medicare wage inputs, exports, printing, saved paycheck comparison, and annual projection.
 
 The Budget page includes the same budget methods, categories, recurring bills, savings goals, transactions, summaries, and report UI as MAUI.
 

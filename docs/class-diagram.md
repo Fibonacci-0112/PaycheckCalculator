@@ -149,6 +149,54 @@ classDiagram
         +decimal StateAmount
         +decimal TotalAmount
     }
+    class FederalSupplementalCalculator {
+        +Calculate(decimal bonusAmount, decimal ytdSupplemental) decimal
+    }
+    class StateSupplementalCalculator {
+        +Calculate(UsState, decimal bonusAmount) decimal
+    }
+    class BonusCalculator {
+        +Calculate(BonusInput) BonusResult
+    }
+    class BonusInput {
+        +decimal BonusAmount
+        +UsState State
+        +decimal YtdSupplementalWages
+        +decimal YtdSocialSecurityWages
+        +decimal YtdMedicareWages
+    }
+    class BonusResult {
+        +decimal BonusAmount
+        +decimal FederalWithholding
+        +decimal SocialSecurityWithholding
+        +decimal MedicareWithholding
+        +decimal AdditionalMedicareWithholding
+        +decimal StateWithholding
+        +bool StateUsesRegularMethod
+        +decimal NetBonus
+        +PaycheckExplanation Explanation
+    }
+    class HourlySalaryCalculator {
+        +Convert(HourlySalaryInput) HourlySalaryResult
+    }
+    class HourlySalaryInput {
+        +PayConversionMode Mode
+        +decimal HourlyRate
+        +decimal AnnualSalary
+        +decimal HoursPerWeek
+        +decimal WeeksPerYear
+        +PayFrequency Frequency
+    }
+    class HourlySalaryResult {
+        +decimal HourlyRate
+        +decimal AnnualSalary
+        +decimal HoursPerYear
+        +decimal PerPeriodPay
+        +decimal WeeklyPay
+        +decimal BiweeklyPay
+        +decimal SemimonthlyPay
+        +decimal MonthlyPay
+    }
 
     PayCalculator --> StateCalculatorRegistry
     PayCalculator --> FicaCalculator
@@ -165,6 +213,13 @@ classDiagram
     SelfEmploymentCalculator ..> SelfEmploymentInput
     SelfEmploymentCalculator ..> SelfEmploymentResult
     SelfEmploymentResult o-- QuarterlyEstimate
+    BonusCalculator --> FederalSupplementalCalculator
+    BonusCalculator --> FicaCalculator
+    BonusCalculator --> StateSupplementalCalculator
+    BonusCalculator ..> BonusInput
+    BonusCalculator ..> BonusResult
+    HourlySalaryCalculator ..> HourlySalaryInput
+    HourlySalaryCalculator ..> HourlySalaryResult
     PaycheckInput o-- Deduction
     GrossUpResult o-- PaycheckResult
 ```
@@ -363,6 +418,7 @@ classDiagram
         +CalculateCommand
         +ShowExplanationCommand
         +SavePaycheckCommand
+        +CalculationMode CalculationMode
         +ResultCardModel ResultCard
         +AnnualProjectionModel Projection
     }
@@ -385,6 +441,8 @@ classDiagram
     class StateFieldViewModel
     class DeductionItemViewModel
     class SavedPaycheckViewModel
+    class BudgetCategoryViewModel
+    class BudgetTransactionViewModel
     class RecurringBillViewModel
     class SavingsGoalViewModel
     class PaycheckInputMapper
@@ -400,6 +458,8 @@ classDiagram
     CalculatorViewModel o-- StateFieldViewModel
     CalculatorViewModel o-- DeductionItemViewModel
     CalculatorViewModel o-- SavedPaycheckViewModel
+    BudgetViewModel o-- BudgetCategoryViewModel
+    BudgetViewModel o-- BudgetTransactionViewModel
     BudgetViewModel o-- RecurringBillViewModel
     BudgetViewModel o-- SavingsGoalViewModel
     CalculatorViewModel ..> PaycheckInputMapper
@@ -424,7 +484,8 @@ classDiagram
     class SessionBudgetStore
     class StateMetadata
     class FileSystemTaxDataReader
-    class PaycheckExportService
+    class PaycheckCsvRenderer
+    class PaycheckPdfRenderer
     class BudgetReportCsvRenderer
     class BudgetReportPdfRenderer
     class CircuitAccountSession
@@ -434,11 +495,14 @@ classDiagram
 
     CalculatorPage --> PayCalculator
     CalculatorPage --> GrossUpCalculator
+    CalculatorPage --> BonusCalculator
     CalculatorPage --> SelfEmploymentCalculator
     CalculatorPage --> AnnualProjectionCalculator
     CalculatorPage --> SessionPaycheckStore
     CalculatorPage --> DoughnutChart
     CalculatorPage --> ExplanationModal
+    CalculatorPage --> PaycheckCsvRenderer
+    CalculatorPage --> PaycheckPdfRenderer
     BudgetPageRazor --> BudgetCalculator
     BudgetPageRazor --> BudgetReportCalculator
     BudgetPageRazor --> SessionBudgetStore

@@ -128,6 +128,7 @@ The following calculators load tax-table data from JSON at startup:
 | `ColoradoWithholdingCalculator` | `co_dr0004_2026.json` |
 | `ConnecticutWithholdingCalculator` | `connecticut_withholding_2026.json` |
 | `OklahomaOw2PercentageCalculator` | `ok_ow2_2026_percentage.json` |
+| `StateSupplementalCalculator` | `state_supplemental_2026.json` |
 
 If a tax-data file is renamed, update `AddPaycheckCalcCore`, MAUI `MauiAsset` entries, Blazor `TaxData` links, test project copy/link entries, and any tests or docs that reference the file.
 
