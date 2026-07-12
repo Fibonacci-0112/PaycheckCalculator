@@ -157,6 +157,7 @@ Tax data lives in [`PaycheckCalc.Core/Data/`](../../PaycheckCalc.Core/Data/):
 | `co_dr0004_2026.json` | Colorado DR 0004 Table 1 allowance data |
 | `connecticut_withholding_2026.json` | Connecticut withholding tables |
 | `ok_ow2_2026_percentage.json` | Oklahoma OW-2 withholding tables |
+| `state_supplemental_2026.json` | State supplemental (bonus) withholding rates for all 50 states + DC |
 | `Schemas/*.json` | Dynamic state-input schema files for every state / DC |
 
 `AddPaycheckCalcCore` reads the JSON files at startup and registers the corresponding calculators and schema provider. If a JSON file is renamed or moved, update all consumers: Core loader, MAUI assets, Blazor `TaxData` links, test project links, and any tests or documentation that reference the old name.

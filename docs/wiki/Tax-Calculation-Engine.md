@@ -156,6 +156,30 @@ The returned `GrossUpResult` contains the target net, solved gross, gross-up cos
 
 ---
 
+## Bonus / Supplemental Wages
+
+`BonusCalculator` computes take-home on a one-off supplemental payment (bonus, commission, award, etc.) without running the full W-4 percentage pipeline.
+
+It composes three steps:
+
+1. **Federal supplemental withholding** — `FederalSupplementalCalculator` applies 22% on the bonus amount or 37% when cumulative supplemental wages exceed $1,000,000 for the calendar year.
+2. **FICA** — `FicaCalculator` applies Social Security (6.2% to the $184,500 wage base) and Medicare (1.45% uncapped), with the 0.9% Additional Medicare over $200,000. Year-to-date Social Security and Medicare wages from the input honor mid-year cap crossings.
+3. **State supplemental withholding** — `StateSupplementalCalculator` looks up the employee's state in `state_supplemental_2026.json` and applies the state's flat supplemental rate. For states that use a "regular method" (no published flat supplemental rate), `BonusResult.StateUsesRegularMethod` is `true` and the displayed net is labeled as before state income tax.
+
+The returned `BonusResult` includes the federal, Social Security, Medicare, Additional Medicare, and state withholding amounts; the net bonus; the state method used; and a "Show Your Work" breakdown.
+
+---
+
+## Hourly ↔ Salary Conversion
+
+`HourlySalaryCalculator` is a pure rate converter. It contains no tax or W-4 logic.
+
+Given an hourly rate and a weekly-hour / weeks-per-year profile it computes the equivalent annual salary, and vice versa. The result always includes the annual salary, hourly equivalent, and the same earnings expressed per week, biweekly, semimonthly, and monthly (and for any other requested pay frequency).
+
+The "real hourly" use case: enter the salary and set `HoursPerWeek` to the hours actually worked (e.g. 50) to reveal the true effective hourly rate, which is lower than the nominal rate implied by 40 hours.
+
+---
+
 ## Self-Employment / 1099
 
 `SelfEmploymentCalculator` estimates taxes for self-employed / 1099 contractors from **annual net earnings** (Schedule C net profit — what the user enters as "gross pay").

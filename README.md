@@ -14,6 +14,8 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 
 - **Gross pay calculation** — Supports hourly pay with regular and overtime hours, plus salary pay by annual amount or per-period amount.
 - **Gross-up calculator** — Solves backward from desired take-home pay to the required gross amount by repeatedly running the full paycheck pipeline. This preserves graduated brackets, FICA caps, state rules, and percentage-based deductions.
+- **Bonus / supplemental-wage calculator** — Computes take-home on a one-off bonus, commission, or award using the IRS flat-rate method (22%; 37% on cumulative supplemental wages over $1,000,000) plus FICA and the selected state's supplemental rate (data-driven from `state_supplemental_2026.json`). States that publish no flat supplemental rate display a caveat that regular withholding may apply. Includes "Show Your Work" breakdowns.
+- **Hourly ↔ salary converter** — Converts between an hourly rate and an annual salary given hours worked per week and paid weeks per year, then expresses the equivalent earnings across common pay frequencies. The "real hourly" direction (set hours to the hours actually worked) reveals the true effective hourly rate behind a salary.
 - **Self-employment / 1099 calculator** — From annual net earnings (Schedule C net profit) it computes federal self-employment tax (15.3% — 12.4% Social Security to the $184,500 cap plus 2.9% Medicare, both halves, with 0.9% Additional Medicare over $200,000 — on 92.35% of earnings), estimates state income tax through the ordinary state engine (no state levies a separate self-employment tax), and produces a quarterly estimated-payment schedule (Form 1040-ES). It does not model federal income tax.
 - **Federal income tax** — Implements the IRS Publication 15-T 2026 percentage method for automated payroll systems. Supported W-4 inputs include filing status, Step 2 checkbox, Step 3 credits, Step 4(a) other income, Step 4(b) deductions, and Step 4(c) extra withholding.
 - **FICA taxes** — Calculates Social Security, Medicare, and Additional Medicare withholding, with YTD wage inputs available where needed to handle the Social Security wage-base cap and Additional Medicare threshold mid-year.
@@ -37,8 +39,8 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 PaycheckCalc.slnx
 ├── global.json                  # .NET 11 preview SDK pin and roll-forward settings
 ├── PaycheckCalc.Core/           # UI-agnostic domain, tax, pay, projection, gross-up, budget, and report engines
-│   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult, SelfEmploymentInput/Result
-│   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, SelfEmploymentCalculator
+│   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult, BonusInput/Result, HourlySalaryInput/Result, SelfEmploymentInput/Result
+│   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, BonusCalculator, HourlySalaryCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/               # Budget, categories, transactions, recurring bills, savings goals, reports
 │   ├── Explanation/             # Show-your-work explanation records
 │   ├── DependencyInjection/     # AddPaycheckCalcCore and ITaxDataReader
@@ -174,6 +176,10 @@ dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
 Money values use `decimal`. Gross pay, deductions, and withholding components are rounded to cents with `MidpointRounding.AwayFromZero`; net pay is computed so the displayed equation ties out to the cent.
 
 `GrossUpCalculator` treats `PayCalculator` as the forward function and uses bisection to solve for the required gross that produces the requested target net.
+
+`BonusCalculator` computes take-home on a supplemental wage (bonus, commission, or award) using the IRS flat-rate method (`FederalSupplementalCalculator` — 22%; 37% on cumulative supplemental wages over $1,000,000), the same `FicaCalculator` (honoring the Social Security wage-base cap and Additional Medicare threshold), and `StateSupplementalCalculator` (data-driven from `state_supplemental_2026.json`). States that publish no flat supplemental rate set `StateUsesRegularMethod = true`.
+
+`HourlySalaryCalculator` converts between an hourly rate and an annual salary given hours per week and paid weeks per year, then expresses the equivalent earnings across common pay frequencies. It contains no tax logic.
 
 `SelfEmploymentCalculator` works from annual net earnings: self-employment tax is 12.4% Social Security (to the `FicaCalculator` wage base) plus 2.9% Medicare, with 0.9% Additional Medicare over the threshold, all applied to 92.35% of earnings. State income tax is estimated by running the full earnings through the same `StateCalculatorRegistry` engine at an annual frequency — there is no separate *state* self-employment tax, so the nine no-income-tax states owe $0. The result includes a quarterly estimated-payment (Form 1040-ES) schedule with federal and state splits. Federal income tax is intentionally out of scope.
 
