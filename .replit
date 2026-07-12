@@ -49,6 +49,4 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 5201
-externalPort = 3000
+# Sync API is internal-only; do not expose port 5201 externally.
