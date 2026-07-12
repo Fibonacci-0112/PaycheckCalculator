@@ -428,3 +428,5 @@ PaycheckCalc.Api/*.db
 PaycheckCalc.Api/*.db-journal
 PaycheckCalc.Api/*.db-shm
 PaycheckCalc.Api/*.db-wal
+.dotnet/
+dotnet-install.sh
