@@ -16,7 +16,7 @@ A US paycheck calculator for 2026 withholding rules (federal, FICA, state, disab
 Two workflows are configured and running:
 
 - **Blazor Web** (`bash start-blazor.sh`) — the user-facing web app, port 5000 (webview).
-- **Sync API** (`bash start-api.sh`) — the accounts/sync backend, port 5201 (console, internal only). The Blazor app talks to it over `localhost`.
+- **Sync API** (`bash start-api.sh`) — the accounts/sync backend, port 5201 (console, internal only). It binds `127.0.0.1:5201` and has no external port mapping in `.replit`, so it's reachable only from the Blazor process over `localhost`, never from outside the Repl.
 
 Both scripts export `ASPNETCORE_URLS`/`DOTNET_ROOT`/`PATH` and start the process; restart the workflows after code changes.
 
@@ -36,7 +36,7 @@ If `global.json` is ever bumped to a newer preview build, re-run `dotnet-install
 
 ### Notes
 
-- HTTPS redirection was removed from `PaycheckCalc.Blazor/Program.cs` — Replit terminates TLS at its edge proxy and forwards plain HTTP, so an internal HTTPS redirect would break the proxied preview.
+- HTTPS redirection in `PaycheckCalc.Blazor/Program.cs` is skipped only in Development — Replit terminates TLS at its edge proxy and forwards plain HTTP there, so an HTTPS redirect would break the proxied preview. It stays enabled in all other environments as a safety net.
 - The MAUI app (`PaycheckCalc.App`) is untouched and not part of the Replit run setup.
 
 ## User preferences
