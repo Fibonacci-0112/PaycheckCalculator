@@ -13,11 +13,6 @@ namespace PaycheckCalc.Api.Migrations
     [DbContext(typeof(SyncDbContext))]
     partial class SyncDbContextModelSnapshot : ModelSnapshot
     {
-        // If you encounter a merge conflict in the line below, it means you need to
-        // discard one of the migration branches and recreate its migrations on top of
-        // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-        public override string LatestMigrationId => "20260615085709_AddRecurringBillsAndSavingsGoals";
-
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
