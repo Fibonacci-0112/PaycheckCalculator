@@ -1,10 +1,10 @@
 ---
-applyTo: "PaycheckCalc.Blazor/**/*.cs,PaycheckCalc.Blazor/**/*.razor"
+applyTo: "PaycheckCalculator.Blazor/**/*.cs,PaycheckCalculator.Blazor/**/*.razor"
 ---
 
 # Blazor project instructions
 
-- `PaycheckCalc.Blazor` is the Blazor Server front-end. Keep Razor components focused on rendering, binding, and simple UI orchestration. Do not put tax, gross-up, annual projection, bonus, budget, or sync merge logic in `.razor` files or code-behind.
+- `PaycheckCalculator.Blazor` is the Blazor Server front-end. Keep Razor components focused on rendering, binding, and simple UI orchestration. Do not put tax, gross-up, annual projection, bonus, budget, or sync merge logic in `.razor` files or code-behind.
 - Use Core for all calculations. Use Shared for DTOs, JSON configuration, sync services, API client, and entitlement abstractions.
 
 ## State inputs and schema
@@ -30,4 +30,4 @@ applyTo: "PaycheckCalc.Blazor/**/*.cs,PaycheckCalc.Blazor/**/*.razor"
 
 ## Tax data wiring
 
-- Core tax JSON is linked into build output under `TaxData/` via `PaycheckCalc.Blazor.csproj`. Do not rename or reorganize these links without also updating Core, the `FileSystemTaxDataReader`, and every `.csproj` entry that depends on stable names.
+- Core tax JSON is linked into build output under `TaxData/` via `PaycheckCalculator.Blazor.csproj`. Do not rename or reorganize these links without also updating Core, the `FileSystemTaxDataReader`, and every `.csproj` entry that depends on stable names.

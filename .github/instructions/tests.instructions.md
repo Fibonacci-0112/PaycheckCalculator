@@ -1,5 +1,5 @@
 ---
-applyTo: "PaycheckCalc.Tests/**/*.cs"
+applyTo: "PaycheckCalculator.Tests/**/*.cs"
 ---
 
 # Test instructions

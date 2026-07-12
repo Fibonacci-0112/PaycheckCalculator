@@ -1,5 +1,5 @@
 ---
-applyTo: "PaycheckCalc.Core/Data/**/*.json"
+applyTo: "PaycheckCalculator.Core/Data/**/*.json"
 ---
 
 # Tax data instructions

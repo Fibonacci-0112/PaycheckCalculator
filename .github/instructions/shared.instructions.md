@@ -1,10 +1,10 @@
 ---
-applyTo: "PaycheckCalc.Shared/**/*.cs"
+applyTo: "PaycheckCalculator.Shared/**/*.cs"
 ---
 
 # Shared library instructions
 
-- `PaycheckCalc.Shared` is the cross-client contract and sync layer. It may reference `PaycheckCalc.Core` but must not reference MAUI, Blazor, ASP.NET Core hosting, EF Core, or platform storage APIs.
+- `PaycheckCalculator.Shared` is the cross-client contract and sync layer. It may reference `PaycheckCalculator.Core` but must not reference MAUI, Blazor, ASP.NET Core hosting, EF Core, or platform storage APIs.
 - Do not put calculation logic here. Core is the calculation engine; Shared only syncs stored results and state.
 
 ## DTOs and JSON

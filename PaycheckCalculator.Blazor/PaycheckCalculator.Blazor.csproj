@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>PaycheckCalculator.Blazor</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PaycheckCalculator.Core\PaycheckCalculator.Core.csproj" />
+    <ProjectReference Include="..\PaycheckCalculator.Shared\PaycheckCalculator.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- Copy Core tax data into TaxData/ in the build output, matching the logical
+       names expected by AddPaycheckCalcCore (e.g. "schemas/ca.json"). -->
+  <ItemGroup>
+    <None Include="..\PaycheckCalculator.Core\Data\ar_withholding_2026.json">
+      <Link>TaxData\ar_withholding_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\ca_method_b_2026.json">
+      <Link>TaxData\ca_method_b_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\co_dr0004_2026.json">
+      <Link>TaxData\co_dr0004_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\connecticut_withholding_2026.json">
+      <Link>TaxData\connecticut_withholding_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\ok_ow2_2026_percentage.json">
+      <Link>TaxData\ok_ow2_2026_percentage.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\us_irs_15t_2026_percentage_automated.json">
+      <Link>TaxData\us_irs_15t_2026_percentage_automated.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\state_supplemental_2026.json">
+      <Link>TaxData\state_supplemental_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- State schemas — logical name prefix "schemas/" matches AddPaycheckCalcCore -->
+    <None Include="..\PaycheckCalculator.Core\Data\Schemas\*.json">
+      <Link>TaxData\schemas\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

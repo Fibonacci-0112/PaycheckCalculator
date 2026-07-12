@@ -1,10 +1,10 @@
 ---
-applyTo: "PaycheckCalc.Core/**/*.cs"
+applyTo: "PaycheckCalculator.Core/**/*.cs"
 ---
 
 # Core library instructions
 
-- `PaycheckCalc.Core` must remain UI-agnostic. Do not add MAUI, XAML, Blazor, ASP.NET Core, or view-model dependencies here.
+- `PaycheckCalculator.Core` must remain UI-agnostic. Do not add MAUI, XAML, Blazor, ASP.NET Core, or view-model dependencies here.
 - Preserve sealed/init-only/value-oriented model patterns where they already exist.
 - All money, wages, rates, thresholds, and deduction values must use `decimal`. Never introduce `double` or `float`.
 - Keep `PayCalculator` as the orchestrator. It composes gross pay, pre-tax deductions, FICA, federal withholding, state withholding, and net pay. Do not push state-specific or supplemental logic into it.

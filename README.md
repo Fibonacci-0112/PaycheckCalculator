@@ -4,11 +4,11 @@ PaycheckCalc is a US paycheck calculator for 2026 withholding rules. It computes
 
 The solution currently ships three runtime surfaces backed by shared libraries:
 
-- **PaycheckCalc.App** — .NET MAUI app for Android and Windows.
-- **PaycheckCalc.Blazor** — Blazor Server web app.
-- **PaycheckCalc.Api** — optional ASP.NET Core Web API for accounts and sync.
+- **PaycheckCalculator.App** — .NET MAUI app for Android and Windows.
+- **PaycheckCalculator.Blazor** — Blazor Server web app.
+- **PaycheckCalculator.Api** — optional ASP.NET Core Web API for accounts and sync.
 
-The tax, gross-up, annual projection, budgeting, and reporting engines live in the UI-agnostic `PaycheckCalc.Core` project. Sync DTOs, JSON configuration, merge logic, store abstractions, API client code, and entitlement abstractions live in `PaycheckCalc.Shared`.
+The tax, gross-up, annual projection, budgeting, and reporting engines live in the UI-agnostic `PaycheckCalculator.Core` project. Sync DTOs, JSON configuration, merge logic, store abstractions, API client code, and entitlement abstractions live in `PaycheckCalculator.Shared`.
 
 ## Features
 
@@ -19,7 +19,7 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 - **Self-employment / 1099 calculator** — From annual net earnings (Schedule C net profit) it computes federal self-employment tax (15.3% — 12.4% Social Security to the $184,500 cap plus 2.9% Medicare, both halves, with 0.9% Additional Medicare over $200,000 — on 92.35% of earnings), estimates state income tax through the ordinary state engine (no state levies a separate self-employment tax), and produces a quarterly estimated-payment schedule (Form 1040-ES). It does not model federal income tax.
 - **Federal income tax** — Implements the IRS Publication 15-T 2026 percentage method for automated payroll systems. Supported W-4 inputs include filing status, Step 2 checkbox, Step 3 credits, Step 4(a) other income, Step 4(b) deductions, and Step 4(c) extra withholding.
 - **FICA taxes** — Calculates Social Security, Medicare, and Additional Medicare withholding, with YTD wage inputs available where needed to handle the Social Security wage-base cap and Additional Medicare threshold mid-year.
-- **State withholding for all 50 states plus DC** — Each jurisdiction is handled by a registered `IStateWithholdingCalculator` under `PaycheckCalc.Core/Tax/<StateName>/`. State-specific UI inputs are schema-driven from `PaycheckCalc.Core/Data/Schemas/*.json`.
+- **State withholding for all 50 states plus DC** — Each jurisdiction is handled by a registered `IStateWithholdingCalculator` under `PaycheckCalculator.Core/Tax/<StateName>/`. State-specific UI inputs are schema-driven from `PaycheckCalculator.Core/Data/Schemas/*.json`.
 - **State disability / paid-leave premiums** — California SDI, Colorado FMLI, Connecticut PFMLI, and Washington WA Cares Fund are surfaced as separate result lines with dynamic labels.
 - **Pre-tax and post-tax deductions** — Deductions can be dollar amounts or percentages. Pre-tax deductions independently control whether they reduce federal taxable wages, state taxable wages, and/or FICA wages.
 - **Show Your Work explanations** — Result lines carry step-by-step explanations through the Core `Explanation/` model and are displayed by both front-ends.
@@ -36,9 +36,9 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 ## Project Structure
 
 ```text
-PaycheckCalc.slnx
+PaycheckCalculator.slnx
 ├── global.json                  # .NET 11 preview SDK pin and roll-forward settings
-├── PaycheckCalc.Core/           # UI-agnostic domain, tax, pay, projection, gross-up, budget, and report engines
+├── PaycheckCalculator.Core/           # UI-agnostic domain, tax, pay, projection, gross-up, budget, and report engines
 │   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult, BonusInput/Result, HourlySalaryInput/Result, SelfEmploymentInput/Result
 │   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, BonusCalculator, HourlySalaryCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/               # Budget, categories, transactions, recurring bills, savings goals, reports
@@ -47,7 +47,7 @@ PaycheckCalc.slnx
 │   ├── Data/                    # JSON tax tables and dynamic state schemas
 │   │   └── Schemas/             # One schema JSON file per state / DC
 │   └── Tax/                     # Federal, FICA, State contracts/registry, and one folder per jurisdiction
-├── PaycheckCalc.App/            # .NET MAUI app for Android and Windows
+├── PaycheckCalculator.App/            # .NET MAUI app for Android and Windows
 │   ├── Views/                   # Inputs, Results, Paychecks, Budget, Account pages
 │   ├── ViewModels/              # Calculator, budget, account, saved paycheck, dynamic field VMs
 │   ├── Mappers/                 # Domain-to-UI mappers
@@ -56,29 +56,29 @@ PaycheckCalc.slnx
 │   ├── Behaviors/               # Input formatting behavior
 │   ├── Helpers/                 # Enum labels and XAML helpers
 │   └── Services/                # Tax data, storage, sync, CSV, PDF, printing
-├── PaycheckCalc.Blazor/         # Blazor Server web app
+├── PaycheckCalculator.Blazor/         # Blazor Server web app
 │   ├── Components/Pages/        # Home, Calculator, Budget, and state landing pages
 │   ├── Components/Shared/       # Shared Razor UI such as chart and explanation modal
 │   ├── Services/                # Tax data, session stores, state metadata, exports, account session
 │   └── wwwroot/                 # Static CSS/JS, including export.js and print styles
-├── PaycheckCalc.Shared/         # Shared sync contracts, stores, mergers, JSON, API client, entitlements
+├── PaycheckCalculator.Shared/         # Shared sync contracts, stores, mergers, JSON, API client, entitlements
 │   ├── Snapshots/               # Saved paycheck DTOs, mapper, tombstones, merger
 │   ├── Budgeting/               # Budget/transaction/bill/goal DTOs, sets, tombstones, merger, sync service
 │   ├── Client/                  # PaycheckApiClient, API results, tokens, base-address provider
 │   ├── Entitlements/            # IEntitlementProvider and default free-tier provider
 │   ├── Json/                    # Shared System.Text.Json options and converters
 │   └── Sync/                    # Paycheck sync service and saved paycheck store abstraction
-├── PaycheckCalc.Api/            # ASP.NET Core Web API for Identity accounts and sync
+├── PaycheckCalculator.Api/            # ASP.NET Core Web API for Identity accounts and sync
 │   ├── Data/                    # SyncDbContext and EF Core entities
 │   ├── Endpoints/               # Paycheck and budget sync minimal API endpoints
 │   └── Migrations/              # PostgreSQL EF Core migrations
-├── PaycheckCalc.Tests/          # xUnit test suite for Core, Shared, Api, and Blazor export paths
+├── PaycheckCalculator.Tests/          # xUnit test suite for Core, Shared, Api, and Blazor export paths
 └── docs/
     ├── class-diagram.md         # Mermaid architecture/class diagrams
     └── wiki/                    # Project wiki
 ```
 
-The solution file includes six projects: `PaycheckCalc.Api`, `PaycheckCalc.App`, `PaycheckCalc.Blazor`, `PaycheckCalc.Core`, `PaycheckCalc.Shared`, and `PaycheckCalc.Tests`.
+The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalculator.App`, `PaycheckCalculator.Blazor`, `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, and `PaycheckCalculator.Tests`.
 
 ## Technology Stack
 
@@ -96,38 +96,38 @@ The solution file includes six projects: `PaycheckCalc.Api`, `PaycheckCalc.App`,
 ## Prerequisites
 
 - [.NET 11 SDK](https://dotnet.microsoft.com/) preview matching `global.json`.
-- .NET MAUI workload only when building or running `PaycheckCalc.App`:
+- .NET MAUI workload only when building or running `PaycheckCalculator.App`:
   ```bash
   dotnet workload install maui
   ```
 - Android SDK or Windows 10+ SDK for MAUI targets.
-- PostgreSQL only when running `PaycheckCalc.Api` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
+- PostgreSQL only when running `PaycheckCalculator.Api` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
 
-`PaycheckCalc.Core`, `PaycheckCalc.Shared`, `PaycheckCalc.Api`, `PaycheckCalc.Blazor`, and `PaycheckCalc.Tests` build without the MAUI workload. `PaycheckCalc.App` requires the MAUI workload.
+`PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
 
 ## Getting Started
 
 ### Build a non-MAUI project
 
 ```bash
-dotnet build PaycheckCalc.Core
-dotnet build PaycheckCalc.Shared
-dotnet build PaycheckCalc.Blazor
-dotnet build PaycheckCalc.Api
+dotnet build PaycheckCalculator.Core
+dotnet build PaycheckCalculator.Shared
+dotnet build PaycheckCalculator.Blazor
+dotnet build PaycheckCalculator.Api
 ```
 
 ### Build the full solution
 
 ```bash
-dotnet build PaycheckCalc.slnx
+dotnet build PaycheckCalculator.slnx
 ```
 
-The full solution build requires the MAUI workload because it includes `PaycheckCalc.App`.
+The full solution build requires the MAUI workload because it includes `PaycheckCalculator.App`.
 
 ### Run tests
 
 ```bash
-dotnet test PaycheckCalc.Tests
+dotnet test PaycheckCalculator.Tests
 ```
 
 The test project covers the paycheck pipeline, federal withholding, FICA, all state calculators, dynamic schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, reports, snapshot JSON, merge behavior, sync API integration, and export renderers.
@@ -135,13 +135,13 @@ The test project covers the paycheck pipeline, federal withholding, FICA, all st
 ### Run the Blazor web app
 
 ```bash
-dotnet run --project PaycheckCalc.Blazor
+dotnet run --project PaycheckCalculator.Blazor
 ```
 
 ### Run the sync API
 
 ```bash
-dotnet run --project PaycheckCalc.Api
+dotnet run --project PaycheckCalculator.Api
 ```
 
 The API defaults to `http://localhost:5201` and uses `ConnectionStrings:Sync` for PostgreSQL. EF Core migrations are applied at startup when the provider is PostgreSQL.
@@ -149,17 +149,17 @@ The API defaults to `http://localhost:5201` and uses `ConnectionStrings:Sync` fo
 ### Run the MAUI app
 
 ```bash
-dotnet build PaycheckCalc.App
+dotnet build PaycheckCalculator.App
 ```
 
 Target-specific examples:
 
 ```bash
 # Android
-dotnet build PaycheckCalc.App -t:Run -f net11.0-android
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
 
 # Windows
-dotnet build PaycheckCalc.App -t:Run -f net11.0-windows10.0.19041.0
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
 ```
 
 ## How the Paycheck Engine Works
@@ -195,11 +195,11 @@ All 50 states and the District of Columbia are supported through `IStateWithhold
 | Dedicated no-income-tax calculators | WA, WY |
 | Dedicated income-tax calculators | AL, AZ, AR, CA, CO, CT, DC, DE, GA, HI, IA, ID, IL, IN, KS, KY, LA, MA, MD, ME, MI, MN, MO, MS, MT, NC, ND, NE, NJ, NM, NY, OH, OK, OR, PA, RI, SC, UT, VA, VT, WI, WV |
 
-Several calculators are JSON-backed: IRS 15-T, Arkansas, California, Colorado, Connecticut, and Oklahoma. All jurisdictions have schema files in `PaycheckCalc.Core/Data/Schemas/` for dynamic state inputs.
+Several calculators are JSON-backed: IRS 15-T, Arkansas, California, Colorado, Connecticut, and Oklahoma. All jurisdictions have schema files in `PaycheckCalculator.Core/Data/Schemas/` for dynamic state inputs.
 
 ## Budgeting, Reports, and Sync
 
-The budgeting engine lives in `PaycheckCalc.Core/Budgeting/` and includes:
+The budgeting engine lives in `PaycheckCalculator.Core/Budgeting/` and includes:
 
 - `Budget`, `BudgetCategory`, `BudgetTransaction`, and `BudgetCalculator`.
 - `BudgetMethod` templates for Custom, 50/30/20, Zero-Based, and Envelope budgets.

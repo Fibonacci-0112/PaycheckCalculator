@@ -1,10 +1,10 @@
 ---
-applyTo: "PaycheckCalc.App/**/*.cs,PaycheckCalc.App/**/*.xaml"
+applyTo: "PaycheckCalculator.App/**/*.cs,PaycheckCalculator.App/**/*.xaml"
 ---
 
 # MAUI app instructions
 
-- Follow MVVM. Pages should stay thin; business logic belongs in `PaycheckCalc.Core` or mappers, not in XAML code-behind.
+- Follow MVVM. Pages should stay thin; business logic belongs in `PaycheckCalculator.Core` or mappers, not in XAML code-behind.
 - Use CommunityToolkit.Mvvm source generators (`[ObservableProperty]`, `[RelayCommand]`) for observable properties and commands.
 - Preserve the mapper boundary: `CalculatorViewModel` builds `StateInputValues`, maps to `PaycheckInput`, and maps domain results to `ResultCardModel`.
 - Keep the state section schema-driven. Do not hardcode per-state controls in XAML if a schema-driven field can express the requirement.

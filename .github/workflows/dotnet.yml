@@ -24,8 +24,8 @@ jobs:
       with:
         dotnet-version: 11.0.100-preview.5.26302.115
     - name: Restore dependencies
-      run: dotnet restore PaycheckCalc.Tests
+      run: dotnet restore PaycheckCalculator.Tests
     - name: Build
-      run: dotnet build PaycheckCalc.Tests --no-restore
+      run: dotnet build PaycheckCalculator.Tests --no-restore
     - name: Test
-      run: dotnet test PaycheckCalc.Tests --no-build --verbosity normal
+      run: dotnet test PaycheckCalculator.Tests --no-build --verbosity normal

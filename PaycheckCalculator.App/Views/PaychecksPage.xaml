@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PaycheckCalculator.App.Views.PaychecksPage"
+             Title="Paychecks"
+             BackgroundColor="#F5F5F5">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Page Header -->
+        <Grid Grid.Row="0" BackgroundColor="#333333" Padding="16,14,16,14">
+            <Label Text="Saved Paychecks"
+                   TextColor="White" FontSize="20" FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16" Spacing="12">
+
+                <!-- Empty state -->
+                <VerticalStackLayout IsVisible="{Binding ShowNoPaychecks}"
+                                     VerticalOptions="Center" Padding="16,32" Spacing="10">
+                    <Label Text="No paychecks saved yet"
+                           FontSize="16" FontAttributes="Bold" TextColor="#424242"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Calculate a paycheck on the Inputs tab. Give each one a name to save several jobs and compare them here."
+                           FontSize="12" TextColor="#9E9E9E"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <!-- Saved paychecks list -->
+                <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasPaychecks}">
+                    <Label Text="SAVED PAYCHECKS" TextColor="#78909C"
+                           FontSize="10" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                    <Button Grid.Column="1" Text="Clear All" Command="{Binding ClearPaychecksCommand}"
+                            BackgroundColor="#ECECEC" TextColor="#C62828"
+                            FontSize="11" Padding="10,4" CornerRadius="6" />
+                </Grid>
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Paychecks}" Spacing="8"
+                                     IsVisible="{Binding HasPaychecks}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Border BackgroundColor="White" StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 10" Padding="14,12">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding Name}" TextColor="#37474F"
+                                               FontSize="14" FontAttributes="Bold" />
+                                        <Label Text="{Binding StateName}" TextColor="#9E9E9E" FontSize="11" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End">
+                                        <Label Text="{Binding NetPay, StringFormat='{0:C}'}"
+                                               TextColor="#2E7D32" FontSize="14" FontAttributes="Bold"
+                                               HorizontalTextAlignment="End" />
+                                        <Label Text="{Binding GrossPay, StringFormat='gross {0:C}'}"
+                                               TextColor="#9E9E9E" FontSize="10" HorizontalTextAlignment="End" />
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="2" Text="Load" FontSize="12" Padding="12,2"
+                                            BackgroundColor="#1565C0" TextColor="White" CornerRadius="4"
+                                            VerticalOptions="Center"
+                                            AutomationProperties.Name="Load this paycheck into the form"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.LoadPaycheckCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    <Button Grid.Column="3" Text="✕" FontSize="12" Padding="8,2"
+                                            BackgroundColor="#EF5350" TextColor="White" CornerRadius="4"
+                                            VerticalOptions="Center"
+                                            AutomationProperties.Name="Delete this paycheck"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemovePaycheckCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- Compare section header -->
+                <Label Text="COMPARE" TextColor="#78909C" FontSize="10" FontAttributes="Bold"
+                       Margin="0,8,0,0" IsVisible="{Binding HasPaychecks}" />
+
+                <!-- Prompt shown when only one paycheck exists -->
+                <Label Text="Save at least two paychecks to compare them side by side."
+                       TextColor="#9E9E9E" FontSize="12" FontAttributes="Italic"
+                       IsVisible="{Binding ShowCompareHint}" />
+
+                <!-- Comparison card -->
+                <Border IsVisible="{Binding CanCompare}" BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="14">
+                    <VerticalStackLayout Spacing="12">
+
+                        <!-- A / B selectors -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="Paycheck A" TextColor="#424242" FontSize="11" />
+                                <Picker ItemsSource="{Binding Paychecks}" SelectedItem="{Binding SelectedComparisonA}"
+                                        TextColor="Black" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="Paycheck B" TextColor="#424242" FontSize="11" />
+                                <Picker ItemsSource="{Binding Paychecks}" SelectedItem="{Binding SelectedComparisonB}"
+                                        TextColor="Black" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Comparison table -->
+                        <VerticalStackLayout IsVisible="{Binding HasComparison}" Spacing="0">
+
+                            <!-- Header row -->
+                            <Grid ColumnDefinitions="*,80,80,80" ColumnSpacing="6" Padding="0,6">
+                                <Label Text="Metric" Grid.Column="0" FontSize="11" FontAttributes="Bold" TextColor="#78909C" />
+                                <Label Text="{Binding ComparisonNameA}" Grid.Column="1" FontSize="11" FontAttributes="Bold"
+                                       TextColor="#78909C" HorizontalTextAlignment="End" LineBreakMode="TailTruncation" />
+                                <Label Text="{Binding ComparisonNameB}" Grid.Column="2" FontSize="11" FontAttributes="Bold"
+                                       TextColor="#78909C" HorizontalTextAlignment="End" LineBreakMode="TailTruncation" />
+                                <Label Text="Δ" Grid.Column="3" FontSize="11" FontAttributes="Bold"
+                                       TextColor="#78909C" HorizontalTextAlignment="End" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="#E0E0E0" />
+
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding ComparisonRows}" Spacing="0">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <VerticalStackLayout Spacing="0">
+                                            <Grid ColumnDefinitions="*,80,80,80" ColumnSpacing="6" Padding="6,9">
+                                                <Grid.Triggers>
+                                                    <DataTrigger TargetType="Grid" Binding="{Binding Highlight}" Value="True">
+                                                        <Setter Property="BackgroundColor" Value="#E8F5E9" />
+                                                    </DataTrigger>
+                                                </Grid.Triggers>
+                                                <Label Text="{Binding Label}" Grid.Column="0" FontSize="12"
+                                                       TextColor="#37474F" VerticalTextAlignment="Center" />
+                                                <Label Text="{Binding ValueADisplay}" Grid.Column="1" FontSize="12"
+                                                       TextColor="#37474F" HorizontalTextAlignment="End" VerticalTextAlignment="Center" />
+                                                <Label Text="{Binding ValueBDisplay}" Grid.Column="2" FontSize="12"
+                                                       TextColor="#37474F" HorizontalTextAlignment="End" VerticalTextAlignment="Center" />
+                                                <Label Text="{Binding DifferenceDisplay}" Grid.Column="3" FontSize="12"
+                                                       TextColor="#607D8B" HorizontalTextAlignment="End" VerticalTextAlignment="Center" />
+                                            </Grid>
+                                            <BoxView HeightRequest="1" Color="#F2F2F2" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Export the A/B comparison table on its own -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10"
+                              IsVisible="{Binding HasComparison}">
+                            <Button Grid.Column="0" Text="Export PDF"
+                                    Command="{Binding ExportComparisonPdfCommand}"
+                                    BackgroundColor="#1565C0" TextColor="White"
+                                    FontSize="12" Padding="0,6" CornerRadius="6"
+                                    AutomationProperties.Name="Export comparison to PDF" />
+                            <Button Grid.Column="1" Text="Export CSV"
+                                    Command="{Binding ExportComparisonCsvCommand}"
+                                    BackgroundColor="#1565C0" TextColor="White"
+                                    FontSize="12" Padding="0,6" CornerRadius="6"
+                                    AutomationProperties.Name="Export comparison to CSV" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

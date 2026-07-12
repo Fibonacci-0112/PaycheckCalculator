@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="PaycheckCalculator.Api/PaycheckCalculator.Api.csproj" />
+  <Project Path="PaycheckCalculator.App/PaycheckCalculator.App.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="PaycheckCalculator.Blazor/PaycheckCalculator.Blazor.csproj" />
+  <Project Path="PaycheckCalculator.Core/PaycheckCalculator.Core.csproj" />
+  <Project Path="PaycheckCalculator.Shared/PaycheckCalculator.Shared.csproj" />
+  <Project Path="PaycheckCalculator.Tests/PaycheckCalculator.Tests.csproj" />
+</Solution>
