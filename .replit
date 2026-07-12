@@ -1,6 +1,54 @@
-modules = ["dotnet-7.0", "web", "nodejs-20"]
+modules = ["dotnet-7.0", "web", "nodejs-20", "postgresql-16"]
 [agent]
 expertMode = true
 
 [nix]
 channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Sync API"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Blazor Web"
+
+[[workflows.workflow]]
+name = "Sync API"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash start-api.sh"
+waitForPort = 5201
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Blazor Web"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash start-blazor.sh"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5201
+externalPort = 3000

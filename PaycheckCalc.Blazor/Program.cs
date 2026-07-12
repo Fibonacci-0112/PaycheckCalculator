@@ -40,7 +40,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// No HTTPS redirect: Replit terminates TLS at its edge proxy and forwards plain HTTP
+// to this process, so redirecting to HTTPS internally would break the proxied preview.
 app.UseStaticFiles();
 app.UseAntiforgery();
 

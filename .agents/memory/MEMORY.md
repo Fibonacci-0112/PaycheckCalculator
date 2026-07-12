@@ -1,0 +1,1 @@
+- [.NET preview SDK not in Nix modules](dotnet-preview-sdk-setup.md) — when global.json pins a preview .NET SDK newer than Replit's highest dotnet module, install it manually.
