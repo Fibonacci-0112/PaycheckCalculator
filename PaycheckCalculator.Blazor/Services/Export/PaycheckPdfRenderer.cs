@@ -47,7 +47,7 @@ public static class PaycheckPdfRenderer
         layout.BeginPage(title);
         // Note: the content stream is written as ASCII (see PdfLayout.Finish), so
         // keep page text within ASCII — use a plain "|" separator, not a bullet.
-        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  |  2026 tax tables");
+        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  |  {result.TaxYear} tax tables");
 
         WritePerPeriod(layout, result);
         if (annual is not null)
@@ -66,7 +66,7 @@ public static class PaycheckPdfRenderer
 
         var (doc, layout, catalogId) = NewDocument();
         layout.BeginPage("Paycheck Comparison");
-        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}  |  2026 tax tables");
+        layout.Subtitle($"Generated {DateTime.Now.ToString("MMMM d, yyyy", Usd)}");
         WriteComparison(layout, comparison, nameA, nameB);
         layout.Finish(catalogId);
         return doc.Build(catalogId);

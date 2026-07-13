@@ -19,6 +19,9 @@ public sealed class Irs15TPercentageCalculator
             ?? throw new InvalidOperationException("Failed to load IRS 15-T JSON data.");
     }
 
+    /// <summary>The tax year of the loaded IRS 15-T table data (from the JSON's <c>year</c> field).</summary>
+    public int SupportedTaxYear => _data.Year;
+
     public decimal CalculateWithholding(
         decimal taxableWagesThisPeriod,
         PayFrequency frequency,

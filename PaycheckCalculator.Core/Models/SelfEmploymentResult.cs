@@ -16,6 +16,9 @@ public sealed class SelfEmploymentResult
     /// <summary>Net earnings subject to self-employment tax — <see cref="AnnualNetEarnings"/> × 92.35%.</summary>
     public decimal NetEarningsSubjectToSeTax { get; init; }
 
+    /// <summary>The tax year this result was calculated under (from the originating input's <c>TaxYear</c>).</summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
+
     public UsState State { get; init; }
 
     /// <summary>Social Security portion of SE tax (12.4%), capped at the annual wage base.</summary>

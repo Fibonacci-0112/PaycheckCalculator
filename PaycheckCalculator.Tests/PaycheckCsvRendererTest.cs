@@ -44,6 +44,7 @@ public sealed class PaycheckCsvRendererTest
         var expected =
             "Section,Item,Value\r\n" +
             "Summary,State,CA\r\n" +
+            "Summary,Tax Year,2026\r\n" +
             "Income,Gross Pay,2000.00\r\n" +
             "Income,Federal Taxable Income,1850.00\r\n" +
             "Income,FICA Taxable Income,1850.00\r\n" +

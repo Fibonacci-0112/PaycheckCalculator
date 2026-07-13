@@ -39,4 +39,10 @@ public sealed class SelfEmploymentInput
     /// earnings relative to the $200,000 Additional Medicare threshold. Defaults to 0.
     /// </summary>
     public decimal YtdMedicareWages { get; init; }
+
+    /// <summary>
+    /// The tax year this input should be calculated under. Defaults to
+    /// <see cref="TaxYearSupport.Default"/>, the only year currently supported.
+    /// </summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
 }

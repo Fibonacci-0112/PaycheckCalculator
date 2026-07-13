@@ -35,7 +35,8 @@ public static class PaycheckInputMapper
                 Step4cExtraWithholding = vm.FederalStep4cExtraWithholding
             },
             Deductions = vm.Deductions.Select(d => d.ToDeduction()).ToArray(),
-            PaycheckNumber = vm.PaycheckNumber
+            PaycheckNumber = vm.PaycheckNumber,
+            TaxYear = vm.TaxYear
         };
     }
 }

@@ -40,6 +40,9 @@ public sealed class BonusCalculator
         if (input.BonusAmount < 0m)
             throw new ArgumentOutOfRangeException(
                 nameof(input), input.BonusAmount, "Bonus amount cannot be negative.");
+        if (!TaxYearSupport.IsSupported(input.TaxYear))
+            throw new NotSupportedException(
+                $"Tax year {input.TaxYear} is not supported. Only {TaxYearSupport.Default} tax data is currently loaded.");
 
         var bonus = RoundMoney(input.BonusAmount);
 
@@ -70,6 +73,7 @@ public sealed class BonusCalculator
         return new BonusResult
         {
             BonusAmount = bonus,
+            TaxYear = input.TaxYear,
             State = input.State,
             FederalWithholding = federalR,
             SocialSecurityWithholding = ssR,

@@ -40,8 +40,6 @@ public sealed class SelfEmploymentCalculator
     /// <summary>Share of net earnings subject to SE tax (the 7.65% employer-half adjustment).</summary>
     public const decimal NetEarningsMultiplier = 0.9235m;
 
-    private const int TaxYear = 2026;
-
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly decimal _socialSecurityWageBase;
     private readonly decimal _additionalMedicareThreshold;
@@ -62,6 +60,9 @@ public sealed class SelfEmploymentCalculator
         if (input.AnnualNetEarnings < 0m)
             throw new ArgumentOutOfRangeException(
                 nameof(input), input.AnnualNetEarnings, "Annual net earnings cannot be negative.");
+        if (!TaxYearSupport.IsSupported(input.TaxYear))
+            throw new NotSupportedException(
+                $"Tax year {input.TaxYear} is not supported. Only {TaxYearSupport.Default} tax data is currently loaded.");
 
         var earnings = RoundMoney(input.AnnualNetEarnings);
 
@@ -97,7 +98,7 @@ public sealed class SelfEmploymentCalculator
             input.State,
             GrossWages: earnings,
             PayPeriod: PayFrequency.Annual,
-            Year: TaxYear,
+            Year: input.TaxYear,
             PreTaxDeductionsReducingStateWages: 0m,
             FederalWithholdingPerPeriod: 0m);
         var stateValues = input.StateInputValues ?? new StateInputValues();
@@ -120,6 +121,7 @@ public sealed class SelfEmploymentCalculator
         {
             AnnualNetEarnings = earnings,
             NetEarningsSubjectToSeTax = RoundMoney(seBase),
+            TaxYear = input.TaxYear,
             State = input.State,
             SocialSecurityTax = ssR,
             MedicareTax = medicareR,

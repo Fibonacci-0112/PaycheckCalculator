@@ -24,6 +24,10 @@ public sealed class PayCalculator
 
     public PaycheckResult Calculate(PaycheckInput input)
     {
+        if (!TaxYearSupport.IsSupported(input.TaxYear))
+            throw new NotSupportedException(
+                $"Tax year {input.TaxYear} is not supported. Only {TaxYearSupport.Default} tax data is currently loaded.");
+
         var payPeriods = PayPeriods.PerYear(input.Frequency);
         var gross = input.PayType == PayType.Salary
             ? (input.SalaryBasis == SalaryBasis.PerYear
@@ -59,7 +63,7 @@ public sealed class PayCalculator
             input.State,
             gross,
             input.Frequency,
-            Year: 2026,
+            Year: input.TaxYear,
             PreTaxDeductionsReducingStateWages: preTaxState,
             FederalWithholdingPerPeriod: RoundMoney(federal));
         var stateValues = input.StateInputValues ?? new StateInputValues();
@@ -99,6 +103,7 @@ public sealed class PayCalculator
             GrossPay = RoundMoney(gross),
             PreTaxDeductions = RoundMoney(preTax),
             PostTaxDeductions = RoundMoney(postTax),
+            TaxYear = input.TaxYear,
             State = input.State,
             StateTaxableWages = RoundMoney(stateResult.TaxableWages),
             StateWithholding = RoundMoney(stateResult.Withholding),

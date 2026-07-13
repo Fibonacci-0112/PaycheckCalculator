@@ -8,6 +8,9 @@ public sealed class PaycheckResult
     public decimal PreTaxDeductions { get; init; }
     public decimal PostTaxDeductions { get; init; }
 
+    /// <summary>The tax year this result was calculated under (from the originating input's <c>TaxYear</c>).</summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
+
     public UsState State { get; init; }
     public decimal StateTaxableWages { get; init; }
     public decimal StateWithholding { get; init; }

@@ -50,4 +50,12 @@ public sealed class PaycheckInput
     /// Defaults to 1 when not specified.
     /// </summary>
     public int PaycheckNumber { get; init; } = 1;
+
+    /// <summary>
+    /// The tax year this input should be calculated under. Defaults to
+    /// <see cref="TaxYearSupport.Default"/>, the only year currently supported. Persisted with
+    /// saved paychecks so a prior year's snapshot is never silently recalculated under newer
+    /// tax data.
+    /// </summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
 }

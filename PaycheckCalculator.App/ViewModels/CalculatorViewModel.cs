@@ -223,6 +223,13 @@ public partial class CalculatorViewModel : ObservableObject
     /// </summary>
     [ObservableProperty] public partial int PaycheckNumber { get; set; } = 1;
 
+    /// <summary>
+    /// The tax year the calculation is performed under. Defaults to
+    /// <see cref="TaxYearSupport.Default"/>; restored from a loaded saved paycheck so a prior
+    /// year's snapshot is never silently recalculated under newer tax data.
+    /// </summary>
+    [ObservableProperty] public partial int TaxYear { get; set; } = TaxYearSupport.Default;
+
     [ObservableProperty] public partial UsState SelectedState { get; set; }
 
     [ObservableProperty]
@@ -797,6 +804,7 @@ public partial class CalculatorViewModel : ObservableObject
         OvertimeMultiplier = input.OvertimeMultiplier;
         SalaryAmount = input.SalaryAmount;
         PaycheckNumber = input.PaycheckNumber;
+        TaxYear = input.TaxYear;
 
         // Federal W-4
         SelectedFederalPickerItem = FederalStatuses.FirstOrDefault(s => s.Value == input.FederalW4.FilingStatus);
