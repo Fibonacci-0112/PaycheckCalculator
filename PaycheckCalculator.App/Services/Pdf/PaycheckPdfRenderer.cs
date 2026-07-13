@@ -45,6 +45,10 @@ internal static class PaycheckPdfRenderer
             WriteComparison(layout, comparison, comparisonNameA, comparisonNameB);
         WriteSources(layout, result.Explanation);
 
+        var sources = result.Explanation.Sources;
+        if (sources.Count > 0)
+            WriteSources(layout, sources);
+
         layout.Finish(catalogId);
         return doc.Build(catalogId);
     }
@@ -137,6 +141,11 @@ internal static class PaycheckPdfRenderer
         layout.SectionHeader("Accuracy & Sources");
         foreach (var source in sources)
             layout.Paragraph($"{source.Title}: {source.Citation}");
+    private static void WriteSources(PdfLayout layout, IReadOnlyList<Core.Explanation.SourceCitation> sources)
+    {
+        layout.SectionHeader("Accuracy & Sources");
+        foreach (var s in sources)
+            layout.Paragraph($"{s.Label}: {s.Reference}");
     }
 
     // The PDF content stream is ASCII; ComparisonRow.DifferenceDisplay uses a U+2212
@@ -234,6 +243,43 @@ internal sealed class PdfLayout
         _y -= 6;
         Text(ContentLeft, _y, text.ToUpperInvariant(), bold: true, size: 10.5, color: Gray);
         _y -= 16;
+    }
+
+    /// <summary>Writes a wrapped body-text paragraph (used for source citations).</summary>
+    public void Paragraph(string text)
+    {
+        // Simple word-wrap at ~90 characters (conservative for 11pt Helvetica in ContentWidth).
+        const int wrapAt = 90;
+        EnsureSpace(16);
+        if (text.Length <= wrapAt)
+        {
+            Text(ContentLeft, _y - 11, text, bold: false, size: 9.5, color: LabelDark);
+            _y -= 16;
+        }
+        else
+        {
+            // Split on spaces; emit one line at a time.
+            var words = text.Split(' ');
+            var line = new System.Text.StringBuilder();
+            foreach (var w in words)
+            {
+                if (line.Length + w.Length + 1 > wrapAt && line.Length > 0)
+                {
+                    EnsureSpace(16);
+                    Text(ContentLeft, _y - 11, line.ToString(), bold: false, size: 9.5, color: LabelDark);
+                    _y -= 16;
+                    line.Clear();
+                }
+                if (line.Length > 0) line.Append(' ');
+                line.Append(w);
+            }
+            if (line.Length > 0)
+            {
+                EnsureSpace(16);
+                Text(ContentLeft, _y - 11, line.ToString(), bold: false, size: 9.5, color: LabelDark);
+                _y -= 16;
+            }
+        }
     }
 
     public void Row(string label, string value, Rgb valueColor, bool bold = false)

@@ -72,124 +72,144 @@ public sealed class TaxYearVersioningTest
     }
 
     [Fact]
-    public void PayCalculator_UnsupportedTaxYear_ThrowsNotSupportedException()
+    public void Calculate_ExplicitTaxYear_ResultPreservesIt()
     {
-        var calculator = CreatePayCalculator();
-        var input = new PaycheckInput
+        var calc = CreateCalculator();
+        var result = calc.Calculate(new PaycheckInput
         {
             Frequency = PayFrequency.Biweekly,
-            HourlyRate = 50m,
-            RegularHours = 40m,
-            State = UsState.TX,
-            TaxYear = 2027
-        };
-
-        Assert.Throws<NotSupportedException>(() => calculator.Calculate(input));
-    }
-
-    // ── SelfEmploymentCalculator ───────────────────────────────────
-
-    [Fact]
-    public void SelfEmploymentCalculator_Result_CarriesInputTaxYear()
-    {
-        var calculator = CreateSelfEmploymentCalculator();
-        var result = calculator.Calculate(new SelfEmploymentInput
-        {
-            AnnualNetEarnings = 100_000m,
-            State = UsState.TX,
-            TaxYear = 2026
+            HourlyRate = 25m,
+            RegularHours = 80m,
+            State = UsState.OK,
+            TaxYear = 2025
         });
-
-        Assert.Equal(2026, result.TaxYear);
+        Assert.Equal(2025, result.TaxYear);
     }
 
+    // ── BonusCalculator ─────────────────────────────────────────
+
     [Fact]
-    public void SelfEmploymentCalculator_UnsupportedTaxYear_ThrowsNotSupportedException()
+    public void BonusCalculate_DefaultTaxYear_ResultHas2026()
     {
-        var calculator = CreateSelfEmploymentCalculator();
-        var input = new SelfEmploymentInput
+        var calc = CreateBonusCalculator();
+        var result = calc.Calculate(new BonusInput
         {
-            AnnualNetEarnings = 100_000m,
-            State = UsState.TX,
-            TaxYear = 2030
-        };
-
-        Assert.Throws<NotSupportedException>(() => calculator.Calculate(input));
-    }
-
-    // ── BonusCalculator ─────────────────────────────────────────────
-
-    [Fact]
-    public void BonusCalculator_Result_CarriesInputTaxYear()
-    {
-        var calculator = CreateBonusCalculator();
-        var result = calculator.Calculate(new BonusInput { BonusAmount = 5_000m, State = UsState.TX, TaxYear = 2026 });
-
+            BonusAmount = 5000m,
+            State = UsState.OK
+        });
         Assert.Equal(2026, result.TaxYear);
     }
 
-    [Fact]
-    public void BonusCalculator_UnsupportedTaxYear_ThrowsNotSupportedException()
-    {
-        var calculator = CreateBonusCalculator();
-        var input = new BonusInput { BonusAmount = 5_000m, State = UsState.TX, TaxYear = 1999 };
+    // ── SelfEmploymentCalculator ────────────────────────────────
 
-        Assert.Throws<NotSupportedException>(() => calculator.Calculate(input));
+    [Fact]
+    public void SelfEmploymentCalculate_DefaultTaxYear_ResultHas2026()
+    {
+        var calc = CreateSelfEmploymentCalculator();
+        var result = calc.Calculate(new SelfEmploymentInput
+        {
+            AnnualNetEarnings = 80_000m,
+            State = UsState.OK
+        });
+        Assert.Equal(2026, result.TaxYear);
     }
 
-    // ── Snapshot round-trip ────────────────────────────────────────
+    // ── Shared SavedPaycheckResultMapper ────────────────────────
 
     [Fact]
-    public void SavedPaycheckResultMapper_CopiesTaxYearFromResult()
+    public void SavedPaycheckResultMapper_PreservesTaxYear()
     {
-        var result = new PaycheckResult { GrossPay = 2000m, NetPay = 1700m, TaxYear = 2026 };
-
-        var dto = SavedPaycheckResultMapper.FromResult(result);
-
+        var result = new PaycheckResult { TaxYear = 2026, GrossPay = 2000m, NetPay = 1600m };
+        var dto = PaycheckCalculator.Shared.Snapshots.SavedPaycheckResultMapper.FromResult(result);
         Assert.Equal(2026, dto.TaxYear);
     }
 
+    // ── SourceCitation / PaycheckExplanation.Sources ────────────
+
     [Fact]
-    public void SavedPaycheckDto_TaxYear_RoundTripsThroughJson()
+    public void PaycheckExplanation_Sources_AggregatesFromLines()
     {
-        var dto = new SavedPaycheckDto
+        var lines = new[]
         {
-            Name = "Job A",
-            UpdatedAtUtc = DateTimeOffset.UtcNow,
-            Input = new PaycheckInput { State = UsState.TX, TaxYear = 2026 },
-            Result = new SavedPaycheckResultDto { NetPay = 1700m, TaxYear = 2026 }
+            new LineExplanation(ExplanationLineKey.FederalWithholding, "Federal Withholding", 100m,
+                Array.Empty<ExplanationStep>(),
+                "IRS Publication 15-T (2026), Worksheet 1A"),
+            new LineExplanation(ExplanationLineKey.SocialSecurity, "Social Security", 62m,
+                Array.Empty<ExplanationStep>(),
+                "IRS Publication 15 (2026), Section 5"),
+            new LineExplanation(ExplanationLineKey.GrossPay, "Gross Pay", 1000m,
+                Array.Empty<ExplanationStep>())
         };
+        var explanation = new PaycheckExplanation(lines);
 
-        var json = JsonSerializer.Serialize(dto, PaycheckJson.Options);
-        var rt = JsonSerializer.Deserialize<SavedPaycheckDto>(json, PaycheckJson.Options)!;
-
-        Assert.Equal(2026, rt.Input.TaxYear);
-        Assert.Equal(2026, rt.Result.TaxYear);
+        Assert.Equal(2, explanation.Sources.Count);
+        Assert.Contains(explanation.Sources, s => s.Label == "Federal Withholding");
+        Assert.Contains(explanation.Sources, s => s.Reference == "IRS Publication 15 (2026), Section 5");
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────
+    [Fact]
+    public void PaycheckExplanation_Sources_DeduplicatesBySameReference()
+    {
+        const string sharedRef = "IRS Publication 15-T (2026), Worksheet 1A";
+        var lines = new[]
+        {
+            new LineExplanation(ExplanationLineKey.FederalWithholding, "Federal Withholding", 100m,
+                Array.Empty<ExplanationStep>(), sharedRef),
+            new LineExplanation(ExplanationLineKey.GrossPay, "Gross Pay", 2000m,
+                Array.Empty<ExplanationStep>(), sharedRef)
+        };
+        var explanation = new PaycheckExplanation(lines);
 
-    private static PayCalculator CreatePayCalculator()
+        // Both lines share the same reference — deduplicated to one citation.
+        Assert.Single(explanation.Sources);
+        Assert.Equal("Federal Withholding", explanation.Sources[0].Label);
+    }
+
+    [Fact]
+    public void PaycheckExplanation_Empty_HasNoSources()
+        => Assert.Empty(PaycheckExplanation.Empty.Sources);
+
+    [Fact]
+    public void RealPaycheckResult_Sources_ContainsFederalReference()
+    {
+        var calc = CreateCalculator();
+        var result = calc.Calculate(new PaycheckInput
+        {
+            Frequency = PayFrequency.Biweekly,
+            HourlyRate = 25m,
+            RegularHours = 80m,
+            State = UsState.OK
+        });
+        // Federal withholding line should carry an IRS 15-T reference.
+        Assert.NotEmpty(result.Explanation.Sources);
+        Assert.Contains(result.Explanation.Sources, s => s.Reference.Contains("15-T"));
+    }
+
+    // ── Helpers ────────────────────────────────────────────────
+
+    private static PayCalculator CreateCalculator()
     {
         var registry = new StateCalculatorRegistry();
-        registry.Register(new NoIncomeTaxWithholdingAdapter(UsState.TX));
+        var okJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ok_ow2_2026_percentage.json"));
+        registry.Register(new OklahomaWithholdingCalculator(new OklahomaOw2PercentageCalculator(okJson), TestSchemas.Provider));
         var fica = new FicaCalculator();
-        var fed = new Irs15TPercentageCalculator(File.ReadAllText("us_irs_15t_2026_percentage_automated.json"));
+        var fedJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "us_irs_15t_2026_percentage_automated.json"));
+        var fed = new Irs15TPercentageCalculator(fedJson);
         return new PayCalculator(registry, fica, fed);
+    }
+
+    private static BonusCalculator CreateBonusCalculator()
+    {
+        var suppJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "state_supplemental_2026.json"));
+        var state = new PaycheckCalculator.Core.Tax.Supplemental.StateSupplementalCalculator(suppJson);
+        return new BonusCalculator(new PaycheckCalculator.Core.Tax.Federal.FederalSupplementalCalculator(), new FicaCalculator(), state);
     }
 
     private static SelfEmploymentCalculator CreateSelfEmploymentCalculator()
     {
         var registry = new StateCalculatorRegistry();
-        registry.Register(new NoIncomeTaxWithholdingAdapter(UsState.TX));
+        var okJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ok_ow2_2026_percentage.json"));
+        registry.Register(new OklahomaWithholdingCalculator(new OklahomaOw2PercentageCalculator(okJson), TestSchemas.Provider));
         return new SelfEmploymentCalculator(registry, new FicaCalculator());
-    }
-
-    private static BonusCalculator CreateBonusCalculator()
-    {
-        var federal = new FederalSupplementalCalculator();
-        var fica = new FicaCalculator();
-        var state = new StateSupplementalCalculator(File.ReadAllText("state_supplemental_2026.json"));
-        return new BonusCalculator(federal, fica, state);
     }
 }

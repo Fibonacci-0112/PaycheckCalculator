@@ -11,6 +11,9 @@ public sealed class Irs15TPercentageCalculator
 {
     private readonly Irs15TRoot _data;
 
+    /// <summary>The tax year this calculator's tables were built for (2026).</summary>
+    public int SupportedTaxYear => TaxYearSupport.CurrentTaxYear;
+
     public Irs15TPercentageCalculator(string json)
     {
         json = json.Replace("None", "null");

@@ -1,11 +1,11 @@
 namespace PaycheckCalculator.Core.Explanation;
 
 /// <summary>
-/// One authoritative tax-rule citation backing a paycheck line, surfaced on the
-/// "Accuracy &amp; Sources" view. Derived from the same <see cref="LineExplanation.Reference"/>
-/// text already shown in each line's "Show Your Work" modal — this type simply
-/// aggregates those citations into a single, consolidated list.
+/// A single accuracy citation — the human-readable label of a calculation step and the
+/// source document that defines it (e.g. "IRS Publication 15-T (2026), Worksheet 1A").
+/// Aggregated from <see cref="LineExplanation.Reference"/> values across all lines in a
+/// <see cref="PaycheckExplanation"/> and surfaced in the Accuracy &amp; Sources screen.
 /// </summary>
-/// <param name="Title">Display title of the line this citation backs (e.g. "Federal Withholding").</param>
-/// <param name="Citation">The authoritative reference text (e.g. "IRS Publication 15-T (2026)...").</param>
-public sealed record SourceCitation(string Title, string Citation);
+/// <param name="Label">The display name of the calculation step this citation belongs to (e.g. "Federal Withholding").</param>
+/// <param name="Reference">The authoritative source document reference (e.g. "IRS Publication 15-T (2026), Worksheet 1A").</param>
+public sealed record SourceCitation(string Label, string Reference);

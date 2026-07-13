@@ -1,16 +1,14 @@
 namespace PaycheckCalculator.Core.Models;
 
 /// <summary>
-/// Centralizes which tax year(s) the loaded tax data supports. All federal/state tax data
-/// currently ships for a single year (2026); this becomes the single place to update — and,
-/// once a second year is added, the place to turn into a real registry lookup — rather than a
-/// literal scattered across calculators.
+/// Identifies the single tax year whose tables are compiled into this build of the
+/// Core engine.  All calculators run against this year's IRS/state rules.
 /// </summary>
 public static class TaxYearSupport
 {
-    /// <summary>The tax year new inputs default to, and the only year currently supported.</summary>
-    public const int Default = 2026;
+    /// <summary>The tax year whose rules and tables are active in the current build (2026).</summary>
+    public const int CurrentTaxYear = 2026;
 
-    /// <summary>True when tax data for the given year is loaded and can be calculated against.</summary>
-    public static bool IsSupported(int taxYear) => taxYear == Default;
+    /// <summary>All tax years supported by this build (only <see cref="CurrentTaxYear"/> in practice).</summary>
+    public static IReadOnlyList<int> SupportedTaxYears { get; } = new[] { CurrentTaxYear };
 }

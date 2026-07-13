@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.State;
+using System.Globalization;
 
 namespace PaycheckCalculator.Blazor.Components.Pages;
 

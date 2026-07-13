@@ -49,6 +49,9 @@ public sealed class BonusResult
     /// <summary>Take-home portion of the bonus after withholding.</summary>
     public decimal NetBonus { get; init; }
 
+    /// <summary>The tax year whose tables were used to produce this result.</summary>
+    public int TaxYear { get; init; }
+
     /// <summary>"Show Your Work" breakdown — one line per visible row, mirroring <see cref="PaycheckResult"/>.</summary>
     public PaycheckExplanation Explanation { get; init; } = PaycheckExplanation.Empty;
 }
