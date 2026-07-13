@@ -12,6 +12,7 @@ using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Pay;
 using PaycheckCalculator.Core.Tax.Federal;
 using PaycheckCalculator.Core.Tax.State;
+using PaycheckCalculator.Core.Validation;
 using PaycheckCalculator.Shared.Snapshots;
 using PaycheckCalculator.Shared.Sync;
 using System.Collections.ObjectModel;
@@ -224,6 +225,19 @@ public partial class CalculatorViewModel : ObservableObject
     [ObservableProperty] public partial int PaycheckNumber { get; set; } = 1;
 
     /// <summary>
+    /// Year-to-date Social Security wages, so the FICA Social Security wage-base cap
+    /// (and the self-employment/bonus equivalents) are honored on this paycheck —
+    /// matching the field already present on the Blazor front-end.
+    /// </summary>
+    [ObservableProperty] public partial decimal YtdSocialSecurityWages { get; set; }
+
+    /// <summary>
+    /// Year-to-date Medicare wages, so the 0.9% Additional Medicare threshold ($200,000)
+    /// is honored — matching the field already present on the Blazor front-end.
+    /// </summary>
+    [ObservableProperty] public partial decimal YtdMedicareWages { get; set; }
+
+    /// <summary>
     /// The tax year the calculation is performed under. Defaults to
     /// <see cref="TaxYearSupport.Default"/>; restored from a loaded saved paycheck so a prior
     /// year's snapshot is never silently recalculated under newer tax data.
@@ -257,6 +271,20 @@ public partial class CalculatorViewModel : ObservableObject
     partial void OnStateValidationErrorsChanged(ObservableCollection<string> value)
     {
         OnPropertyChanged(nameof(HasStateValidationErrors));
+    }
+
+    /// <summary>
+    /// Sanity-check errors (negative/implausible/out-of-range values) from
+    /// <see cref="PaycheckInputValidator"/>, surfaced the same way as
+    /// <see cref="StateValidationErrors"/>.
+    /// </summary>
+    [ObservableProperty] public partial ObservableCollection<string> CalculationErrors { get; set; } = new();
+
+    public bool HasCalculationErrors => CalculationErrors.Count > 0;
+
+    partial void OnCalculationErrorsChanged(ObservableCollection<string> value)
+    {
+        OnPropertyChanged(nameof(HasCalculationErrors));
     }
 
     /// <summary>True when the selected state has no extra input fields (e.g., no-income-tax states).</summary>
@@ -960,19 +988,27 @@ public partial class CalculatorViewModel : ObservableObject
         }
         StateValidationErrors = new ObservableCollection<string>(stateErrors);
 
-        // Block calculation when state input is invalid
-        if (hasFieldErrors || stateErrors.Count > 0)
-            return;
-
         // Self-employment mode reuses the validated state inputs but its own engine.
         if (IsSelfEmploymentMode)
         {
+            // Block calculation when state input is invalid
+            if (hasFieldErrors || stateErrors.Count > 0)
+                return;
+
             CalculateSelfEmployment(stateValues);
             return;
         }
 
         // Map ViewModel state → domain input via mapper
         var input = PaycheckInputMapper.Map(this, stateValues);
+
+        // Sanity-check negative/implausible/out-of-range values before running the pipeline.
+        var calcErrors = PaycheckInputValidator.Validate(input, IsGrossUpMode ? TargetNetPay : null);
+        CalculationErrors = new ObservableCollection<string>(calcErrors);
+
+        // Block calculation when state input or paycheck input is invalid
+        if (hasFieldErrors || stateErrors.Count > 0 || calcErrors.Count > 0)
+            return;
 
         // Run the calculation for the selected mode and map to the presentation model.
         if (IsGrossUpMode)
@@ -1010,12 +1046,21 @@ public partial class CalculatorViewModel : ObservableObject
     /// </summary>
     private void CalculateBonus()
     {
-        var bonusResult = _bonus.Calculate(new BonusInput
+        var bonusInput = new BonusInput
         {
             BonusAmount = BonusAmount,
             State = SelectedState,
-            YtdSupplementalWages = YtdSupplementalWages
-        });
+            YtdSupplementalWages = YtdSupplementalWages,
+            YtdSocialSecurityWages = YtdSocialSecurityWages,
+            YtdMedicareWages = YtdMedicareWages
+        };
+
+        var calcErrors = PaycheckInputValidator.ValidateBonus(bonusInput);
+        CalculationErrors = new ObservableCollection<string>(calcErrors);
+        if (calcErrors.Count > 0)
+            return;
+
+        var bonusResult = _bonus.Calculate(bonusInput);
 
         ResultCard = ResultCardMapper.MapBonus(bonusResult);
         Projection = null;
@@ -1037,12 +1082,21 @@ public partial class CalculatorViewModel : ObservableObject
     /// </summary>
     private void CalculateSelfEmployment(StateInputValues stateValues)
     {
-        var seResult = _selfEmployment.Calculate(new SelfEmploymentInput
+        var seInput = new SelfEmploymentInput
         {
             AnnualNetEarnings = SelfEmploymentEarnings,
             State = SelectedState,
-            StateInputValues = stateValues
-        });
+            StateInputValues = stateValues,
+            YtdSocialSecurityWages = YtdSocialSecurityWages,
+            YtdMedicareWages = YtdMedicareWages
+        };
+
+        var calcErrors = PaycheckInputValidator.ValidateSelfEmployment(seInput);
+        CalculationErrors = new ObservableCollection<string>(calcErrors);
+        if (calcErrors.Count > 0)
+            return;
+
+        var seResult = _selfEmployment.Calculate(seInput);
 
         ResultCard = ResultCardMapper.MapSelfEmployment(seResult);
         Projection = null;

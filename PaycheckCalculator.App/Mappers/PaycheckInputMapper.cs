@@ -36,6 +36,8 @@ public static class PaycheckInputMapper
             },
             Deductions = vm.Deductions.Select(d => d.ToDeduction()).ToArray(),
             PaycheckNumber = vm.PaycheckNumber,
+            YtdSocialSecurityWages = vm.YtdSocialSecurityWages,
+            YtdMedicareWages = vm.YtdMedicareWages,
             TaxYear = vm.TaxYear
         };
     }
