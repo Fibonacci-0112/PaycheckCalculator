@@ -11,7 +11,7 @@ public partial class Calculator
     /// </summary>
     [Parameter] public UsState? InitialState { get; set; }
 
-    private sealed class StateFieldVm
+    internal sealed class StateFieldVm
     {
         public StateFieldDefinition Def { get; }
         public string Key => Def.Key;
@@ -62,11 +62,13 @@ public partial class Calculator
             }
             if (Def.FieldType == StateFieldType.Integer
                 && !string.IsNullOrEmpty(StringValue)
-                && !int.TryParse(StringValue, out _))
+                && !int.TryParse(StringValue, System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a whole number.";
             if (Def.FieldType == StateFieldType.Decimal
                 && !string.IsNullOrEmpty(StringValue)
-                && !decimal.TryParse(StringValue, out _))
+                && !decimal.TryParse(StringValue, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a number.";
         }
 
@@ -74,7 +76,8 @@ public partial class Calculator
         {
             StateFieldType.Picker => (object?)(SelectedOption ?? Def.DefaultValue?.ToString()),
             StateFieldType.Toggle => BoolValue,
-            StateFieldType.Integer => int.TryParse(StringValue, out var i) ? i : 0,
+            StateFieldType.Integer => int.TryParse(StringValue, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out var i) ? i : 0,
             StateFieldType.Decimal => decimal.TryParse(StringValue, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0m,
             _ => StringValue

@@ -12,6 +12,12 @@
     <ProjectReference Include="..\PaycheckCalculator.Shared\PaycheckCalculator.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Allows PaycheckCalculator.Tests to unit test internal component helper types
+       (e.g. Calculator.StateFieldVm) without needing a full bUnit render harness. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="PaycheckCalculator.Tests" />
+  </ItemGroup>
+
   <!-- Copy Core tax data into TaxData/ in the build output, matching the logical
        names expected by AddPaycheckCalcCore (e.g. "schemas/ca.json"). -->
   <ItemGroup>

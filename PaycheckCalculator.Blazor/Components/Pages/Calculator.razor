@@ -165,7 +165,7 @@
                 <div class="form-group">
                     <label>State</label>
                     <select @bind="_state" @bind:after="LoadStateFields">
-                        @foreach (var s in Enum.GetValues<UsState>())
+                        @foreach (var s in StateRegistry.SupportedStates)
                         {
                             <option value="@s">@s.ToString()</option>
                         }
