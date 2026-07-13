@@ -7,4 +7,4 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export ASPNETCORE_ENVIRONMENT=Development
 export ASPNETCORE_URLS="http://0.0.0.0:5000"
 export PaycheckApi__BaseUrl="http://127.0.0.1:5201"
-exec dotnet run --project PaycheckCalc.Blazor --no-launch-profile
+exec dotnet run --project PaycheckCalculator.Blazor --no-launch-profile
