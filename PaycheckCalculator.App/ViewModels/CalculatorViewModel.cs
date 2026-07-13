@@ -475,8 +475,6 @@ public partial class CalculatorViewModel : ObservableObject
     public bool ShowBothDeductions =>
         (ResultCard?.PreTaxDeductions ?? 0m) > 0m && (ResultCard?.PostTaxDeductions ?? 0m) > 0m;
 
-    /// <summary>
-    /// Opens a "Show Your Work" alert for the paycheck line identified by
     /// <summary>Shows a <c>DisplayAlert</c> listing all source citations from the current result.</summary>
     [RelayCommand]
     private async Task ShowAccuracySources()
