@@ -32,4 +32,10 @@ public sealed class BonusInput
     /// honored on the bonus. Defaults to 0.
     /// </summary>
     public decimal YtdMedicareWages { get; init; }
+
+    /// <summary>
+    /// The tax year this bonus was computed under.  0 (default) means "use the current
+    /// supported year" (<see cref="TaxYearSupport.CurrentTaxYear"/>).
+    /// </summary>
+    public int TaxYear { get; init; } = 0;
 }

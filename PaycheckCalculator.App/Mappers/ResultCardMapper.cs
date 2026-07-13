@@ -45,7 +45,8 @@ public static class ResultCardMapper
             Explanation = result.Explanation,
             IsBonus = true,
             BonusStateUsesRegularMethod = result.StateUsesRegularMethod,
-            BonusStateDescription = result.StateWithholdingDescription
+            BonusStateDescription = result.StateWithholdingDescription,
+            TaxYear = result.TaxYear
         };
 
     /// <summary>
@@ -74,7 +75,8 @@ public static class ResultCardMapper
             StateName = EnumDisplay.UsStateName(result.State.ToString()),
             Explanation = result.Explanation,
             IsSelfEmployment = true,
-            QuarterlyEstimates = result.QuarterlyEstimates
+            QuarterlyEstimates = result.QuarterlyEstimates,
+            TaxYear = result.TaxYear
         };
 
     private static ResultCardModel MapInternal(PaycheckResult result, bool isGrossUp, decimal targetNetPay)
@@ -100,7 +102,8 @@ public static class ResultCardMapper
             Explanation = result.Explanation,
             IsGrossUp = isGrossUp,
             TargetNetPay = targetNetPay,
-            GrossUpCost = isGrossUp ? result.GrossPay - targetNetPay : 0m
+            GrossUpCost = isGrossUp ? result.GrossPay - targetNetPay : 0m,
+            TaxYear = result.TaxYear
         };
     }
 }

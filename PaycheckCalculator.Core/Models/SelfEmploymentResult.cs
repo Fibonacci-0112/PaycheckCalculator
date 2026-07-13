@@ -58,6 +58,9 @@ public sealed class SelfEmploymentResult
     /// <summary>The four quarterly estimated-payment installments and their due dates.</summary>
     public IReadOnlyList<QuarterlyEstimate> QuarterlyEstimates { get; init; } = Array.Empty<QuarterlyEstimate>();
 
+    /// <summary>The tax year whose tables were used to produce this result.</summary>
+    public int TaxYear { get; init; }
+
     /// <summary>"Show Your Work" breakdown — one line per visible row, mirroring <see cref="PaycheckResult"/>.</summary>
     public PaycheckExplanation Explanation { get; init; } = PaycheckExplanation.Empty;
 }

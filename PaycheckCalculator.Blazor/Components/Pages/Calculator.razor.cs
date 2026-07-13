@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.State;
+using System.Globalization;
 
 namespace PaycheckCalculator.Blazor.Components.Pages;
 
@@ -62,11 +63,13 @@ public partial class Calculator
             }
             if (Def.FieldType == StateFieldType.Integer
                 && !string.IsNullOrEmpty(StringValue)
-                && !int.TryParse(StringValue, out _))
+                && !int.TryParse(StringValue, NumberStyles.Integer,
+                    CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a whole number.";
             if (Def.FieldType == StateFieldType.Decimal
                 && !string.IsNullOrEmpty(StringValue)
-                && !decimal.TryParse(StringValue, out _))
+                && !decimal.TryParse(StringValue, NumberStyles.Any,
+                    CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a number.";
         }
 

@@ -80,6 +80,7 @@ public sealed class BonusCalculator
             StateUsesRegularMethod = stateResult.UsesRegularMethod,
             StateWithholdingDescription = stateResult.Description,
             NetBonus = RoundMoney(net),
+            TaxYear = input.TaxYear > 0 ? input.TaxYear : TaxYearSupport.CurrentTaxYear,
             Explanation = explanation
         };
     }
