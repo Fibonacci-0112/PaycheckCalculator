@@ -533,6 +533,43 @@ public partial class CalculatorViewModel : ObservableObject
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Opens the "Accuracy &amp; Sources" alert, listing every authoritative
+    /// tax-rule citation behind the current result's calculated lines.
+    /// Bound from the Results page toolbar.
+    /// </summary>
+    [RelayCommand]
+    private async Task ShowAccuracySources()
+    {
+        if (ResultCard is null) return;
+
+        var shell = Shell.Current;
+        if (shell is null) return;
+
+        await shell.DisplayAlert(
+            $"Accuracy & Sources ({ResultCard.TaxYear})",
+            FormatSources(ResultCard.Explanation.Sources),
+            "OK");
+    }
+
+    private static string FormatSources(IReadOnlyList<SourceCitation> sources)
+    {
+        if (sources.Count == 0)
+        {
+            return "No source citations are available for this result.";
+        }
+
+        var sb = new StringBuilder();
+        foreach (var source in sources)
+        {
+            sb.Append(source.Title).AppendLine(":");
+            sb.Append("  ").AppendLine(source.Citation);
+            sb.AppendLine();
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
     public IReadOnlyList<PickerItem<PayFrequency>> Frequencies { get; } =
         Enum.GetValues<PayFrequency>()
             .Select(f => new PickerItem<PayFrequency>(f, EnumDisplay.PayFrequency(f.ToString())))

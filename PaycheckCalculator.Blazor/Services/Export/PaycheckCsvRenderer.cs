@@ -64,6 +64,9 @@ public static class PaycheckCsvRenderer
         Money(sb, "Summary", "Total Taxes", result.TotalTaxes);
         Money(sb, "Summary", "Net Pay", result.NetPay);
 
+        foreach (var source in result.Explanation.Sources)
+            Line(sb, "Sources", source.Title, source.Citation);
+
         if (annual is not null)
             WriteAnnual(sb, annual);
         if (comparison is { Count: > 0 })

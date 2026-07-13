@@ -24,4 +24,15 @@ public sealed class PaycheckExplanation
 
     /// <summary>An empty explanation, used as a safe default.</summary>
     public static PaycheckExplanation Empty { get; } = new(Array.Empty<LineExplanation>());
+
+    /// <summary>
+    /// The authoritative source citations backing this calculation, one per line
+    /// that carries a <see cref="LineExplanation.Reference"/>, in display order.
+    /// Lines with no governing tax rule (e.g. Gross Pay, Net Pay) are omitted.
+    /// Powers the "Accuracy &amp; Sources" view in both front-ends.
+    /// </summary>
+    public IReadOnlyList<SourceCitation> Sources =>
+        Lines.Where(l => !string.IsNullOrEmpty(l.Reference))
+             .Select(l => new SourceCitation(l.Title, l.Reference!))
+             .ToList();
 }

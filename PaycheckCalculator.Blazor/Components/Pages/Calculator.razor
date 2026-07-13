@@ -302,14 +302,18 @@
     <div class="calc-panel results-outer">
         <div class="panel-header results-header">
             <h2>Results</h2>
-            @if (_result != null)
+            @if (_result != null || _bonusResult != null || _selfEmpResult != null)
             {
                 <div class="results-actions no-print">
-                    <input type="text" class="export-name-input" @bind="_exportFileName"
-                           placeholder="File name" title="Name for exported files" aria-label="Export file name" />
-                    <button class="btn-export" @onclick="ExportCsvAsync" title="Download results (with annual projection) as CSV">CSV</button>
-                    <button class="btn-export" @onclick="ExportPdfAsync" title="Download results (with annual projection) as PDF">PDF</button>
-                    <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
+                    @if (_result != null)
+                    {
+                        <input type="text" class="export-name-input" @bind="_exportFileName"
+                               placeholder="File name" title="Name for exported files" aria-label="Export file name" />
+                        <button class="btn-export" @onclick="ExportCsvAsync" title="Download results (with annual projection) as CSV">CSV</button>
+                        <button class="btn-export" @onclick="ExportPdfAsync" title="Download results (with annual projection) as PDF">PDF</button>
+                        <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
+                    }
+                    <button class="btn-export" @onclick="OpenAccuracySources" title="View the tax-rule citations behind these results">Sources</button>
                 </div>
             }
         </div>
@@ -919,6 +923,11 @@
     <ExplanationModal Explanation="_modalExplanation" OnClose="CloseModal" />
 }
 
+@if (_showSourcesModal)
+{
+    <AccuracySourcesModal Sources="ActiveSources" TaxYear="ActiveTaxYear" OnClose="CloseSourcesModal" />
+}
+
 @code {
     private int _inputTab = 0;
     private int _resultTab = 0;
@@ -974,6 +983,16 @@
     // Modal
     private bool _showModal = false;
     private LineExplanation? _modalExplanation;
+    private bool _showSourcesModal = false;
+
+    /// <summary>The source citations for whichever result mode is currently active (standard/bonus/self-employment).</summary>
+    private IReadOnlyList<SourceCitation> ActiveSources =>
+        (_result?.Explanation ?? _bonusResult?.Explanation ?? _selfEmpResult?.Explanation)?.Sources
+            ?? Array.Empty<SourceCitation>();
+
+    /// <summary>The tax year backing whichever result mode is currently active.</summary>
+    private int ActiveTaxYear =>
+        _result?.TaxYear ?? _bonusResult?.TaxYear ?? _selfEmpResult?.TaxYear ?? TaxYearSupport.Default;
 
     // Saved paychecks (session) + account
     private string _paycheckName = "";
@@ -1363,6 +1382,10 @@
     }
 
     private void CloseModal() => _showModal = false;
+
+    private void OpenAccuracySources() => _showSourcesModal = true;
+
+    private void CloseSourcesModal() => _showSourcesModal = false;
 
     // ── Export / print ──────────────────────────────────────────
     // CSV and PDF export the per-paycheck results plus the annual projection, and

@@ -43,6 +43,7 @@ internal static class PaycheckPdfRenderer
             WriteAnnual(layout, annual);
         if (comparison is { Count: > 0 })
             WriteComparison(layout, comparison, comparisonNameA, comparisonNameB);
+        WriteSources(layout, result.Explanation);
 
         layout.Finish(catalogId);
         return doc.Build(catalogId);
@@ -126,6 +127,16 @@ internal static class PaycheckPdfRenderer
         layout.CompareHeader(nameA, nameB);
         foreach (var r in rows)
             layout.CompareRow(r.Label, r.ValueADisplay, r.ValueBDisplay, AsciiDiff(r), r.Highlight);
+    }
+
+    private static void WriteSources(PdfLayout layout, PaycheckCalculator.Core.Explanation.PaycheckExplanation explanation)
+    {
+        var sources = explanation.Sources;
+        if (sources.Count == 0) return;
+
+        layout.SectionHeader("Accuracy & Sources");
+        foreach (var source in sources)
+            layout.Paragraph($"{source.Title}: {source.Citation}");
     }
 
     // The PDF content stream is ASCII; ComparisonRow.DifferenceDisplay uses a U+2212
@@ -281,6 +292,23 @@ internal sealed class PdfLayout
         _y -= height + 14;
     }
 
+    /// <summary>
+    /// A word-wrapped block of small text, used for longer free-form content like
+    /// tax-rule citations that don't fit the label/value <see cref="Row"/> layout.
+    /// </summary>
+    public void Paragraph(string text, double size = 9.5, Rgb? color = null)
+    {
+        var col = color ?? Faint;
+        foreach (var line in Wrap(text, ContentWidth, size))
+        {
+            const double lineHeight = 14;
+            EnsureSpace(lineHeight);
+            Text(ContentLeft, _y - 10, line, bold: false, size: size, color: col);
+            _y -= lineHeight;
+        }
+        _y -= 4; // small gap after each paragraph
+    }
+
     /// <summary>Emits the font, content-stream, and page objects and wires up the pages tree + catalog.</summary>
     public void Finish(int catalogId)
     {
@@ -368,4 +396,27 @@ internal sealed class PdfLayout
 
     /// <summary>Rough proportional width estimate, used only for centering short labels.</summary>
     private static double MeasureApprox(string text, double size) => text.Length * 0.55 * size;
+
+    /// <summary>Greedily wraps free-form text into lines no wider than <paramref name="maxWidth"/>.</summary>
+    private static List<string> Wrap(string text, double maxWidth, double size)
+    {
+        var lines = new List<string>();
+        var current = new StringBuilder();
+        foreach (var word in text.Split(' '))
+        {
+            var candidate = current.Length == 0 ? word : $"{current} {word}";
+            if (current.Length > 0 && MeasureApprox(candidate, size) > maxWidth)
+            {
+                lines.Add(current.ToString());
+                current.Clear().Append(word);
+            }
+            else
+            {
+                current.Clear().Append(candidate);
+            }
+        }
+        if (current.Length > 0)
+            lines.Add(current.ToString());
+        return lines;
+    }
 }

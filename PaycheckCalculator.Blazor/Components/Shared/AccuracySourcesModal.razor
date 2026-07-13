@@ -1,0 +1,39 @@
+@using PaycheckCalculator.Core.Explanation
+
+<div class="modal-overlay" @onclick="OnOverlayClick">
+    <div class="modal-container" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h3>Accuracy &amp; Sources (@TaxYear)</h3>
+            <button class="modal-close" @onclick="OnClose" title="Close">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+            @if (Sources.Count == 0)
+            {
+                <div class="explanation-step">
+                    <div class="step-detail">No source citations are available for this result.</div>
+                </div>
+            }
+            else
+            {
+                @foreach (var source in Sources)
+                {
+                    <div class="explanation-step">
+                        <div class="step-label">@source.Title</div>
+                        <div class="explanation-reference">@source.Citation</div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" @onclick="OnClose">Close</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<SourceCitation> Sources { get; set; } = Array.Empty<SourceCitation>();
+    [Parameter] public int TaxYear { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnClose { get; set; }
+
+    private Task OnOverlayClick() => OnClose.InvokeAsync();
+}
