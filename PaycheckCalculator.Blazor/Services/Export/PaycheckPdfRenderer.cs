@@ -56,10 +56,6 @@ public static class PaycheckPdfRenderer
             WriteComparison(layout, comparison, comparisonNameA, comparisonNameB);
         WriteSources(layout, result.Explanation);
 
-        var sources = result.Explanation.Sources;
-        if (sources.Count > 0)
-            WriteSources(layout, sources);
-
         layout.Finish(catalogId);
         return doc.Build(catalogId);
     }
@@ -153,7 +149,7 @@ public static class PaycheckPdfRenderer
 
         layout.SectionHeader("Accuracy & Sources");
         foreach (var source in sources)
-            layout.Paragraph($"{source.Title}: {source.Citation}");
+            layout.Paragraph($"{source.Label}: {source.Reference}");
     }
 
     // The PDF content stream is ASCII; ComparisonRow.DifferenceDisplay uses a U+2212

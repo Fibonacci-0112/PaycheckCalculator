@@ -237,8 +237,8 @@ public sealed class PayCalculatorExplanationTest
         var calc = CreateCalculator();
         var result = calc.Calculate(SampleInput());
 
-        Assert.DoesNotContain(result.Explanation.Sources, s => s.Title == "Gross Pay");
-        Assert.DoesNotContain(result.Explanation.Sources, s => s.Title == "Net Pay");
+        Assert.DoesNotContain(result.Explanation.Sources, s => s.Label == "Gross Pay");
+        Assert.DoesNotContain(result.Explanation.Sources, s => s.Label == "Net Pay");
     }
 
     [Fact]
@@ -257,10 +257,10 @@ public sealed class PayCalculatorExplanationTest
         Assert.NotEmpty(medicareExpl.Reference);
         Assert.NotEmpty(stateExpl.Reference);
 
-        Assert.Contains(result.Explanation.Sources, s => s.Title == federalExpl.Title && s.Citation == federalExpl.Reference);
-        Assert.Contains(result.Explanation.Sources, s => s.Title == ssExpl.Title && s.Citation == ssExpl.Reference);
-        Assert.Contains(result.Explanation.Sources, s => s.Title == medicareExpl.Title && s.Citation == medicareExpl.Reference);
-        Assert.Contains(result.Explanation.Sources, s => s.Title == stateExpl.Title && s.Citation == stateExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == federalExpl.Title && s.Reference == federalExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == ssExpl.Title && s.Reference == ssExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == medicareExpl.Title && s.Reference == medicareExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == stateExpl.Title && s.Reference == stateExpl.Reference);
     }
 
     [Fact]

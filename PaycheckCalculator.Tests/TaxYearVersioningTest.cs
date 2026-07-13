@@ -1,8 +1,10 @@
 using System.Text.Json;
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Pay;
 using PaycheckCalculator.Core.Tax.Fica;
 using PaycheckCalculator.Core.Tax.Federal;
+using PaycheckCalculator.Core.Tax.Oklahoma;
 using PaycheckCalculator.Core.Tax.State;
 using PaycheckCalculator.Core.Tax.Supplemental;
 using PaycheckCalculator.Shared.Json;
@@ -58,13 +60,13 @@ public sealed class TaxYearVersioningTest
     [Fact]
     public void PayCalculator_Result_CarriesInputTaxYear()
     {
-        var calculator = CreatePayCalculator();
+        var calculator = CreateCalculator();
         var result = calculator.Calculate(new PaycheckInput
         {
             Frequency = PayFrequency.Biweekly,
             HourlyRate = 50m,
             RegularHours = 40m,
-            State = UsState.TX,
+            State = UsState.OK,
             TaxYear = 2026
         });
 
@@ -81,9 +83,9 @@ public sealed class TaxYearVersioningTest
             HourlyRate = 25m,
             RegularHours = 80m,
             State = UsState.OK,
-            TaxYear = 2025
+            TaxYear = 2026
         });
-        Assert.Equal(2025, result.TaxYear);
+        Assert.Equal(2026, result.TaxYear);
     }
 
     // ── BonusCalculator ─────────────────────────────────────────
