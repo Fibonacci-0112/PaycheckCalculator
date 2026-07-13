@@ -39,7 +39,6 @@ public static class PaycheckInputMapper
             YtdSocialSecurityWages = vm.YtdSocialSecurityWages,
             YtdMedicareWages = vm.YtdMedicareWages,
             TaxYear = vm.TaxYear
-            YtdMedicareWages = vm.YtdMedicareWages
         };
     }
 }

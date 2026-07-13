@@ -54,7 +54,7 @@ internal static class PaycheckCsvRenderer
         Money(sb, "Summary", "Net Pay", result.NetPay);
 
         foreach (var source in result.Explanation.Sources)
-            Line(sb, "Sources", source.Title, source.Citation);
+            Line(sb, "Sources", source.Label, source.Reference);
 
         if (annual is not null)
             WriteAnnual(sb, annual);

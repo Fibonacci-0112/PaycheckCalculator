@@ -63,13 +63,13 @@ public partial class Calculator
             }
             if (Def.FieldType == StateFieldType.Integer
                 && !string.IsNullOrEmpty(StringValue)
-                && !int.TryParse(StringValue, System.Globalization.NumberStyles.Integer,
-                    System.Globalization.CultureInfo.InvariantCulture, out _))
+                && !int.TryParse(StringValue, NumberStyles.Integer,
+                    CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a whole number.";
             if (Def.FieldType == StateFieldType.Decimal
                 && !string.IsNullOrEmpty(StringValue)
-                && !decimal.TryParse(StringValue, System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out _))
+                && !decimal.TryParse(StringValue, NumberStyles.Any,
+                    CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a number.";
         }
 
@@ -77,10 +77,10 @@ public partial class Calculator
         {
             StateFieldType.Picker => (object?)(SelectedOption ?? Def.DefaultValue?.ToString()),
             StateFieldType.Toggle => BoolValue,
-            StateFieldType.Integer => int.TryParse(StringValue, System.Globalization.NumberStyles.Integer,
-                System.Globalization.CultureInfo.InvariantCulture, out var i) ? i : 0,
-            StateFieldType.Decimal => decimal.TryParse(StringValue, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0m,
+            StateFieldType.Integer => int.TryParse(StringValue, NumberStyles.Integer,
+                CultureInfo.InvariantCulture, out var i) ? i : 0,
+            StateFieldType.Decimal => decimal.TryParse(StringValue, NumberStyles.Any,
+                CultureInfo.InvariantCulture, out var d) ? d : 0m,
             _ => StringValue
         };
     }

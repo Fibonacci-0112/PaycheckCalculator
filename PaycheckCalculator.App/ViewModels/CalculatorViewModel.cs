@@ -621,8 +621,8 @@ public partial class CalculatorViewModel : ObservableObject
         var sb = new StringBuilder();
         foreach (var source in sources)
         {
-            sb.Append(source.Title).AppendLine(":");
-            sb.Append("  ").AppendLine(source.Citation);
+            sb.Append(source.Label).AppendLine(":");
+            sb.Append("  ").AppendLine(source.Reference);
             sb.AppendLine();
         }
 

@@ -926,7 +926,6 @@
 @if (_showSourcesModal)
 {
     <AccuracySourcesModal Sources="ActiveSources" TaxYear="ActiveTaxYear" OnClose="CloseSourcesModal" />
-    <AccuracySourcesModal Sources="_sourcesForModal" TaxYear="_taxYearForModal" OnClose="CloseSourcesModal" />
 }
 
 @code {
@@ -994,10 +993,6 @@
     /// <summary>The tax year backing whichever result mode is currently active.</summary>
     private int ActiveTaxYear =>
         _result?.TaxYear ?? _bonusResult?.TaxYear ?? _selfEmpResult?.TaxYear ?? TaxYearSupport.Default;
-
-    // Accuracy & Sources modal
-    private IReadOnlyList<PaycheckCalculator.Core.Explanation.SourceCitation> _sourcesForModal = Array.Empty<PaycheckCalculator.Core.Explanation.SourceCitation>();
-    private int _taxYearForModal = 0;
 
     // Saved paychecks (session) + account
     private string _paycheckName = "";
@@ -1389,14 +1384,6 @@
     private void CloseModal() => _showModal = false;
 
     private void OpenAccuracySources() => _showSourcesModal = true;
-    private void OpenSourcesModal()
-    {
-        var explanation = _result?.Explanation ?? _bonusResult?.Explanation ?? _selfEmpResult?.Explanation;
-        if (explanation is null) return;
-        _sourcesForModal = explanation.Sources;
-        _taxYearForModal = _result?.TaxYear ?? _bonusResult?.TaxYear ?? _selfEmpResult?.TaxYear ?? 0;
-        _showSourcesModal = true;
-    }
 
     private void CloseSourcesModal() => _showSourcesModal = false;
 

@@ -45,10 +45,6 @@ internal static class PaycheckPdfRenderer
             WriteComparison(layout, comparison, comparisonNameA, comparisonNameB);
         WriteSources(layout, result.Explanation);
 
-        var sources = result.Explanation.Sources;
-        if (sources.Count > 0)
-            WriteSources(layout, sources);
-
         layout.Finish(catalogId);
         return doc.Build(catalogId);
     }
@@ -140,12 +136,7 @@ internal static class PaycheckPdfRenderer
 
         layout.SectionHeader("Accuracy & Sources");
         foreach (var source in sources)
-            layout.Paragraph($"{source.Title}: {source.Citation}");
-    private static void WriteSources(PdfLayout layout, IReadOnlyList<Core.Explanation.SourceCitation> sources)
-    {
-        layout.SectionHeader("Accuracy & Sources");
-        foreach (var s in sources)
-            layout.Paragraph($"{s.Label}: {s.Reference}");
+            layout.Paragraph($"{source.Label}: {source.Reference}");
     }
 
     // The PDF content stream is ASCII; ComparisonRow.DifferenceDisplay uses a U+2212
