@@ -22,6 +22,9 @@ public sealed class PaycheckResult
     public decimal FederalTaxableIncome { get; init; }
     public decimal FederalWithholding { get; init; }
 
+    /// <summary>The tax year whose tables were used to produce this result.</summary>
+    public int TaxYear { get; init; }
+
     public decimal TotalTaxes => StateWithholding + StateDisabilityInsurance
                                 + SocialSecurityWithholding + MedicareWithholding + AdditionalMedicareWithholding
                                 + FederalWithholding;

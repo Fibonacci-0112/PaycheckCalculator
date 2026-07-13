@@ -165,7 +165,7 @@
                 <div class="form-group">
                     <label>State</label>
                     <select @bind="_state" @bind:after="LoadStateFields">
-                        @foreach (var s in Enum.GetValues<UsState>())
+                        @foreach (var s in StateRegistry.SupportedStates)
                         {
                             <option value="@s">@s.ToString()</option>
                         }
@@ -310,6 +310,7 @@
                     <button class="btn-export" @onclick="ExportCsvAsync" title="Download results (with annual projection) as CSV">CSV</button>
                     <button class="btn-export" @onclick="ExportPdfAsync" title="Download results (with annual projection) as PDF">PDF</button>
                     <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
+                    <button class="btn-export" @onclick="OpenSourcesModal" title="View accuracy and source citations">Sources</button>
                 </div>
             }
         </div>
@@ -919,6 +920,11 @@
     <ExplanationModal Explanation="_modalExplanation" OnClose="CloseModal" />
 }
 
+@if (_showSourcesModal)
+{
+    <AccuracySourcesModal Sources="_sourcesForModal" TaxYear="_taxYearForModal" OnClose="CloseSourcesModal" />
+}
+
 @code {
     private int _inputTab = 0;
     private int _resultTab = 0;
@@ -971,9 +977,14 @@
     private SelfEmploymentResult? _selfEmpResult;
     private string? _calcError;
 
-    // Modal
+    // Explanation modal
     private bool _showModal = false;
     private LineExplanation? _modalExplanation;
+
+    // Accuracy & Sources modal
+    private bool _showSourcesModal = false;
+    private IReadOnlyList<PaycheckCalculator.Core.Explanation.SourceCitation> _sourcesForModal = Array.Empty<PaycheckCalculator.Core.Explanation.SourceCitation>();
+    private int _taxYearForModal = 0;
 
     // Saved paychecks (session) + account
     private string _paycheckName = "";
@@ -1363,6 +1374,17 @@
     }
 
     private void CloseModal() => _showModal = false;
+
+    private void OpenSourcesModal()
+    {
+        var explanation = _result?.Explanation ?? _bonusResult?.Explanation ?? _selfEmpResult?.Explanation;
+        if (explanation is null) return;
+        _sourcesForModal = explanation.Sources;
+        _taxYearForModal = _result?.TaxYear ?? _bonusResult?.TaxYear ?? _selfEmpResult?.TaxYear ?? 0;
+        _showSourcesModal = true;
+    }
+
+    private void CloseSourcesModal() => _showSourcesModal = false;
 
     // ── Export / print ──────────────────────────────────────────
     // CSV and PDF export the per-paycheck results plus the annual projection, and

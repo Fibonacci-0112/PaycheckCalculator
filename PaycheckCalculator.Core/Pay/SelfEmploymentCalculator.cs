@@ -132,6 +132,7 @@ public sealed class SelfEmploymentCalculator
             FederalQuarterlyPayment = fedPerQuarter,
             StateQuarterlyPayment = statePerQuarter,
             QuarterlyEstimates = quarters,
+            TaxYear = input.TaxYear > 0 ? input.TaxYear : TaxYearSupport.CurrentTaxYear,
             Explanation = explanation
         };
     }

@@ -111,6 +111,7 @@ public sealed class PayCalculator
             FederalTaxableIncome = RoundMoney(fedTaxable),
             FederalWithholding = RoundMoney(federal),
             NetPay = RoundMoney(net),
+            TaxYear = input.TaxYear > 0 ? input.TaxYear : _fed.SupportedTaxYear,
             Explanation = explanation
         };
     }

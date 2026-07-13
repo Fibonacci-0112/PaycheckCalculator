@@ -210,6 +210,28 @@
                                    TextColor="Black" BackgroundColor="#F2F2F2" />
                         </Grid>
 
+                        <!-- YTD FICA wages (for wage-base cap accuracy) -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Prior Social Security Wages (this year)" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                            <Entry Text="{Binding YtdSocialSecurityWages}" Keyboard="Numeric" Grid.Column="1"
+                                   TextColor="Black" BackgroundColor="#F2F2F2">
+                                <Entry.Behaviors>
+                                    <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                </Entry.Behaviors>
+                            </Entry>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Prior Medicare Wages (this year)" Grid.Column="0"
+                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                            <Entry Text="{Binding YtdMedicareWages}" Keyboard="Numeric" Grid.Column="1"
+                                   TextColor="Black" BackgroundColor="#F2F2F2">
+                                <Entry.Behaviors>
+                                    <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                </Entry.Behaviors>
+                            </Entry>
+                        </Grid>
+
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
                                 BackgroundColor="#333333" TextColor="White"
                                 FontAttributes="Bold" CornerRadius="8"

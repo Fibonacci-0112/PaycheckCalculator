@@ -155,6 +155,12 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>Supplemental wages already paid this year, for the federal $1,000,000 threshold.</summary>
     [ObservableProperty] public partial decimal YtdSupplementalWages { get; set; }
 
+    /// <summary>Year-to-date Social Security wages from prior paychecks, for honoring the $184,500 wage-base cap.</summary>
+    [ObservableProperty] public partial decimal YtdSocialSecurityWages { get; set; }
+
+    /// <summary>Year-to-date Medicare wages from prior paychecks, for the 0.9% Additional Medicare threshold.</summary>
+    [ObservableProperty] public partial decimal YtdMedicareWages { get; set; }
+
     /// <summary>Annual net self-employment earnings (Schedule C net profit) for the 1099 calculation.</summary>
     [ObservableProperty] public partial decimal SelfEmploymentEarnings { get; set; } = 80000m;
 
@@ -471,6 +477,33 @@ public partial class CalculatorViewModel : ObservableObject
 
     /// <summary>
     /// Opens a "Show Your Work" alert for the paycheck line identified by
+    /// <summary>Shows a <c>DisplayAlert</c> listing all source citations from the current result.</summary>
+    [RelayCommand]
+    private async Task ShowAccuracySources()
+    {
+        if (ResultCard is null) return;
+        var sources = ResultCard.Explanation.Sources;
+        var shell = Shell.Current;
+        if (shell is null) return;
+
+        if (sources.Count == 0)
+        {
+            await shell.DisplayAlert("Accuracy & Sources", "No source citations are available for this result.", "OK");
+            return;
+        }
+
+        var sb = new StringBuilder();
+        foreach (var s in sources)
+        {
+            sb.AppendLine(s.Label);
+            sb.Append("  ").AppendLine(s.Reference);
+            sb.AppendLine();
+        }
+
+        await shell.DisplayAlert("Accuracy & Sources", sb.ToString().TrimEnd(), "OK");
+    }
+
+    /// <summary>Shows a <c>DisplayAlert</c> for the explanation of a particular paycheck line identified by
     /// <paramref name="keyName"/>. Bound from XAML info-icon TapGestureRecognizers
     /// with a CommandParameter naming one of <see cref="ExplanationLineKey"/>.
     /// </summary>
@@ -797,6 +830,8 @@ public partial class CalculatorViewModel : ObservableObject
         OvertimeMultiplier = input.OvertimeMultiplier;
         SalaryAmount = input.SalaryAmount;
         PaycheckNumber = input.PaycheckNumber;
+        YtdSocialSecurityWages = input.YtdSocialSecurityWages;
+        YtdMedicareWages = input.YtdMedicareWages;
 
         // Federal W-4
         SelectedFederalPickerItem = FederalStatuses.FirstOrDefault(s => s.Value == input.FederalW4.FilingStatus);

@@ -62,11 +62,13 @@ public partial class Calculator
             }
             if (Def.FieldType == StateFieldType.Integer
                 && !string.IsNullOrEmpty(StringValue)
-                && !int.TryParse(StringValue, out _))
+                && !int.TryParse(StringValue, System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a whole number.";
             if (Def.FieldType == StateFieldType.Decimal
                 && !string.IsNullOrEmpty(StringValue)
-                && !decimal.TryParse(StringValue, out _))
+                && !decimal.TryParse(StringValue, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out _))
                 ErrorMessage = $"{Label} must be a number.";
         }
 

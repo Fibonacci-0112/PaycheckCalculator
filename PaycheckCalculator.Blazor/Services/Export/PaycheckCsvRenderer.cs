@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using PaycheckCalculator.Blazor.Models;
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
 
 namespace PaycheckCalculator.Blazor.Services.Export;
@@ -42,6 +43,8 @@ public static class PaycheckCsvRenderer
 
         if (!string.IsNullOrEmpty(stateLabel))
             Line(sb, "Summary", "State", stateLabel);
+        if (result.TaxYear > 0)
+            Line(sb, "Summary", "Tax Year", result.TaxYear.ToString(Invariant));
 
         Money(sb, "Income", "Gross Pay", result.GrossPay);
         Money(sb, "Income", "Federal Taxable Income", result.FederalTaxableIncome);
@@ -67,6 +70,10 @@ public static class PaycheckCsvRenderer
             WriteAnnual(sb, annual);
         if (comparison is { Count: > 0 })
             WriteComparison(sb, comparison, comparisonNameA, comparisonNameB);
+
+        var sources = result.Explanation.Sources;
+        if (sources.Count > 0)
+            WriteSources(sb, sources);
 
         return sb.ToString();
     }
@@ -115,6 +122,14 @@ public static class PaycheckCsvRenderer
         Line4(sb, "Metric", nameA, nameB, "Difference");
         foreach (var r in rows)
             Line4(sb, r.Label, Dec(r.ValueA), Dec(r.ValueB), Dec(r.Difference));
+    }
+
+    private static void WriteSources(StringBuilder sb, IReadOnlyList<SourceCitation> sources)
+    {
+        sb.Append("\r\n"); // blank separator before the sources table
+        Line(sb, "Section", "Calculation Step", "Source");
+        foreach (var s in sources)
+            Line(sb, "Sources", s.Label, s.Reference);
     }
 
     private static string Dec(decimal value) => value.ToString("0.00", Invariant);

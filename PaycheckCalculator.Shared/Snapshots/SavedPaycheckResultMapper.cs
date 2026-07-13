@@ -29,6 +29,7 @@ public static class SavedPaycheckResultMapper
             NetPay = result.NetPay,
             IsGrossUp = isGrossUp,
             TargetNetPay = targetNetPay,
-            GrossUpCost = isGrossUp ? result.GrossPay - targetNetPay : 0m
+            GrossUpCost = isGrossUp ? result.GrossPay - targetNetPay : 0m,
+            TaxYear = result.TaxYear
         };
 }

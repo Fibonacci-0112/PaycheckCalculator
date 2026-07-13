@@ -38,7 +38,8 @@ public static class SavedPaycheckSnapshotMapper
                 NetPay = card.NetPay,
                 IsGrossUp = card.IsGrossUp,
                 TargetNetPay = card.TargetNetPay,
-                GrossUpCost = card.GrossUpCost
+                GrossUpCost = card.GrossUpCost,
+                TaxYear = card.TaxYear
             }
         };
 
@@ -65,6 +66,7 @@ public static class SavedPaycheckSnapshotMapper
             IsGrossUp = r.IsGrossUp,
             TargetNetPay = r.TargetNetPay,
             GrossUpCost = r.GrossUpCost,
+            TaxYear = r.TaxYear,
             StateName = EnumDisplay.UsStateName(dto.Input.State.ToString())
         };
     }
