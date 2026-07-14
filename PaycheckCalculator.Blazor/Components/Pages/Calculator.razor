@@ -1319,7 +1319,7 @@
     private void RequestDeleteAccount() => _confirmDeleteAccount = true;
     private void CancelDeleteAccount() => _confirmDeleteAccount = false;
 
-    private async Task DeleteLocalDataAsync()
+    private async Task DeleteLocalDataAsync(bool setStatus = true)
     {
         _confirmDeleteLocal = false;
 
@@ -1330,7 +1330,8 @@
         await BudgetStore.ReplaceAllSavingsGoalsAsync(new SavingsGoalSet([], []));
 
         await RefreshHistoryAsync();
-        _accountStatus = "Local paycheck and budget data deleted for this browser session.";
+        if (setStatus)
+            _accountStatus = "Local paycheck and budget data deleted for this browser session.";
         _accountError = null;
     }
 
@@ -1373,7 +1374,7 @@
         }
 
         Account.Email = null;
-        await DeleteLocalDataAsync();
+        await DeleteLocalDataAsync(setStatus: false);
         _accountStatus = "Account and synced cloud data deleted.";
     }
 

@@ -139,80 +139,80 @@ public sealed class PaycheckApiClient
                     : ApiResult<BudgetSyncResponse>.Ok(body);
             }
         }
-
-        public async Task<ApiResult<string>> ExportAccountDataAsync(CancellationToken ct = default)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            var uri = BuildUri("api/account/export");
-            if (uri is null) return ApiResult<string>.Fail("No server URL is configured.");
-
-            var tokens = await _tokens.GetTokensAsync(ct).ConfigureAwait(false);
-            if (tokens is null) return ApiResult<string>.Fail("Not signed in.");
-
-            try
-            {
-                var resp = await GetAsync(uri, tokens.AccessToken, ct).ConfigureAwait(false);
-                if (resp.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    resp.Dispose();
-                    var refreshed = await TryRefreshAsync(tokens.RefreshToken, ct).ConfigureAwait(false);
-                    if (refreshed is null)
-                        return ApiResult<string>.Fail("Your session has expired. Please sign in again.");
-                    resp = await GetAsync(uri, refreshed.AccessToken, ct).ConfigureAwait(false);
-                }
-
-                using (resp)
-                {
-                    if (!resp.IsSuccessStatusCode)
-                        return ApiResult<string>.Fail(await ReadErrorAsync(resp, ct).ConfigureAwait(false));
-                    var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-                    return string.IsNullOrWhiteSpace(json)
-                        ? ApiResult<string>.Fail("Unexpected export response from server.")
-                        : ApiResult<string>.Ok(json);
-                }
-            }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-            {
-                return ApiResult<string>.Fail($"Could not reach the server: {ex.Message}");
-            }
+            return ApiResult<BudgetSyncResponse>.Fail($"Could not reach the server: {ex.Message}");
         }
+    }
 
-        public async Task<ApiResult> DeleteAccountAsync(CancellationToken ct = default)
+    public async Task<ApiResult<string>> ExportAccountDataAsync(CancellationToken ct = default)
+    {
+        var uri = BuildUri("api/account/export");
+        if (uri is null) return ApiResult<string>.Fail("No server URL is configured.");
+
+        var tokens = await _tokens.GetTokensAsync(ct).ConfigureAwait(false);
+        if (tokens is null) return ApiResult<string>.Fail("Not signed in.");
+
+        try
         {
-            var uri = BuildUri("api/account/");
-            if (uri is null) return ApiResult.Fail("No server URL is configured.");
-
-            var tokens = await _tokens.GetTokensAsync(ct).ConfigureAwait(false);
-            if (tokens is null) return ApiResult.Fail("Not signed in.");
-
-            try
+            var resp = await GetAsync(uri, tokens.AccessToken, ct).ConfigureAwait(false);
+            if (resp.StatusCode == HttpStatusCode.Unauthorized)
             {
-                var resp = await DeleteAsync(uri, tokens.AccessToken, ct).ConfigureAwait(false);
-                if (resp.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    resp.Dispose();
-                    var refreshed = await TryRefreshAsync(tokens.RefreshToken, ct).ConfigureAwait(false);
-                    if (refreshed is null)
-                        return ApiResult.Fail("Your session has expired. Please sign in again.");
-                    resp = await DeleteAsync(uri, refreshed.AccessToken, ct).ConfigureAwait(false);
-                }
-
-                using (resp)
-                {
-                    if (!resp.IsSuccessStatusCode)
-                        return ApiResult.Fail(await ReadErrorAsync(resp, ct).ConfigureAwait(false));
-                }
-
-                await _tokens.SetTokensAsync(null, ct).ConfigureAwait(false);
-                return ApiResult.Ok();
+                resp.Dispose();
+                var refreshed = await TryRefreshAsync(tokens.RefreshToken, ct).ConfigureAwait(false);
+                if (refreshed is null)
+                    return ApiResult<string>.Fail("Your session has expired. Please sign in again.");
+                resp = await GetAsync(uri, refreshed.AccessToken, ct).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+
+            using (resp)
             {
-                return ApiResult.Fail($"Could not reach the server: {ex.Message}");
+                if (!resp.IsSuccessStatusCode)
+                    return ApiResult<string>.Fail(await ReadErrorAsync(resp, ct).ConfigureAwait(false));
+                var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                return string.IsNullOrWhiteSpace(json)
+                    ? ApiResult<string>.Fail("Unexpected export response from server.")
+                    : ApiResult<string>.Ok(json);
             }
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            return ApiResult<BudgetSyncResponse>.Fail($"Could not reach the server: {ex.Message}");
+            return ApiResult<string>.Fail($"Could not reach the server: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResult> DeleteAccountAsync(CancellationToken ct = default)
+    {
+        var uri = BuildUri("api/account/");
+        if (uri is null) return ApiResult.Fail("No server URL is configured.");
+
+        var tokens = await _tokens.GetTokensAsync(ct).ConfigureAwait(false);
+        if (tokens is null) return ApiResult.Fail("Not signed in.");
+
+        try
+        {
+            var resp = await DeleteAsync(uri, tokens.AccessToken, ct).ConfigureAwait(false);
+            if (resp.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                resp.Dispose();
+                var refreshed = await TryRefreshAsync(tokens.RefreshToken, ct).ConfigureAwait(false);
+                if (refreshed is null)
+                    return ApiResult.Fail("Your session has expired. Please sign in again.");
+                resp = await DeleteAsync(uri, refreshed.AccessToken, ct).ConfigureAwait(false);
+            }
+
+            using (resp)
+            {
+                if (!resp.IsSuccessStatusCode)
+                    return ApiResult.Fail(await ReadErrorAsync(resp, ct).ConfigureAwait(false));
+            }
+
+            await _tokens.SetTokensAsync(null, ct).ConfigureAwait(false);
+            return ApiResult.Ok();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return ApiResult.Fail($"Could not reach the server: {ex.Message}");
         }
     }
 

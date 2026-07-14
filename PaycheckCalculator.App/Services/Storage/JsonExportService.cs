@@ -7,6 +7,10 @@ namespace PaycheckCalculator.App.Services.Storage;
 /// <inheritdoc />
 public sealed class JsonExportService : IJsonExportService
 {
+    /// <summary>
+    /// Writes the JSON payload to a sanitized file name under the app cache sharing directory,
+    /// opens it in the platform default file handler, and returns the full exported path.
+    /// </summary>
     public async Task<string> ExportAndOpenAsync(string json, string baseFileName)
     {
         ArgumentNullException.ThrowIfNull(json);

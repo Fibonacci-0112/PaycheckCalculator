@@ -36,7 +36,7 @@ public static class AccountDataEndpoints
         if (user is null) return Results.Unauthorized();
 
         var paychecks = await LoadPaychecksAsync(db, userId, ct);
-        var budgets = await LoadBudgetSetsAsync(db, userId, ct);
+        var budgets = await LoadBudgetDataAsync(db, userId, ct);
         return Results.Ok(new
         {
             exportedAtUtc = DateTimeOffset.UtcNow,
@@ -106,7 +106,7 @@ public static class AccountDataEndpoints
         return new SavedPaycheckSet(paychecks, tombstones);
     }
 
-    private static async Task<(BudgetSet Budgets, TransactionSet Transactions, RecurringBillSet Bills, SavingsGoalSet Goals)> LoadBudgetSetsAsync(
+    private static async Task<(BudgetSet Budgets, TransactionSet Transactions, RecurringBillSet Bills, SavingsGoalSet Goals)> LoadBudgetDataAsync(
         SyncDbContext db, string userId, CancellationToken ct)
     {
         var budgetRows = await db.Budgets.Where(r => r.UserId == userId).AsNoTracking().ToListAsync(ct);
