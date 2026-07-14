@@ -12,6 +12,9 @@ public sealed class BonusResult
     /// <summary>The supplemental payment the result was computed for.</summary>
     public decimal BonusAmount { get; init; }
 
+    /// <summary>The tax year this result was calculated under (from the originating input's <c>TaxYear</c>).</summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
+
     public UsState State { get; init; }
 
     /// <summary>Federal income tax withheld using the flat supplemental method (22%; 37% over $1M).</summary>
@@ -45,9 +48,6 @@ public sealed class BonusResult
 
     /// <summary>Take-home portion of the bonus after withholding.</summary>
     public decimal NetBonus { get; init; }
-
-    /// <summary>The tax year whose tables were used to produce this result.</summary>
-    public int TaxYear { get; init; }
 
     /// <summary>"Show Your Work" breakdown — one line per visible row, mirroring <see cref="PaycheckResult"/>.</summary>
     public PaycheckExplanation Explanation { get; init; } = PaycheckExplanation.Empty;

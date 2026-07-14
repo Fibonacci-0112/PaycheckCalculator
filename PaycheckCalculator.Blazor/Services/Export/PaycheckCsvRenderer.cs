@@ -43,8 +43,7 @@ public static class PaycheckCsvRenderer
 
         if (!string.IsNullOrEmpty(stateLabel))
             Line(sb, "Summary", "State", stateLabel);
-        if (result.TaxYear > 0)
-            Line(sb, "Summary", "Tax Year", result.TaxYear.ToString(Invariant));
+        Line(sb, "Summary", "Tax Year", result.TaxYear.ToString(CultureInfo.InvariantCulture));
 
         Money(sb, "Income", "Gross Pay", result.GrossPay);
         Money(sb, "Income", "Federal Taxable Income", result.FederalTaxableIncome);
@@ -65,6 +64,9 @@ public static class PaycheckCsvRenderer
 
         Money(sb, "Summary", "Total Taxes", result.TotalTaxes);
         Money(sb, "Summary", "Net Pay", result.NetPay);
+
+        foreach (var source in result.Explanation.Sources)
+            Line(sb, "Sources", source.Label, source.Reference);
 
         if (annual is not null)
             WriteAnnual(sb, annual);

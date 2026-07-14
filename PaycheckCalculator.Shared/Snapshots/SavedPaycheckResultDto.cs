@@ -1,3 +1,5 @@
+using PaycheckCalculator.Core.Models;
+
 namespace PaycheckCalculator.Shared.Snapshots;
 
 /// <summary>
@@ -36,6 +38,10 @@ public sealed record SavedPaycheckResultDto
     /// <summary>Extra gross beyond the target net that covers taxes and deductions (0 when not a gross-up).</summary>
     public decimal GrossUpCost { get; init; }
 
-    /// <summary>The tax year whose tables produced this result (e.g. 2026).</summary>
-    public int TaxYear { get; init; }
+    /// <summary>
+    /// The tax year this result was calculated under. Also carried on the snapshot's
+    /// <c>Input.TaxYear</c>; stored here too so a restored snapshot's flat display fields stay
+    /// self-contained, consistent with the other duplicated result fields on this DTO.
+    /// </summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
 }

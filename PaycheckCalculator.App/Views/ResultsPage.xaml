@@ -17,9 +17,9 @@
         <ToolbarItem Text="Export CSV"
                      Command="{Binding ExportCsvCommand}"
                      AutomationProperties.Name="Export results to CSV" />
-        <ToolbarItem Text="Sources"
+        <ToolbarItem Text="Accuracy &amp; Sources"
                      Command="{Binding ShowAccuracySourcesCommand}"
-                     AutomationProperties.Name="View accuracy and source citations" />
+                     AutomationProperties.Name="Show accuracy and sources" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>

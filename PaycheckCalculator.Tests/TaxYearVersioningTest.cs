@@ -1,54 +1,75 @@
+using System.Text.Json;
 using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Pay;
-using PaycheckCalculator.Core.Tax.Federal;
 using PaycheckCalculator.Core.Tax.Fica;
+using PaycheckCalculator.Core.Tax.Federal;
 using PaycheckCalculator.Core.Tax.Oklahoma;
 using PaycheckCalculator.Core.Tax.State;
+using PaycheckCalculator.Core.Tax.Supplemental;
+using PaycheckCalculator.Shared.Json;
+using PaycheckCalculator.Shared.Snapshots;
 using Xunit;
 
 namespace PaycheckCalculator.Tests;
 
 /// <summary>
-/// Regression tests for Task 1 — Tax Year Versioning.
-/// Verifies that the tax year flows correctly from inputs through calculators
-/// to results and Shared DTOs.
+/// Tests for tax-year versioning: <see cref="TaxYearSupport"/> and the <c>TaxYear</c> field now
+/// carried on every input/result model. Only 2026 tax data is loaded today, so
+/// <see cref="TaxYearSupport.Default"/> is both the implicit default for new inputs and the only
+/// currently-supported year; calculators must reject any other year rather than silently applying
+/// 2026 tables to it.
 /// </summary>
 public sealed class TaxYearVersioningTest
 {
-    // ── TaxYearSupport constants ────────────────────────────────
-
     [Fact]
-    public void CurrentTaxYear_Is2026()
-        => Assert.Equal(2026, TaxYearSupport.CurrentTaxYear);
-
-    [Fact]
-    public void SupportedTaxYears_Contains2026()
-        => Assert.Contains(2026, TaxYearSupport.SupportedTaxYears);
-
-    // ── Irs15TPercentageCalculator ──────────────────────────────
-
-    [Fact]
-    public void FederalCalculator_SupportedTaxYear_Is2026()
+    public void TaxYearSupport_Default_Is2026()
     {
-        var fedJson = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "us_irs_15t_2026_percentage_automated.json"));
-        var fed = new Irs15TPercentageCalculator(fedJson);
-        Assert.Equal(2026, fed.SupportedTaxYear);
+        Assert.Equal(2026, TaxYearSupport.Default);
     }
 
-    // ── PayCalculator: TaxYear defaults to SupportedTaxYear ────
+    [Theory]
+    [InlineData(2026, true)]
+    [InlineData(2025, false)]
+    [InlineData(2027, false)]
+    public void TaxYearSupport_IsSupported_OnlyMatchesDefault(int year, bool expected)
+    {
+        Assert.Equal(expected, TaxYearSupport.IsSupported(year));
+    }
 
     [Fact]
-    public void Calculate_DefaultTaxYear_ResultHas2026()
+    public void PaycheckInput_DefaultTaxYear_IsSupportedDefault()
     {
-        var calc = CreateCalculator();
-        var result = calc.Calculate(new PaycheckInput
+        Assert.Equal(TaxYearSupport.Default, new PaycheckInput().TaxYear);
+    }
+
+    [Fact]
+    public void SelfEmploymentInput_DefaultTaxYear_IsSupportedDefault()
+    {
+        Assert.Equal(TaxYearSupport.Default, new SelfEmploymentInput().TaxYear);
+    }
+
+    [Fact]
+    public void BonusInput_DefaultTaxYear_IsSupportedDefault()
+    {
+        Assert.Equal(TaxYearSupport.Default, new BonusInput().TaxYear);
+    }
+
+    // ── PayCalculator ──────────────────────────────────────────────
+
+    [Fact]
+    public void PayCalculator_Result_CarriesInputTaxYear()
+    {
+        var calculator = CreateCalculator();
+        var result = calculator.Calculate(new PaycheckInput
         {
             Frequency = PayFrequency.Biweekly,
-            HourlyRate = 25m,
-            RegularHours = 80m,
-            State = UsState.OK
+            HourlyRate = 50m,
+            RegularHours = 40m,
+            State = UsState.OK,
+            TaxYear = 2026
         });
+
         Assert.Equal(2026, result.TaxYear);
     }
 
@@ -62,9 +83,9 @@ public sealed class TaxYearVersioningTest
             HourlyRate = 25m,
             RegularHours = 80m,
             State = UsState.OK,
-            TaxYear = 2025
+            TaxYear = 2026
         });
-        Assert.Equal(2025, result.TaxYear);
+        Assert.Equal(2026, result.TaxYear);
     }
 
     // ── BonusCalculator ─────────────────────────────────────────

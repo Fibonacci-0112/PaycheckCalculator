@@ -227,6 +227,48 @@ public sealed class PayCalculatorExplanationTest
         Assert.Contains(state.Steps, s => s.Label == "No state taxable wages");
     }
 
+    // ── Sources aggregation ──
+
+    [Fact]
+    public void Sources_ExcludesLinesWithoutReference()
+    {
+        // GrossPay and NetPay explanations don't carry a Reference citation, so
+        // they must not appear in the aggregated Sources list.
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInput());
+
+        Assert.DoesNotContain(result.Explanation.Sources, s => s.Label == "Gross Pay");
+        Assert.DoesNotContain(result.Explanation.Sources, s => s.Label == "Net Pay");
+    }
+
+    [Fact]
+    public void Sources_IncludesFederalFicaAndStateCitations()
+    {
+        var calc = CreateCalculator();
+        var result = calc.Calculate(SampleInput());
+
+        var federalExpl = result.Explanation.Get(ExplanationLineKey.FederalWithholding)!;
+        var ssExpl = result.Explanation.Get(ExplanationLineKey.SocialSecurity)!;
+        var medicareExpl = result.Explanation.Get(ExplanationLineKey.Medicare)!;
+        var stateExpl = result.Explanation.Get(ExplanationLineKey.StateWithholding)!;
+
+        Assert.NotEmpty(federalExpl.Reference);
+        Assert.NotEmpty(ssExpl.Reference);
+        Assert.NotEmpty(medicareExpl.Reference);
+        Assert.NotEmpty(stateExpl.Reference);
+
+        Assert.Contains(result.Explanation.Sources, s => s.Label == federalExpl.Title && s.Reference == federalExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == ssExpl.Title && s.Reference == ssExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == medicareExpl.Title && s.Reference == medicareExpl.Reference);
+        Assert.Contains(result.Explanation.Sources, s => s.Label == stateExpl.Title && s.Reference == stateExpl.Reference);
+    }
+
+    [Fact]
+    public void Sources_EmptyExplanation_ProducesNoSources()
+    {
+        Assert.Empty(PaycheckExplanation.Empty.Sources);
+    }
+
     private static PaycheckInput SampleInput(UsState state = UsState.OK) => new()
     {
         Frequency = PayFrequency.Biweekly,

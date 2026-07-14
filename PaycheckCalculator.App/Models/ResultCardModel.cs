@@ -82,6 +82,9 @@ public sealed class ResultCardModel
     /// <summary>Human-readable state name for display (e.g., "California").</summary>
     public string StateName { get; init; } = "";
 
+    /// <summary>The tax year this result was calculated under (e.g. 2026).</summary>
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
+
     /// <summary>
     /// "Show Your Work" breakdown for each visible paycheck line, used by the
     /// info-icon modals on the results page. Defaults to an empty aggregate.

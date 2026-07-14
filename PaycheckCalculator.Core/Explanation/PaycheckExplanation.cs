@@ -39,4 +39,5 @@ public sealed class PaycheckExplanation
 
     /// <summary>An empty explanation, used as a safe default.</summary>
     public static PaycheckExplanation Empty { get; } = new(Array.Empty<LineExplanation>());
+
 }

@@ -52,10 +52,10 @@ public sealed class PaycheckInput
     public int PaycheckNumber { get; init; } = 1;
 
     /// <summary>
-    /// The tax year this input should be computed under.  0 (default) means "use the current
-    /// supported year" (<see cref="TaxYearSupport.CurrentTaxYear"/>), which is the right choice
-    /// for new calculations. Restored saved paychecks carry their original year so exports and
-    /// display show the correct year.
+    /// The tax year this input should be calculated under. Defaults to
+    /// <see cref="TaxYearSupport.Default"/>, the only year currently supported. Persisted with
+    /// saved paychecks so a prior year's snapshot is never silently recalculated under newer
+    /// tax data.
     /// </summary>
-    public int TaxYear { get; init; } = 0;
+    public int TaxYear { get; init; } = TaxYearSupport.Default;
 }

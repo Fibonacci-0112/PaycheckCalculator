@@ -3,27 +3,23 @@
 <div class="modal-overlay" @onclick="OnOverlayClick">
     <div class="modal-container" @onclick:stopPropagation="true">
         <div class="modal-header">
-            <h3>Accuracy &amp; Sources</h3>
+            <h3>Accuracy &amp; Sources (@TaxYear)</h3>
             <button class="modal-close" @onclick="OnClose" title="Close">&#x2715;</button>
         </div>
         <div class="modal-body">
-            @if (TaxYear > 0)
-            {
-                <div class="explanation-reference" style="margin-bottom: 12px;">
-                    Tax tables: <strong>@TaxYear</strong>
-                </div>
-            }
             @if (Sources.Count == 0)
             {
-                <p>No source citations are available for this result.</p>
+                <div class="explanation-step">
+                    <div class="step-detail">No source citations are available for this result.</div>
+                </div>
             }
             else
             {
-                @foreach (var s in Sources)
+                @foreach (var source in Sources)
                 {
                     <div class="explanation-step">
-                        <div class="step-label">@s.Label</div>
-                        <div class="explanation-reference">@s.Reference</div>
+                        <div class="step-label">@source.Label</div>
+                        <div class="explanation-reference">@source.Reference</div>
                     </div>
                 }
             }

@@ -12,7 +12,7 @@ public partial class Calculator
     /// </summary>
     [Parameter] public UsState? InitialState { get; set; }
 
-    private sealed class StateFieldVm
+    internal sealed class StateFieldVm
     {
         public StateFieldDefinition Def { get; }
         public string Key => Def.Key;
@@ -77,9 +77,10 @@ public partial class Calculator
         {
             StateFieldType.Picker => (object?)(SelectedOption ?? Def.DefaultValue?.ToString()),
             StateFieldType.Toggle => BoolValue,
-            StateFieldType.Integer => int.TryParse(StringValue, out var i) ? i : 0,
-            StateFieldType.Decimal => decimal.TryParse(StringValue, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0m,
+            StateFieldType.Integer => int.TryParse(StringValue, NumberStyles.Integer,
+                CultureInfo.InvariantCulture, out var i) ? i : 0,
+            StateFieldType.Decimal => decimal.TryParse(StringValue, NumberStyles.Any,
+                CultureInfo.InvariantCulture, out var d) ? d : 0m,
             _ => StringValue
         };
     }
