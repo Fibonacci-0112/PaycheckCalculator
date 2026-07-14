@@ -56,12 +56,21 @@ Clients do not implement separate conflict-resolution logic; they reuse the shar
 | `POST` | `/api/account/register` | None | Create an account. |
 | `POST` | `/api/account/login` | None | Sign in and receive Identity bearer credentials. |
 | `POST` | `/api/account/refresh` | None | Refresh the Identity session. |
+| `GET` | `/api/account/export` | Required | Export synced account data (paychecks + budgets) as JSON. |
+| `DELETE` | `/api/account/` | Required | Permanently delete the account and synced cloud data. |
 | `POST` | `/api/paychecks/sync` | Required | Push saved paycheck state, merge, return merged state. |
 | `GET` | `/api/paychecks/` | Required | Return saved paycheck state without writing. |
 | `POST` | `/api/budgets/sync` | Required | Push budget, transaction, recurring bill, and savings goal state, merge, return merged state. |
 | `GET` | `/api/budgets/` | Required | Return budget-related state without writing. |
 
 Account endpoints are mapped through ASP.NET Core Identity. The sync endpoints validate collection sizes and budget names before merging.
+
+Both front-ends expose legal and data-control flows in the account area:
+
+- Privacy Policy and Terms links/pages.
+- Export account data (JSON).
+- Delete local data (device/session only).
+- Delete account (permanent cloud-data deletion).
 
 ---
 

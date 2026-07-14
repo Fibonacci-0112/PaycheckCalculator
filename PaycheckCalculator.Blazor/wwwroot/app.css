@@ -59,6 +59,19 @@ html, body {
 
 .site-footer p { margin: 0; }
 
+.legal-links {
+    margin-top: 6px !important;
+}
+
+.legal-links a {
+    color: #cfd8dc;
+    text-decoration: none;
+}
+
+.legal-links a:hover {
+    text-decoration: underline;
+}
+
 /* ── Calculator layout ─────────────────────────────────────── */
 .calc-layout {
     display: grid;
@@ -356,6 +369,8 @@ html, body {
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn-secondary:hover { background: #c5cae9; }

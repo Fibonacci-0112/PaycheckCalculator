@@ -28,6 +28,10 @@
                                FontSize="15" FontAttributes="Bold" />
                         <Button Text="Sync Now" Command="{Binding SyncNowCommand}"
                                 BackgroundColor="#333333" TextColor="White" CornerRadius="8" />
+                        <Button Text="Export Account Data (JSON)" Command="{Binding ExportAccountDataCommand}"
+                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
+                        <Button Text="Delete Account" Command="{Binding DeleteAccountCommand}"
+                                BackgroundColor="#ECECEC" TextColor="#C62828" CornerRadius="8" />
                         <Button Text="Sign Out" Command="{Binding LogoutCommand}"
                                 BackgroundColor="#ECECEC" TextColor="#C62828" CornerRadius="8" />
                     </VerticalStackLayout>
@@ -55,6 +59,17 @@
                 <Label Text="{Binding StatusMessage}" FontSize="12" TextColor="#37474F"
                        HorizontalTextAlignment="Center" />
 
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="DATA CONTROLS" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                        <Button Text="Delete Local Data" Command="{Binding DeleteLocalDataCommand}"
+                                BackgroundColor="#ECECEC" TextColor="#C62828" CornerRadius="8" />
+                        <Label Text="Deletes paychecks and budgets saved on this device only."
+                               FontSize="11" TextColor="#9E9E9E" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Server URL -->
                 <Border BackgroundColor="White" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16">
@@ -64,6 +79,17 @@
                                BackgroundColor="#F2F2F2" TextColor="Black" />
                         <Label Text="The address of the sync server. Change this only if you host your own."
                                FontSize="11" TextColor="#9E9E9E" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border BackgroundColor="White" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="LEGAL" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                        <Button Text="Privacy Policy" Command="{Binding ViewPrivacyPolicyCommand}"
+                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
+                        <Button Text="Terms of Use" Command="{Binding ViewTermsCommand}"
+                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
                     </VerticalStackLayout>
                 </Border>
 
