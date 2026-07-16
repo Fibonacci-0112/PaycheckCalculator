@@ -213,5 +213,6 @@ The API persists those sets in PostgreSQL through `BudgetEntity`, `BudgetTransac
 
 ## Documentation
 
+- [Roadmap](ROADMAP.md) — Prioritized product milestones, engineering improvements, feature recommendations, and release criteria.
 - [Wiki](docs/wiki/Home.md) — Architecture, getting started, tax engine, state coverage, budgeting, accounts/sync, UI guide, and contributing notes.
 - [UML Class Diagram](docs/class-diagram.md) — Mermaid diagrams for the solution, core pipeline, MAUI layer, shared sync layer, and API persistence model.
