@@ -14,6 +14,7 @@ public sealed class JsonExportService : IJsonExportService
     public async Task<string> ExportAndOpenAsync(string json, string baseFileName)
     {
         ArgumentNullException.ThrowIfNull(json);
+        ArgumentException.ThrowIfNullOrWhiteSpace(baseFileName);
 
         var directory = Path.Combine(FileSystem.CacheDirectory, "sharing-root");
         Directory.CreateDirectory(directory);
