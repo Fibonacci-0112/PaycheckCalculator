@@ -37,11 +37,14 @@ public static class AccountDataEndpoints
 
         var paychecks = await LoadPaychecksAsync(db, userId, ct);
         var budgets = await LoadBudgetDataAsync(db, userId, ct);
+
+        var now = DateTimeOffset.UtcNow;
+
         return Results.Ok(new
         {
-            exportedAtUtc = DateTimeOffset.UtcNow,
+            exportedAtUtc = now,
             email = user.Email,
-            paychecks = new SyncResponse(paychecks.Paychecks, paychecks.Tombstones, DateTimeOffset.UtcNow),
+            paychecks = new SyncResponse(paychecks.Paychecks, paychecks.Tombstones, now),
             budgets = new BudgetSyncResponse(
                 budgets.Budgets.Budgets,
                 budgets.Budgets.Tombstones,
@@ -51,7 +54,7 @@ public static class AccountDataEndpoints
                 budgets.Bills.Tombstones,
                 budgets.Goals.Goals,
                 budgets.Goals.Tombstones,
-                DateTimeOffset.UtcNow)
+                now)
         });
     }
 
