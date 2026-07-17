@@ -1,14 +1,17 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PaycheckCalculator.Core.Budgeting;
 using PaycheckCalculator.Api.Data;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.State;
+using PaycheckCalculator.Shared.Budgeting;
 using PaycheckCalculator.Shared.Json;
 using PaycheckCalculator.Shared.Snapshots;
 using PaycheckCalculator.Shared.Sync;
@@ -134,6 +137,54 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
         Assert.False(values.GetValueOrDefault("Exempt", true));
     }
 
+    [Fact]
+    public async Task ExportAccountData_ReturnsPaychecksAndBudgets()
+    {
+        var client = await SignedInClientAsync();
+        await SyncAsync(client, new SyncRequest([Entry("Export Job", At(1), netPay: 432.10m)], []));
+        await SyncBudgetsAsync(client, new BudgetSyncRequest(
+            [
+                new BudgetDto
+                {
+                    Name = "Household",
+                    UpdatedAtUtc = At(1),
+                    MonthlyNetIncome = 5000m,
+                    Method = BudgetMethod.Custom,
+                    Categories = [new BudgetCategoryDto { Name = "Needs", Amount = 2500m }]
+                }
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []));
+
+        var exportJson = await ExportRawAsync(client);
+        using var doc = JsonDocument.Parse(exportJson);
+
+        Assert.Equal("Export Job", doc.RootElement.GetProperty("paychecks").GetProperty("paychecks")[0].GetProperty("name").GetString());
+        Assert.Equal("Household", doc.RootElement.GetProperty("budgets").GetProperty("budgets")[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task DeleteAccount_RemovesAccountAndSyncedRows()
+    {
+        var email = NewEmail();
+        var client = await SignedInClientAsync(email);
+        await SyncAsync(client, new SyncRequest([Entry("Delete Me", At(1))], []));
+
+        var deleteResp = await client.DeleteAsync("/api/account/");
+        deleteResp.EnsureSuccessStatusCode();
+
+        var syncAfterDelete = await client.PostAsync("/api/paychecks/sync", Json(new SyncRequest([], [])));
+        Assert.Equal(HttpStatusCode.Unauthorized, syncAfterDelete.StatusCode);
+
+        var login = await _factory.CreateClient().PostAsync("/api/account/login", Json(new { email, password = Password }));
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────
 
     private const string Password = "Passw0rd!";
@@ -177,6 +228,20 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
         var resp = await client.GetAsync("/api/paychecks/");
         resp.EnsureSuccessStatusCode();
         return (await resp.Content.ReadFromJsonAsync<SyncResponse>(PaycheckJson.Options))!;
+    }
+
+    private static async Task<BudgetSyncResponse> SyncBudgetsAsync(HttpClient client, BudgetSyncRequest request)
+    {
+        var resp = await client.PostAsync("/api/budgets/sync", Json(request));
+        resp.EnsureSuccessStatusCode();
+        return (await resp.Content.ReadFromJsonAsync<BudgetSyncResponse>(PaycheckJson.Options))!;
+    }
+
+    private static async Task<string> ExportRawAsync(HttpClient client)
+    {
+        var resp = await client.GetAsync("/api/account/export");
+        resp.EnsureSuccessStatusCode();
+        return await resp.Content.ReadAsStringAsync();
     }
 
     private static HttpContent Json<T>(T value) => JsonContent.Create(value, options: PaycheckJson.Options);

@@ -2,6 +2,7 @@
 @using System.Text
 @using PaycheckCalculator.Blazor.Models
 @using PaycheckCalculator.Blazor.Services.Export
+@using PaycheckCalculator.Shared.Budgeting
 @inject IJSRuntime JS
 @inject PayCalculator Calc
 @inject AnnualProjectionCalculator ProjectionCalc
@@ -11,6 +12,7 @@
 @inject StateCalculatorRegistry StateRegistry
 @inject IStateSchemaProvider SchemaProvider
 @inject SessionPaycheckStore Store
+@inject SessionBudgetStore BudgetStore
 @inject CircuitAccountSession Account
 @inject PaycheckApiClient Api
 @inject PaycheckSyncService Sync
@@ -881,11 +883,25 @@
 
         <div class="account-section">
             <h3 class="history-subtitle">Account</h3>
+            <div class="account-actions" style="margin-bottom: 10px;">
+                <a class="btn-secondary" href="/privacy">Privacy policy</a>
+                <a class="btn-secondary" href="/terms">Terms</a>
+            </div>
             @if (IsSignedIn)
             {
                 <p class="account-email">Signed in as <strong>@Account.Email</strong></p>
                 <div class="account-actions">
                     <button class="btn-secondary" @onclick="SyncNowAsync" disabled="@_busy">Sync now</button>
+                    <button class="btn-secondary" @onclick="ExportAccountDataAsync" disabled="@_busy">Export data</button>
+                    @if (_confirmDeleteAccount)
+                    {
+                        <button class="btn-secondary btn-danger" @onclick="DeleteAccountAsync" disabled="@_busy">Confirm account delete</button>
+                        <button class="btn-secondary" @onclick="CancelDeleteAccount" disabled="@_busy">Cancel</button>
+                    }
+                    else
+                    {
+                        <button class="btn-secondary btn-danger" @onclick="RequestDeleteAccount" disabled="@_busy">Delete account</button>
+                    }
                     <button class="btn-secondary" @onclick="LogoutAsync" disabled="@_busy">Sign out</button>
                 </div>
             }
@@ -905,6 +921,18 @@
                 </div>
                 <p class="form-note">Optional. Create an account to sync your saved paychecks between this site and the mobile app.</p>
             }
+            <div class="account-actions" style="margin-top: 10px;">
+                @if (_confirmDeleteLocal)
+                {
+                    <button class="btn-secondary btn-danger" @onclick="() => DeleteLocalDataAsync()" disabled="@_busy">Confirm local delete</button>
+                    <button class="btn-secondary" @onclick="CancelDeleteLocal" disabled="@_busy">Cancel</button>
+                }
+                else
+                {
+                    <button class="btn-secondary btn-danger" @onclick="RequestDeleteLocal" disabled="@_busy">Delete local data</button>
+                }
+            </div>
+            <p class="form-note">Local delete removes paychecks and budgets from this browser session only.</p>
             @if (_accountError != null)
             {
                 <div class="calc-error">@_accountError</div>
@@ -1003,6 +1031,8 @@
     private string? _accountError;
     private string? _accountStatus;
     private bool _busy = false;
+    private bool _confirmDeleteLocal;
+    private bool _confirmDeleteAccount;
     private bool IsSignedIn => Account.IsSignedIn;
 
     protected override async Task OnInitializedAsync()
@@ -1278,8 +1308,74 @@
     {
         await Api.LogoutAsync();
         Account.Email = null;
+        _confirmDeleteAccount = false;
         _accountStatus = "Signed out. Saved paychecks remain for this session only.";
         _accountError = null;
+    }
+
+    private void RequestDeleteLocal() => _confirmDeleteLocal = true;
+    private void CancelDeleteLocal() => _confirmDeleteLocal = false;
+
+    private void RequestDeleteAccount() => _confirmDeleteAccount = true;
+    private void CancelDeleteAccount() => _confirmDeleteAccount = false;
+
+    private async Task DeleteLocalDataAsync(bool setStatus = true)
+    {
+        _confirmDeleteLocal = false;
+
+        await Store.ReplaceAllAsync(new SavedPaycheckSet([], []));
+        await BudgetStore.ReplaceAllBudgetsAsync(new BudgetSet([], []));
+        await BudgetStore.ReplaceAllTransactionsAsync(new TransactionSet([], []));
+        await BudgetStore.ReplaceAllRecurringBillsAsync(new RecurringBillSet([], []));
+        await BudgetStore.ReplaceAllSavingsGoalsAsync(new SavingsGoalSet([], []));
+
+        await RefreshHistoryAsync();
+        if (setStatus)
+            _accountStatus = "Local paycheck and budget data deleted for this browser session.";
+        _accountError = null;
+    }
+
+    private async Task ExportAccountDataAsync()
+    {
+        _accountError = null;
+        _accountStatus = null;
+        _busy = true;
+        var result = await Api.ExportAccountDataAsync();
+        _busy = false;
+
+        if (!result.Success || string.IsNullOrWhiteSpace(result.Value))
+        {
+            _accountError = result.Error ?? "Could not export account data.";
+            return;
+        }
+
+        var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(result.Value));
+        await JS.InvokeVoidAsync(
+            "paycheckExport.downloadFile",
+            $"paycheckcalc-account-export-{DateTime.UtcNow:yyyyMMdd}.json",
+            "application/json",
+            base64);
+        _accountStatus = "Account data exported.";
+    }
+
+    private async Task DeleteAccountAsync()
+    {
+        _confirmDeleteAccount = false;
+        _accountError = null;
+        _accountStatus = null;
+        _busy = true;
+        var result = await Api.DeleteAccountAsync();
+        _busy = false;
+
+        if (!result.Success)
+        {
+            _accountError = result.Error ?? "Could not delete account.";
+            return;
+        }
+
+        Account.Email = null;
+        await DeleteLocalDataAsync(setStatus: false);
+        _accountStatus = "Account and synced cloud data deleted.";
     }
 
     private Task SyncNowAsync() => TrySyncAsync();

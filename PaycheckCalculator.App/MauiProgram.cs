@@ -47,6 +47,7 @@ public static class MauiProgram
         // Local persistence (saved paychecks on device) + optional account sync.
         builder.Services.AddSingleton<ISavedPaycheckStore, JsonFilePaycheckStore>();
         builder.Services.AddSingleton<IBudgetStore, JsonFileBudgetStore>();
+        builder.Services.AddSingleton<IJsonExportService, JsonExportService>();
         builder.Services.AddSingleton<ITokenStore, SecureStorageTokenStore>();
         builder.Services.AddSingleton<PreferencesApiBaseAddressProvider>();
         builder.Services.AddSingleton<IApiBaseAddressProvider>(sp => sp.GetRequiredService<PreferencesApiBaseAddressProvider>());

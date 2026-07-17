@@ -33,6 +33,7 @@ using (var scope = app.Services.CreateScope())
 
 // Email + password register/login/refresh, etc.
 app.MapGroup("/api/account").MapIdentityApi<IdentityUser>();
+app.MapGroup("/api/account").RequireAuthorization().MapAccountDataEndpoints();
 
 // Authorized paycheck sync.
 app.MapGroup("/api/paychecks").RequireAuthorization().MapPaycheckSyncEndpoints();
