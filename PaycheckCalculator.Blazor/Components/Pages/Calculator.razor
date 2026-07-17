@@ -924,7 +924,7 @@
             <div class="account-actions" style="margin-top: 10px;">
                 @if (_confirmDeleteLocal)
                 {
-                    <button class="btn-secondary btn-danger" @onclick="DeleteLocalDataAsync" disabled="@_busy">Confirm local delete</button>
+                    <button class="btn-secondary btn-danger" @onclick="() => DeleteLocalDataAsync()" disabled="@_busy">Confirm local delete</button>
                     <button class="btn-secondary" @onclick="CancelDeleteLocal" disabled="@_busy">Cancel</button>
                 }
                 else
