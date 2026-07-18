@@ -4,7 +4,7 @@ Scope: this file applies to everything under `PaycheckCalculator.App/`.
 
 ## Role of this project
 
-`PaycheckCalculator.App` is the .NET MAUI client for Android and Windows. It presents the calculator, results, saved paychecks, budget features, account/sync screens, export, print, and local offline storage. The calculation truth lives in Core; this project adapts that truth to a native UI.
+`PaycheckCalculator.App` is the .NET MAUI client for Android, iOS, macOS (Mac Catalyst), and Windows. It presents the calculator, results, saved paychecks, budget features, account/sync screens, export, print, and local offline storage. The calculation truth lives in Core; this project adapts that truth to a native UI.
 
 ## Architecture rules
 
@@ -16,7 +16,7 @@ Scope: this file applies to everything under `PaycheckCalculator.App/`.
 
 ## Platform and packaging rules
 
-- Target Android and Windows only unless the task explicitly expands platform support.
+- Target Android, iOS, Mac Catalyst, and Windows unless the task explicitly changes platform support.
 - Do not change `WindowsPackageType`, Android minimum version, target frameworks, application ID, or MAUI single-project settings casually.
 - Tax data must remain packaged as `MauiAsset` entries with logical names matching the names expected by Core loaders, including `schemas/<state>.json`.
 - App storage should keep saved paychecks usable offline. Account sync must be optional.
@@ -32,6 +32,8 @@ Scope: this file applies to everything under `PaycheckCalculator.App/`.
 ```bash
 dotnet build PaycheckCalculator.App
 dotnet build PaycheckCalculator.App -f net11.0-android
+dotnet build PaycheckCalculator.App -f net11.0-ios
+dotnet build PaycheckCalculator.App -f net11.0-maccatalyst
 dotnet build PaycheckCalculator.App -f net11.0-windows10.0.19041.0
 ```
 

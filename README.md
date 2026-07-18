@@ -4,7 +4,7 @@ PaycheckCalculator is a US paycheck calculator for 2026 withholding rules. It co
 
 The solution currently ships three runtime surfaces backed by shared libraries:
 
-- **PaycheckCalculator.App** — .NET MAUI app for Android and Windows.
+- **PaycheckCalculator.App** — .NET MAUI app for Android, iOS, macOS (Mac Catalyst), and Windows.
 - **PaycheckCalculator.Blazor** — Blazor Server web app.
 - **PaycheckCalculator.Api** — optional ASP.NET Core Web API for accounts and sync.
 
@@ -47,7 +47,7 @@ PaycheckCalculator.slnx
 │   ├── Data/                    # JSON tax tables and dynamic state schemas
 │   │   └── Schemas/             # One schema JSON file per state / DC
 │   └── Tax/                     # Federal, FICA, State contracts/registry, and one folder per jurisdiction
-├── PaycheckCalculator.App/            # .NET MAUI app for Android and Windows
+├── PaycheckCalculator.App/            # .NET MAUI app for Android, iOS, macOS, and Windows
 │   ├── Views/                   # Inputs, Results, Paychecks, Budget, Account pages
 │   ├── ViewModels/              # Calculator, budget, account, saved paycheck, dynamic field VMs
 │   ├── Mappers/                 # Domain-to-UI mappers
@@ -86,7 +86,7 @@ The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalc
 |---|---|
 | Primary SDK | .NET 11 preview pinned in `global.json` |
 | Core library | `net11.0;net9.0` when built with the .NET 11 SDK; `net9.0` fallback on older SDKs |
-| MAUI app | .NET MAUI, `net11.0-android`, `net11.0-windows10.0.19041.0`, CommunityToolkit.Mvvm |
+| MAUI app | .NET MAUI, `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, `net11.0-windows10.0.19041.0`, CommunityToolkit.Mvvm |
 | Web app | ASP.NET Core Blazor Server, `net11.0` |
 | Sync API | ASP.NET Core minimal APIs, ASP.NET Core Identity, EF Core, Npgsql/PostgreSQL |
 | Shared contracts | `System.Text.Json` with enum, `DateOnly`, and `StateInputValues` converters |
@@ -100,7 +100,7 @@ The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalc
   ```bash
   dotnet workload install maui
   ```
-- Android SDK or Windows 10+ SDK for MAUI targets.
+- Android SDK, Xcode on macOS (for iOS and Mac Catalyst), or Windows 10+ SDK for the corresponding MAUI target.
 - PostgreSQL only when running `PaycheckCalculator.Api` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
 
 `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
@@ -157,6 +157,12 @@ Target-specific examples:
 ```bash
 # Android
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
+
+# iOS (requires macOS and Xcode)
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios
+
+# macOS via Mac Catalyst (requires macOS and Xcode)
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-maccatalyst
 
 # Windows
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0

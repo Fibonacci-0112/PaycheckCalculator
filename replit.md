@@ -8,7 +8,7 @@ A US paycheck calculator for 2026 withholding rules (federal, FICA, state, disab
 - `PaycheckCalculator.Shared` — sync DTOs, JSON config, API client, entitlement abstractions.
 - `PaycheckCalculator.Blazor` — Blazor Server web front-end (runs in Replit).
 - `PaycheckCalculator.Api` — optional ASP.NET Core Web API for account sync (runs in Replit).
-- `PaycheckCalculator.App` — .NET MAUI app for Android/Windows (cannot run in Replit's preview; build/run it on your own machine or CI).
+- `PaycheckCalculator.App` — .NET MAUI app for Android, iOS, macOS (Mac Catalyst), and Windows (cannot run in Replit's preview; build/run it on a compatible machine or CI).
 - `PaycheckCalculator.Tests` — unit + integration tests.
 
 ## Running in Replit

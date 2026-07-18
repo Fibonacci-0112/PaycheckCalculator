@@ -26,7 +26,7 @@ classDiagram
 
     note for Core "PaycheckCalculator.Core: tax, pay, gross-up, projection, budget, and report engine"
     note for Shared "PaycheckCalculator.Shared: DTOs, JSON, merge, API client, stores, entitlements"
-    note for App "PaycheckCalculator.App: Android and Windows MVVM frontend"
+    note for App "PaycheckCalculator.App: Android, iOS, Mac Catalyst, and Windows MVVM frontend"
     note for Blazor "PaycheckCalculator.Blazor: Blazor Server frontend"
     note for Api "PaycheckCalculator.Api: Identity, sync endpoints, EF Core PostgreSQL"
     note for Tests "PaycheckCalculator.Tests: Core, Shared, Api, and Blazor tests"

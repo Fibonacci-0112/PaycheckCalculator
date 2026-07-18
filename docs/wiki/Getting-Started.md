@@ -11,12 +11,12 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
   ```bash
   dotnet workload install maui
   ```
-- **Android SDK** or **Windows 10+ SDK** depending on the MAUI target platform.
+- **Android SDK**, **Xcode on macOS** (for iOS and Mac Catalyst), or **Windows 10+ SDK** depending on the MAUI target platform.
 - **PostgreSQL** only when running `PaycheckCalculator.Api` with its default provider. The integration tests use a SQLite-backed test path and do not require PostgreSQL.
 
 `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
 
-`PaycheckCalculator.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is available and falls back to `net9.0` on older SDKs. The other non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android` and `net11.0-windows10.0.19041.0`.
+`PaycheckCalculator.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is available and falls back to `net9.0` on older SDKs. The other non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows10.0.19041.0`; Apple targets are excluded when MSBuild runs on Linux, and the Windows target is included only on Windows.
 
 ---
 
@@ -26,7 +26,7 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
 PaycheckCalculator.slnx
 ├── global.json                   # .NET 11 preview SDK pin
 ├── PaycheckCalculator.Core/            # UI-agnostic tax, pay, gross-up, projection, budget, and report engines
-├── PaycheckCalculator.App/             # .NET MAUI frontend for Android and Windows
+├── PaycheckCalculator.App/             # .NET MAUI frontend for Android, iOS, macOS, and Windows
 ├── PaycheckCalculator.Blazor/          # Blazor Server web frontend
 ├── PaycheckCalculator.Shared/          # Sync contracts, JSON config, mergers, API client, stores, entitlements
 ├── PaycheckCalculator.Api/             # ASP.NET Core Web API for Identity accounts and sync
@@ -116,6 +116,12 @@ Target-specific run examples:
 ```bash
 # Android
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
+
+# iOS (requires macOS and Xcode)
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios
+
+# macOS via Mac Catalyst (requires macOS and Xcode)
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-maccatalyst
 
 # Windows
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
