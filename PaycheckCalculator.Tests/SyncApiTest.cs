@@ -174,12 +174,33 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
         var email = NewEmail();
         var client = await SignedInClientAsync(email);
         await SyncAsync(client, new SyncRequest([Entry("Delete Me", At(1))], []));
+        await SyncBudgetsAsync(client, new BudgetSyncRequest(
+            [
+                new BudgetDto
+                {
+                    Name = "Delete Budget",
+                    UpdatedAtUtc = At(1),
+                    MonthlyNetIncome = 1000m,
+                    Method = BudgetMethod.Custom,
+                    Categories = [new BudgetCategoryDto { Name = "Needs", Amount = 500m }]
+                }
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []));
 
         var deleteResp = await client.DeleteAsync("/api/account/");
         deleteResp.EnsureSuccessStatusCode();
 
         var syncAfterDelete = await client.PostAsync("/api/paychecks/sync", Json(new SyncRequest([], [])));
         Assert.Equal(HttpStatusCode.Unauthorized, syncAfterDelete.StatusCode);
+
+        var budgetSyncAfterDelete = await client.PostAsync("/api/budgets/sync", Json(new BudgetSyncRequest([], [], [], [], [], [], [], [])));
+        Assert.Equal(HttpStatusCode.Unauthorized, budgetSyncAfterDelete.StatusCode);
 
         var login = await _factory.CreateClient().PostAsync("/api/account/login", Json(new { email, password = Password }));
         Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);

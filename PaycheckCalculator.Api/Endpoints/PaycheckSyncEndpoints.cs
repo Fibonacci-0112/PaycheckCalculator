@@ -33,8 +33,8 @@ public static class PaycheckSyncEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+        var userId = await GetActiveUserIdAsync(principal, users);
+        if (userId is null) return Results.Unauthorized();
 
         if (!TryValidate(request, out var error))
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["request"] = [error] });
@@ -54,11 +54,20 @@ public static class PaycheckSyncEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+        var userId = await GetActiveUserIdAsync(principal, users);
+        if (userId is null) return Results.Unauthorized();
 
         var set = await LoadSetAsync(db, userId, ct);
         return Results.Ok(new SyncResponse(set.Paychecks, set.Tombstones, DateTimeOffset.UtcNow));
+    }
+
+    private static async Task<string?> GetActiveUserIdAsync(ClaimsPrincipal principal, UserManager<IdentityUser> users)
+    {
+        var userId = users.GetUserId(principal);
+        if (string.IsNullOrEmpty(userId))
+            return null;
+
+        return await users.FindByIdAsync(userId) is null ? null : userId;
     }
 
     private static bool TryValidate(SyncRequest request, out string error)
