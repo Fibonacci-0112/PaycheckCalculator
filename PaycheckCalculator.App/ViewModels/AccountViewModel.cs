@@ -178,7 +178,7 @@ public partial class AccountViewModel : ObservableObject
     {
         await Shell.Current.DisplayAlert(
             "Privacy Policy",
-            "PaycheckCalc stores data locally by default. If you create an account, synced paychecks and budgets are stored on the sync server so your data can sync across devices. Use Export Account Data, Delete Local Data, or Delete Account at any time.",
+            "PaycheckCalculator stores data locally by default. If you create an account, synced paychecks and budgets are stored on the sync server so your data can sync across devices. Use Export Account Data, Delete Local Data, or Delete Account at any time.",
             "OK");
     });
 
@@ -187,7 +187,7 @@ public partial class AccountViewModel : ObservableObject
     {
         await Shell.Current.DisplayAlert(
             "Terms of Use",
-            "PaycheckCalc is provided for informational purposes only and is not tax advice. You are responsible for reviewing payroll and tax outcomes before relying on them. Use of account sync features requires network access and acceptance of server-side data storage.",
+            "PaycheckCalculator is provided for informational purposes only and is not tax advice. You are responsible for reviewing payroll and tax outcomes before relying on them. Use of account sync features requires network access and acceptance of server-side data storage.",
             "OK");
     });
 

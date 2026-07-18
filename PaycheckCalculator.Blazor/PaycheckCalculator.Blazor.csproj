@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <!-- Copy Core tax data into TaxData/ in the build output, matching the logical
-       names expected by AddPaycheckCalcCore (e.g. "schemas/ca.json"). -->
+       names expected by AddPaycheckCalculatorCore (e.g. "schemas/ca.json"). -->
   <ItemGroup>
     <None Include="..\PaycheckCalculator.Core\Data\ar_withholding_2026.json">
       <Link>TaxData\ar_withholding_2026.json</Link>
@@ -49,7 +49,7 @@
       <Link>TaxData\state_supplemental_2026.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <!-- State schemas — logical name prefix "schemas/" matches AddPaycheckCalcCore -->
+    <!-- State schemas — logical name prefix "schemas/" matches AddPaycheckCalculatorCore -->
     <None Include="..\PaycheckCalculator.Core\Data\Schemas\*.json">
       <Link>TaxData\schemas\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

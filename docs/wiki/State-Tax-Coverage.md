@@ -1,8 +1,8 @@
 # State Tax Coverage
 
-PaycheckCalc supports all 50 US states plus the District of Columbia.
+PaycheckCalculator supports all 50 US states plus the District of Columbia.
 
-Every jurisdiction is represented by an `IStateWithholdingCalculator` registered in `StateCalculatorRegistry` during `AddPaycheckCalcCore`. Dynamic state-specific UI fields are defined by schema JSON files in `PaycheckCalculator.Core/Data/Schemas/`.
+Every jurisdiction is represented by an `IStateWithholdingCalculator` registered in `StateCalculatorRegistry` during `AddPaycheckCalculatorCore`. Dynamic state-specific UI fields are defined by schema JSON files in `PaycheckCalculator.Core/Data/Schemas/`.
 
 ---
 
@@ -130,7 +130,7 @@ The following calculators load tax-table data from JSON at startup:
 | `OklahomaOw2PercentageCalculator` | `ok_ow2_2026_percentage.json` |
 | `StateSupplementalCalculator` | `state_supplemental_2026.json` |
 
-If a tax-data file is renamed, update `AddPaycheckCalcCore`, MAUI `MauiAsset` entries, Blazor `TaxData` links, test project copy/link entries, and any tests or docs that reference the file.
+If a tax-data file is renamed, update `AddPaycheckCalculatorCore`, MAUI `MauiAsset` entries, Blazor `TaxData` links, test project copy/link entries, and any tests or docs that reference the file.
 
 ---
 
@@ -150,7 +150,7 @@ For new or changed state withholding logic:
 2. Implement or update the `IStateWithholdingCalculator`.
 3. Add or update the matching schema file in `PaycheckCalculator.Core/Data/Schemas/<state>.json`.
 4. Add or update tax-table JSON in `PaycheckCalculator.Core/Data/` if the calculator is table-driven.
-5. Register the calculator in `AddPaycheckCalcCore`.
+5. Register the calculator in `AddPaycheckCalculatorCore`.
 6. Update MAUI, Blazor, and test project asset/link entries if a new JSON data file is introduced.
 7. Add or update xUnit tests with explicit expected dollar amounts.
 8. Verify the state picker and dynamic fields render correctly in both front-ends.

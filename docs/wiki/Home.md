@@ -1,8 +1,8 @@
-# PaycheckCalc Wiki
+# PaycheckCalculator Wiki
 
-Welcome to the **PaycheckCalc** wiki — the documentation home for the paycheck calculator.
+Welcome to the **PaycheckCalculator** wiki — the documentation home for the paycheck calculator.
 
-PaycheckCalc computes gross pay, tax withholding, deductions, employee-paid state disability / paid-leave premiums, and net pay for all 50 US states plus the District of Columbia using 2026 tax data. It includes a .NET MAUI app, a Blazor Server web app, a shared Core calculation engine, shared sync/contracts code, and an optional ASP.NET Core Web API for accounts and sync.
+PaycheckCalculator computes gross pay, tax withholding, deductions, employee-paid state disability / paid-leave premiums, and net pay for all 50 US states plus the District of Columbia using 2026 tax data. It includes a .NET MAUI app, a Blazor Server web app, a shared Core calculation engine, shared sync/contracts code, and an optional ASP.NET Core Web API for accounts and sync.
 
 Current major capabilities include standard paycheck calculation, gross-up calculation, annual projection, saved paycheck comparison, CSV/PDF/print export, a monthly budget tracker, recurring bills, savings goals, and Pro-gated budget reporting infrastructure.
 

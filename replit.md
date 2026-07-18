@@ -1,4 +1,4 @@
-# PaycheckCalc
+# PaycheckCalculator
 
 A US paycheck calculator for 2026 withholding rules (federal, FICA, state, disability/paid-leave premiums, deductions, annual projections, gross-up, and self-employment/1099 estimates for all 50 states + DC). See `README.md` for full feature details and architecture.
 
@@ -22,7 +22,7 @@ Both scripts export `ASPNETCORE_URLS`/`DOTNET_ROOT`/`PATH` and start the process
 
 ### .NET SDK
 
-This project pins `global.json` to a **.NET 11 preview SDK** (`11.0.100-preview.5.26302.115`), which isn't available as a Replit Nix module (the highest module is .NET 10). It's installed locally instead:
+This project pins `global.json` to a **.NET 11 preview SDK** (`11.0.100-preview.6.26359.118`), which isn't available as a Replit Nix module (the highest module is .NET 10). It's installed locally instead:
 
 - Downloaded via `dotnet-install.sh` into `.dotnet/` (git-ignored) — matches the exact preview version pinned in `global.json`.
 - `icu` was added as a system dependency (required by the preview SDK's globalization support).

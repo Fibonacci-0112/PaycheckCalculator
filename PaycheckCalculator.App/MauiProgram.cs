@@ -30,7 +30,7 @@ public static class MauiProgram
         // ── PaycheckCalculator.Core wiring (state/federal calculators, registries,
         //    schema provider, tax JSON tables). MAUI reads the JSON from the app
         //    package via FileSystem.OpenAppPackageFileAsync.
-        builder.Services.AddPaycheckCalcCore(new MauiAppPackageTaxDataReader());
+        builder.Services.AddPaycheckCalculatorCore(new MauiAppPackageTaxDataReader());
 
         // PDF export of paycheck results + chart, opened in Adobe Reader/Acrobat.
         builder.Services.AddSingleton<IPdfViewerLauncher, PdfViewerLauncher>();

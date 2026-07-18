@@ -6,7 +6,7 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
 
 ## Prerequisites
 
-- **.NET 11 SDK preview** pinned in [`global.json`](../../global.json): `11.0.100-preview.5.26302.115`, `latestPatch` roll-forward, prerelease allowed.
+- **.NET 11 SDK preview** pinned in [`global.json`](../../global.json): `11.0.100-preview.6.26359.118`, `latestPatch` roll-forward, prerelease allowed.
 - **.NET MAUI workload** only when building or running `PaycheckCalculator.App`:
   ```bash
   dotnet workload install maui
@@ -160,4 +160,4 @@ Tax data lives in [`PaycheckCalculator.Core/Data/`](../../PaycheckCalculator.Cor
 | `state_supplemental_2026.json` | State supplemental (bonus) withholding rates for all 50 states + DC |
 | `Schemas/*.json` | Dynamic state-input schema files for every state / DC |
 
-`AddPaycheckCalcCore` reads the JSON files at startup and registers the corresponding calculators and schema provider. If a JSON file is renamed or moved, update all consumers: Core loader, MAUI assets, Blazor `TaxData` links, test project links, and any tests or documentation that reference the old name.
+`AddPaycheckCalculatorCore` reads the JSON files at startup and registers the corresponding calculators and schema provider. If a JSON file is renamed or moved, update all consumers: Core loader, MAUI assets, Blazor `TaxData` links, test project links, and any tests or documentation that reference the old name.

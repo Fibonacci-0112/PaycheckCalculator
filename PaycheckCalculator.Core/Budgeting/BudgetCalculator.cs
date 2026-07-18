@@ -4,7 +4,7 @@ namespace PaycheckCalculator.Core.Budgeting;
 /// Computes a <see cref="BudgetSummary"/> for a given <see cref="Budget"/> and its month's
 /// transactions. Per-category spent amounts are summed from the transaction list (case-insensitive
 /// category name match); projected month-end is a linear extrapolation of the current run-rate
-/// based on the day of the month. Registered in DI via <c>AddPaycheckCalcCore</c>.
+/// based on the day of the month. Registered in DI via <c>AddPaycheckCalculatorCore</c>.
 /// </summary>
 public sealed class BudgetCalculator
 {

@@ -1,12 +1,12 @@
-# PaycheckCalc Roadmap
+# PaycheckCalculator Roadmap
 
 _Last updated: July 16, 2026_
 
-This is the living product and engineering roadmap for PaycheckCalc. It describes intended direction, not a promise of dates. Milestones are ordered by dependency and risk; accuracy, explainability, and data safety take priority over feature count.
+This is the living product and engineering roadmap for PaycheckCalculator. It describes intended direction, not a promise of dates. Milestones are ordered by dependency and risk; accuracy, explainability, and data safety take priority over feature count.
 
 ## Product direction
 
-PaycheckCalc should become the most trustworthy, understandable, and practical US paycheck-planning tool for employees and independent contractors.
+PaycheckCalculator should become the most trustworthy, understandable, and practical US paycheck-planning tool for employees and independent contractors.
 
 The product should remain:
 

@@ -1,6 +1,6 @@
-# PaycheckCalc
+# PaycheckCalculator
 
-PaycheckCalc is a US paycheck calculator for 2026 withholding rules. It computes gross pay, net pay, federal withholding, FICA, state withholding, employee-paid state disability / paid-leave premiums, deductions, annual projections, gross-up pay, and self-employment (1099) estimates for all 50 US states plus the District of Columbia.
+PaycheckCalculator is a US paycheck calculator for 2026 withholding rules. It computes gross pay, net pay, federal withholding, FICA, state withholding, employee-paid state disability / paid-leave premiums, deductions, annual projections, gross-up pay, and self-employment (1099) estimates for all 50 US states plus the District of Columbia.
 
 The solution currently ships three runtime surfaces backed by shared libraries:
 
@@ -43,7 +43,7 @@ PaycheckCalculator.slnx
 │   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, BonusCalculator, HourlySalaryCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/               # Budget, categories, transactions, recurring bills, savings goals, reports
 │   ├── Explanation/             # Show-your-work explanation records
-│   ├── DependencyInjection/     # AddPaycheckCalcCore and ITaxDataReader
+│   ├── DependencyInjection/     # AddPaycheckCalculatorCore and ITaxDataReader
 │   ├── Data/                    # JSON tax tables and dynamic state schemas
 │   │   └── Schemas/             # One schema JSON file per state / DC
 │   └── Tax/                     # Federal, FICA, State contracts/registry, and one folder per jurisdiction
@@ -187,7 +187,7 @@ Money values use `decimal`. Gross pay, deductions, and withholding components ar
 
 ## State Tax Coverage
 
-All 50 states and the District of Columbia are supported through `IStateWithholdingCalculator` implementations registered in `AddPaycheckCalcCore`.
+All 50 states and the District of Columbia are supported through `IStateWithholdingCalculator` implementations registered in `AddPaycheckCalculatorCore`.
 
 | Category | Jurisdictions |
 |---|---|

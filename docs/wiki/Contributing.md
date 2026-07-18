@@ -114,7 +114,7 @@ Intentional examples that should not be removed casually:
 2. Implement or update `IStateWithholdingCalculator`.
 3. Add or update `PaycheckCalculator.Core/Data/Schemas/<state>.json`.
 4. Add or update tax-table JSON when needed.
-5. Register the calculator and any data-backed helper in `AddPaycheckCalcCore`.
+5. Register the calculator and any data-backed helper in `AddPaycheckCalculatorCore`.
 6. Update MAUI, Blazor, and test project data-file wiring if a new JSON file is introduced.
 7. Add or update tests in `PaycheckCalculator.Tests`.
 8. Update documentation.

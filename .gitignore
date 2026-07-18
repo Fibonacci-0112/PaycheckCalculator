@@ -418,15 +418,15 @@ FodyWeavers.xsd
 *.msp
 
 # SQLite database files created by the Blazor dev server at runtime
-PaycheckCalc.Blazor/*.db
-PaycheckCalc.Blazor/*.db-journal
-PaycheckCalc.Blazor/*.db-shm
-PaycheckCalc.Blazor/*.db-wal
+PaycheckCalculator.Blazor/*.db
+PaycheckCalculator.Blazor/*.db-journal
+PaycheckCalculator.Blazor/*.db-shm
+PaycheckCalculator.Blazor/*.db-wal
 
 # SQLite database files created by the sync API at runtime
-PaycheckCalc.Api/*.db
-PaycheckCalc.Api/*.db-journal
-PaycheckCalc.Api/*.db-shm
-PaycheckCalc.Api/*.db-wal
+PaycheckCalculator.Api/*.db
+PaycheckCalculator.Api/*.db-journal
+PaycheckCalculator.Api/*.db-shm
+PaycheckCalculator.Api/*.db-wal
 .dotnet/
 dotnet-install.sh
