@@ -506,32 +506,6 @@ public partial class CalculatorViewModel : ObservableObject
     public bool ShowBothDeductions =>
         (ResultCard?.PreTaxDeductions ?? 0m) > 0m && (ResultCard?.PostTaxDeductions ?? 0m) > 0m;
 
-    /// <summary>Shows a <c>DisplayAlert</c> listing all source citations from the current result.</summary>
-    [RelayCommand]
-    private async Task ShowAccuracySources()
-    {
-        if (ResultCard is null) return;
-        var sources = ResultCard.Explanation.Sources;
-        var shell = Shell.Current;
-        if (shell is null) return;
-
-        if (sources.Count == 0)
-        {
-            await shell.DisplayAlert("Accuracy & Sources", "No source citations are available for this result.", "OK");
-            return;
-        }
-
-        var sb = new StringBuilder();
-        foreach (var s in sources)
-        {
-            sb.AppendLine(s.Label);
-            sb.Append("  ").AppendLine(s.Reference);
-            sb.AppendLine();
-        }
-
-        await shell.DisplayAlert("Accuracy & Sources", sb.ToString().TrimEnd(), "OK");
-    }
-
     /// <summary>Shows a <c>DisplayAlert</c> for the explanation of a particular paycheck line identified by
     /// <paramref name="keyName"/>. Bound from XAML info-icon TapGestureRecognizers
     /// with a CommandParameter naming one of <see cref="ExplanationLineKey"/>.
