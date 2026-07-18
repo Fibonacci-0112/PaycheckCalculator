@@ -21,6 +21,8 @@
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net11.0-windows10.0.19041.0'">
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- The Windows XAML compiler can report design-time WMC1006 warnings for project-reference outputs before Core/Shared have been built. -->
+    <NoWarn>$(NoWarn);WMC1006</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
