@@ -1,6 +1,6 @@
 # Budgeting
 
-PaycheckCalc includes a monthly budget tracker built on the UI-agnostic Core layer.
+PaycheckCalculator includes a monthly budget tracker built on the UI-agnostic Core layer.
 
 The budget module can normalize paycheck net pay into monthly income, apply budget templates, track categories and expenses, track recurring bills, track savings goals, generate report data, and sync budget state across the MAUI and Blazor front-ends when an account is used.
 

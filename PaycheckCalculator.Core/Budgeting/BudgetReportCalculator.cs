@@ -3,7 +3,7 @@ namespace PaycheckCalculator.Core.Budgeting;
 /// <summary>
 /// Aggregates transaction history into a read-only <see cref="BudgetReport"/>:
 /// spend-by-category over time and budget-vs-actual trend.
-/// Registered in DI via <c>AddPaycheckCalcCore</c>.
+/// Registered in DI via <c>AddPaycheckCalculatorCore</c>.
 /// </summary>
 public sealed class BudgetReportCalculator
 {

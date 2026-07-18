@@ -1,6 +1,6 @@
 # UI Guide
 
-PaycheckCalc ships two front-ends that share the same Core engine:
+PaycheckCalculator ships two front-ends that share the same Core engine:
 
 - **PaycheckCalculator.App** — .NET MAUI app for Android and Windows.
 - **PaycheckCalculator.Blazor** — Blazor Server web app.

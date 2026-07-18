@@ -1,6 +1,6 @@
-# PaycheckCalc repository instructions for GitHub Copilot
+# PaycheckCalculator repository instructions for GitHub Copilot
 
-PaycheckCalc is a US paycheck calculator (2026 tax tables) with two front-ends — a **.NET MAUI** app and a **Blazor Server** web app — both backed by a shared calculation engine and exercised by an xUnit suite. It computes gross pay, federal/state withholding, FICA, deductions, and net pay, plus annual projection, bonus withholding, gross-up, self-employment tax, and budgeting.
+PaycheckCalculator is a US paycheck calculator (2026 tax tables) with two front-ends — a **.NET MAUI** app and a **Blazor Server** web app — both backed by a shared calculation engine and exercised by an xUnit suite. It computes gross pay, federal/state withholding, FICA, deductions, and net pay, plus annual projection, bonus withholding, gross-up, self-employment tax, and budgeting.
 
 ## Solution shape
 
@@ -20,8 +20,8 @@ Tax JSON tables live in `PaycheckCalculator.Core/Data/` and are asset-linked int
 - `PaycheckCalculator.Core` is the single source of tax and payroll math. No tax logic belongs in XAML, code-behind, Razor components, converters, exporters, or API endpoints.
 - `PaycheckCalculator.Shared` may reference Core but must not reference MAUI, Blazor, ASP.NET Core hosting, EF Core, or platform storage APIs.
 - `PaycheckCalculator.Api` references Shared and must not reference App or Blazor. It syncs stored results; it does not recalculate.
-- Both front-ends call `AddPaycheckCalcCore` supplying a platform `ITaxDataReader` (MAUI: `MauiAppPackageTaxDataReader`; Blazor: `FileSystemTaxDataReader`).
-- `StateCalculatorRegistry` is the single registration point for all state calculators and is wired in `AddPaycheckCalcCore`. Do not register states in front-end startup code.
+- Both front-ends call `AddPaycheckCalculatorCore` supplying a platform `ITaxDataReader` (MAUI: `MauiAppPackageTaxDataReader`; Blazor: `FileSystemTaxDataReader`).
+- `StateCalculatorRegistry` is the single registration point for all state calculators and is wired in `AddPaycheckCalculatorCore`. Do not register states in front-end startup code.
 
 ## Calculation pipeline (PayCalculator)
 

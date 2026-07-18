@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <ApplicationTitle>PaycheckCalc</ApplicationTitle>
+    <ApplicationTitle>PaycheckCalculator</ApplicationTitle>
     <ApplicationId>com.erik.paycheckcalc</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
@@ -37,8 +37,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0-preview.5.26302.115" />
-	<PackageReference Include="Microsoft.Maui.Controls" Version="11.0.0-preview.5.26304.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0-preview.6.26359.118" />
+	<PackageReference Include="Microsoft.Maui.Controls" Version="11.0.0-preview.6.26360.8" />
   </ItemGroup>
 
   <ItemGroup>

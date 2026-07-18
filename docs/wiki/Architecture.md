@@ -1,6 +1,6 @@
 # Architecture
 
-PaycheckCalc keeps a strict separation between domain logic, front-end presentation, shared sync contracts, and the optional sync API.
+PaycheckCalculator keeps a strict separation between domain logic, front-end presentation, shared sync contracts, and the optional sync API.
 
 The current solution has six projects:
 
@@ -22,7 +22,7 @@ PaycheckCalculator.slnx
 │   ├── Pay/                       # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, SelfEmploymentCalculator
 │   ├── Budgeting/                 # Budget engine, recurring bills, savings goals, reports
 │   ├── Explanation/               # Show-your-work breakdowns
-│   ├── DependencyInjection/       # AddPaycheckCalcCore + ITaxDataReader
+│   ├── DependencyInjection/       # AddPaycheckCalculatorCore + ITaxDataReader
 │   ├── Data/                      # Federal/state tax JSON and Schemas/*.json
 │   └── Tax/                       # Federal, FICA, State contracts/registry, and dedicated jurisdiction calculators
 ├── PaycheckCalculator.App/              # MAUI frontend
@@ -40,7 +40,7 @@ PaycheckCalculator.slnx
 
 2. **PayCalculator is an orchestrator.** It composes gross pay, deductions, FICA, federal withholding, state withholding, state disability / paid-leave premiums, and net pay. It does not contain state-specific tax logic.
 
-3. **State calculators are plugins.** Every state and DC implements `IStateWithholdingCalculator` and is registered in `StateCalculatorRegistry` by `AddPaycheckCalcCore`.
+3. **State calculators are plugins.** Every state and DC implements `IStateWithholdingCalculator` and is registered in `StateCalculatorRegistry` by `AddPaycheckCalculatorCore`.
 
 4. **State UI is schema-driven.** State-specific fields are declared by state schema JSON and surfaced through `StateFieldDefinition`. Both front-ends render those fields dynamically instead of hard-coding per-state controls.
 
@@ -72,7 +72,7 @@ PaycheckCalculator.Tests   → Core + Shared + Api + Blazor
 
 ## Core Engine
 
-`AddPaycheckCalcCore` is the composition root for Core. It:
+`AddPaycheckCalculatorCore` is the composition root for Core. It:
 
 - Reads IRS 15-T and state tax JSON through `ITaxDataReader`.
 - Reads every available `schemas/<state>.json` file into `JsonStateSchemaProvider`.

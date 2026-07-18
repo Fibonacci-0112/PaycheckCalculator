@@ -27,7 +27,7 @@ public sealed class StatePickerAndDecimalFixTest
     [Fact]
     public void SupportedStates_CountMatchesRegisteredCalculators()
     {
-        // The full AddPaycheckCalcCore registers all 51 (50 states + DC).
+        // The full AddPaycheckCalculatorCore registers all 51 (50 states + DC).
         // Without DI, just verify the empty registry starts at 0.
         var registry = new StateCalculatorRegistry();
         // An unregistered registry has 0 supported states.

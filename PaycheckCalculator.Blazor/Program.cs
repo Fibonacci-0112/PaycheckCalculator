@@ -13,7 +13,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var taxDataPath = Path.Combine(AppContext.BaseDirectory, "TaxData");
-builder.Services.AddPaycheckCalcCore(new FileSystemTaxDataReader(taxDataPath));
+builder.Services.AddPaycheckCalculatorCore(new FileSystemTaxDataReader(taxDataPath));
 
 // Budget store — circuit-scoped so anonymous data persists only until the tab closes.
 builder.Services.AddScoped<SessionBudgetStore>();

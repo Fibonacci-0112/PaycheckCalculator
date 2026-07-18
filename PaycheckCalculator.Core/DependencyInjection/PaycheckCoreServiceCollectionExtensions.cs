@@ -55,7 +55,7 @@ namespace PaycheckCalculator.Core.DependencyInjection;
 
 public static class PaycheckCoreServiceCollectionExtensions
 {
-    public static IServiceCollection AddPaycheckCalcCore(
+    public static IServiceCollection AddPaycheckCalculatorCore(
         this IServiceCollection services,
         ITaxDataReader dataReader)
     {

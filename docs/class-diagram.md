@@ -1,6 +1,6 @@
 # UML Class Diagram
 
-> High-level Mermaid class diagrams for the current **PaycheckCalc** solution.
+> High-level Mermaid class diagrams for the current **PaycheckCalculator** solution.
 >
 > These diagrams are architectural rather than exhaustive. State calculators are represented by their shared contracts and registry instead of listing every state class.
 

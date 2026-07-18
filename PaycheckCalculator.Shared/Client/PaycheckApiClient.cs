@@ -9,7 +9,7 @@ using PaycheckCalculator.Shared.Sync;
 namespace PaycheckCalculator.Shared.Client;
 
 /// <summary>
-/// Typed client for the PaycheckCalc API: account register/login/logout against the ASP.NET Core
+/// Typed client for the PaycheckCalculator API: account register/login/logout against the ASP.NET Core
 /// Identity bearer-token endpoints, and paycheck sync. Request URIs are built per call from
 /// <see cref="IApiBaseAddressProvider"/> (never <c>HttpClient.BaseAddress</c>) so the server URL can
 /// change at runtime. A 401 on sync triggers a single refresh-and-retry.
