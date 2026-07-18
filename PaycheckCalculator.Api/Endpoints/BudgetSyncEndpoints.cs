@@ -33,19 +33,19 @@ public static class BudgetSyncEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+        var user = await ActiveUserResolver.GetActiveUserAsync(principal, users);
+        if (user is null) return Results.Unauthorized();
 
         if (!TryValidate(request, out var error))
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["request"] = [error] });
 
-        var existing = await LoadSetsAsync(db, userId, ct);
+        var existing = await LoadSetsAsync(db, user.Id, ct);
         var mergedBudgets      = BudgetMerger.MergeBudgets(existing.Budgets, new BudgetSet(request.Budgets, request.BudgetTombstones));
         var mergedTransactions = BudgetMerger.MergeTransactions(existing.Transactions, new TransactionSet(request.Transactions, request.TransactionTombstones));
         var mergedBills        = BudgetMerger.MergeRecurringBills(existing.Bills, new RecurringBillSet(request.RecurringBills, request.RecurringBillTombstones));
         var mergedGoals        = BudgetMerger.MergeSavingsGoals(existing.Goals, new SavingsGoalSet(request.SavingsGoals, request.SavingsGoalTombstones));
 
-        await PersistAsync(db, userId, mergedBudgets, mergedTransactions, mergedBills, mergedGoals, ct);
+        await PersistAsync(db, user.Id, mergedBudgets, mergedTransactions, mergedBills, mergedGoals, ct);
 
         return Results.Ok(BuildResponse(mergedBudgets, mergedTransactions, mergedBills, mergedGoals));
     }
@@ -56,10 +56,10 @@ public static class BudgetSyncEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+        var user = await ActiveUserResolver.GetActiveUserAsync(principal, users);
+        if (user is null) return Results.Unauthorized();
 
-        var sets = await LoadSetsAsync(db, userId, ct);
+        var sets = await LoadSetsAsync(db, user.Id, ct);
         return Results.Ok(BuildResponse(sets.Budgets, sets.Transactions, sets.Bills, sets.Goals));
     }
 

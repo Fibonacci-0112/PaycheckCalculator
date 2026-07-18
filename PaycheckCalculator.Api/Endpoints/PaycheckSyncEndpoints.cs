@@ -33,17 +33,17 @@ public static class PaycheckSyncEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+        var user = await ActiveUserResolver.GetActiveUserAsync(principal, users);
+        if (user is null) return Results.Unauthorized();
 
         if (!TryValidate(request, out var error))
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["request"] = [error] });
 
-        var existing = await LoadSetAsync(db, userId, ct);
+        var existing = await LoadSetAsync(db, user.Id, ct);
         var incoming = new SavedPaycheckSet(request.Paychecks, request.Tombstones);
         var merged = SavedPaycheckMerger.Merge(existing, incoming);
 
-        await PersistAsync(db, userId, merged, ct);
+        await PersistAsync(db, user.Id, merged, ct);
 
         return Results.Ok(new SyncResponse(merged.Paychecks, merged.Tombstones, DateTimeOffset.UtcNow));
     }
@@ -54,10 +54,10 @@ public static class PaycheckSyncEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+        var user = await ActiveUserResolver.GetActiveUserAsync(principal, users);
+        if (user is null) return Results.Unauthorized();
 
-        var set = await LoadSetAsync(db, userId, ct);
+        var set = await LoadSetAsync(db, user.Id, ct);
         return Results.Ok(new SyncResponse(set.Paychecks, set.Tombstones, DateTimeOffset.UtcNow));
     }
 

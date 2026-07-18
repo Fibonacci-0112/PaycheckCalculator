@@ -29,14 +29,11 @@ public static class AccountDataEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
-
-        var user = await users.FindByIdAsync(userId);
+        var user = await ActiveUserResolver.GetActiveUserAsync(principal, users);
         if (user is null) return Results.Unauthorized();
 
-        var paychecks = await LoadPaychecksAsync(db, userId, ct);
-        var budgets = await LoadBudgetDataAsync(db, userId, ct);
+        var paychecks = await LoadPaychecksAsync(db, user.Id, ct);
+        var budgets = await LoadBudgetDataAsync(db, user.Id, ct);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -64,17 +61,14 @@ public static class AccountDataEndpoints
         UserManager<IdentityUser> users,
         CancellationToken ct)
     {
-        var userId = users.GetUserId(principal);
-        if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
-
-        var user = await users.FindByIdAsync(userId);
+        var user = await ActiveUserResolver.GetActiveUserAsync(principal, users);
         if (user is null) return Results.Unauthorized();
 
-        await db.SavedPaychecks.Where(r => r.UserId == userId).ExecuteDeleteAsync(ct);
-        await db.Budgets.Where(r => r.UserId == userId).ExecuteDeleteAsync(ct);
-        await db.BudgetTransactions.Where(r => r.UserId == userId).ExecuteDeleteAsync(ct);
-        await db.RecurringBills.Where(r => r.UserId == userId).ExecuteDeleteAsync(ct);
-        await db.SavingsGoals.Where(r => r.UserId == userId).ExecuteDeleteAsync(ct);
+        await db.SavedPaychecks.Where(r => r.UserId == user.Id).ExecuteDeleteAsync(ct);
+        await db.Budgets.Where(r => r.UserId == user.Id).ExecuteDeleteAsync(ct);
+        await db.BudgetTransactions.Where(r => r.UserId == user.Id).ExecuteDeleteAsync(ct);
+        await db.RecurringBills.Where(r => r.UserId == user.Id).ExecuteDeleteAsync(ct);
+        await db.SavingsGoals.Where(r => r.UserId == user.Id).ExecuteDeleteAsync(ct);
 
         var result = await users.DeleteAsync(user);
         if (!result.Succeeded)
