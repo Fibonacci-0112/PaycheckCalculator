@@ -42,10 +42,6 @@ public sealed class ResultCardModel
     /// <summary>Extra gross beyond the target net that covers taxes and deductions (GrossPay − TargetNetPay).</summary>
     public decimal GrossUpCost { get; init; }
 
-    // ── Tax year ────────────────────────────────────────────
-    /// <summary>The tax year whose tables were used to produce this result (e.g. 2026).</summary>
-    public int TaxYear { get; init; }
-
     // ── Bonus / supplemental wage (only populated for a bonus result) ──
     /// <summary>True when this result was produced by the bonus / supplemental-wage calculator.</summary>
     public bool IsBonus { get; init; }
