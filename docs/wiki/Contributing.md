@@ -29,6 +29,8 @@ For manual app checks:
 dotnet run --project PaycheckCalculator.Api
 dotnet run --project PaycheckCalculator.Blazor
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios              # macOS + Xcode
+dotnet build PaycheckCalculator.App -t:Run -f net11.0-maccatalyst      # macOS + Xcode
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
 ```
 

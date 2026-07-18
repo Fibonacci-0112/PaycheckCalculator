@@ -5,7 +5,7 @@ PaycheckCalculator keeps a strict separation between domain logic, front-end pre
 The current solution has six projects:
 
 - `PaycheckCalculator.Core` — UI-agnostic paycheck, tax, gross-up, annual projection, budgeting, and budget-report engines.
-- `PaycheckCalculator.App` — .NET MAUI frontend for Android and Windows.
+- `PaycheckCalculator.App` — .NET MAUI frontend for Android, iOS, macOS (Mac Catalyst), and Windows.
 - `PaycheckCalculator.Blazor` — Blazor Server web frontend.
 - `PaycheckCalculator.Shared` — sync DTOs, JSON options, deterministic mergers, HTTP client, store abstractions, and entitlement abstractions.
 - `PaycheckCalculator.Api` — ASP.NET Core Web API for optional accounts and sync.

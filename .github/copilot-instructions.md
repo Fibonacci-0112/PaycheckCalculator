@@ -7,7 +7,7 @@ PaycheckCalculator is a US paycheck calculator (2026 tax tables) with two front-
 | Project | Role |
 |---|---|
 | `PaycheckCalculator.Core` | Calculation engine; must stay free of any UI dependency |
-| `PaycheckCalculator.App` | .NET MAUI front-end (Android + Windows) |
+| `PaycheckCalculator.App` | .NET MAUI front-end (Android + iOS + Mac Catalyst + Windows) |
 | `PaycheckCalculator.Blazor` | Blazor Server front-end |
 | `PaycheckCalculator.Shared` | Cross-client sync contracts, JSON config, merge logic, API client, and budgeting DTOs |
 | `PaycheckCalculator.Api` | ASP.NET Core Web API providing account + sync endpoints (PostgreSQL via EF Core) |

@@ -2,7 +2,7 @@
 
 PaycheckCalculator ships two front-ends that share the same Core engine:
 
-- **PaycheckCalculator.App** — .NET MAUI app for Android and Windows.
+- **PaycheckCalculator.App** — .NET MAUI app for Android, iOS, macOS (Mac Catalyst), and Windows.
 - **PaycheckCalculator.Blazor** — Blazor Server web app.
 
 Both front-ends expose the paycheck calculator, gross-up mode, annual projection, saved paycheck comparison, exports, budgeting, and optional account sync. The layouts differ, but the calculation and sync models are shared.
