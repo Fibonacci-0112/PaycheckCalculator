@@ -15,7 +15,9 @@
         <VerticalStackLayout Padding="16" Spacing="16">
 
             <!-- Monthly income header -->
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Monthly Net Income" FontSize="12" TextColor="#9E9E9E" />
                     <Label Text="{Binding MonthlyNetIncome, StringFormat='{0:C}'}"
@@ -24,10 +26,12 @@
                            Text="Pick a method and tap 'Apply Template' after calculating a paycheck"
                            FontSize="12" TextColor="#9E9E9E" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Method + apply action -->
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Budgeting Method" FontSize="12" TextColor="#9E9E9E" />
                     <Picker ItemsSource="{Binding Methods}"
@@ -41,53 +45,63 @@
                             FontAttributes="Bold"
                             HeightRequest="48" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Summary row -->
             <Grid IsVisible="{Binding HasCategories}" ColumnDefinitions="*,*" ColumnSpacing="8">
-                <Frame Grid.Column="0" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+                <Border Grid.Column="0" BackgroundColor="#2C2C2C" Padding="10"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                     <VerticalStackLayout>
                         <Label Text="Budgeted" FontSize="11" TextColor="#9E9E9E" />
                         <Label Text="{Binding TotalBudgeted, StringFormat='{0:C}'}"
                                FontSize="16" FontAttributes="Bold" TextColor="White" />
                     </VerticalStackLayout>
-                </Frame>
-                <Frame Grid.Column="1" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+                </Border>
+                <Border Grid.Column="1" BackgroundColor="#2C2C2C" Padding="10"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                     <VerticalStackLayout>
                         <Label Text="Spent" FontSize="11" TextColor="#9E9E9E" />
                         <Label Text="{Binding TotalSpent, StringFormat='{0:C}'}"
                                FontSize="16" FontAttributes="Bold" TextColor="White" />
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
             </Grid>
 
             <!-- Recurring / savings summary row -->
             <Grid IsVisible="{Binding HasCategories}" ColumnDefinitions="*,*" ColumnSpacing="8">
-                <Frame Grid.Column="0" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+                <Border Grid.Column="0" BackgroundColor="#2C2C2C" Padding="10"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                     <VerticalStackLayout>
                         <Label Text="Recurring (monthly)" FontSize="11" TextColor="#9E9E9E" />
                         <Label Text="{Binding TotalRecurring, StringFormat='{0:C}'}"
                                FontSize="16" FontAttributes="Bold" TextColor="White" />
                     </VerticalStackLayout>
-                </Frame>
-                <Frame Grid.Column="1" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+                </Border>
+                <Border Grid.Column="1" BackgroundColor="#2C2C2C" Padding="10"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                     <VerticalStackLayout>
                         <Label Text="Savings goals (monthly)" FontSize="11" TextColor="#9E9E9E" />
                         <Label Text="{Binding TotalSavingsContribution, StringFormat='{0:C}'}"
                                FontSize="16" FontAttributes="Bold" TextColor="White" />
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
             </Grid>
 
             <!-- Zero-based allocation indicator -->
-            <Frame IsVisible="{Binding HasCategories}" BackgroundColor="#2C2C2C" CornerRadius="8" Padding="10">
+            <Border IsVisible="{Binding HasCategories}" BackgroundColor="#2C2C2C" Padding="10"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Grid.Column="0" Text="Unallocated income" FontSize="12" TextColor="#9E9E9E"
                            VerticalOptions="Center" />
                     <Label Grid.Column="1" Text="{Binding Unallocated, StringFormat='{0:C}'}"
                            FontSize="16" FontAttributes="Bold" TextColor="White" HorizontalOptions="End" />
                 </Grid>
-            </Frame>
+            </Border>
 
             <!-- Category list -->
             <Label Text="Budget Categories" FontSize="14" FontAttributes="Bold" TextColor="White"
@@ -105,7 +119,9 @@
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
-                            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                            <Border BackgroundColor="#2C2C2C" Padding="12" Margin="0,0,0,8"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,8,Auto,Auto">
                                     <Label Grid.Row="0" Grid.Column="0"
                                            Text="{Binding Name}" FontSize="16"
@@ -131,7 +147,7 @@
                                            Text="{Binding Recurring, StringFormat='Recurring bills: {0:C}/mo'}"
                                            FontSize="11" TextColor="#9E9E9E" />
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -148,8 +164,10 @@
             <Label Text="Add Expense" FontSize="14" FontAttributes="Bold" TextColor="White"
                    IsVisible="{Binding HasCategories}" />
 
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
-                   IsVisible="{Binding HasCategories}">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                   IsVisible="{Binding HasCategories}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Entry Placeholder="Category" Text="{Binding NewTransactionCategory}"
                            PlaceholderColor="#666" TextColor="White" BackgroundColor="Transparent" />
@@ -163,7 +181,7 @@
                             BackgroundColor="#1976D2" TextColor="White"
                             CornerRadius="6" HeightRequest="40" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Transaction list -->
             <Label Text="This Month's Expenses" FontSize="14" FontAttributes="Bold" TextColor="White"
@@ -181,7 +199,9 @@
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
-                            <Frame BackgroundColor="#2C2C2C" CornerRadius="6" Padding="10" Margin="0,0,0,4">
+                            <Border BackgroundColor="#2C2C2C" Padding="10" Margin="0,0,0,4"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 6">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Grid.Column="0" Spacing="2">
                                         <Label Text="{Binding CategoryName}" FontSize="14"
@@ -198,7 +218,7 @@
                                                TextColor="#9E9E9E" HorizontalOptions="End" />
                                     </VerticalStackLayout>
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -220,7 +240,9 @@
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
-                            <Frame BackgroundColor="#2C2C2C" CornerRadius="6" Padding="10" Margin="0,0,0,4">
+                            <Border BackgroundColor="#2C2C2C" Padding="10" Margin="0,0,0,4"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 6">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Grid.Column="0" Spacing="2">
                                         <Label Text="{Binding Name}" FontSize="14"
@@ -237,14 +259,16 @@
                                                TextColor="#9E9E9E" HorizontalOptions="End" />
                                     </VerticalStackLayout>
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
-                   IsVisible="{Binding HasIncome}">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                   IsVisible="{Binding HasIncome}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Entry Placeholder="Bill name (e.g. Rent)" Text="{Binding NewBillName}"
                            PlaceholderColor="#666" TextColor="White" BackgroundColor="Transparent" />
@@ -259,7 +283,7 @@
                             BackgroundColor="#1976D2" TextColor="White"
                             CornerRadius="6" HeightRequest="40" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- ── SAVINGS GOALS ───────────────────────────────────── -->
             <Label Text="Savings Goals" FontSize="14" FontAttributes="Bold" TextColor="White"
@@ -277,7 +301,9 @@
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
-                            <Frame BackgroundColor="#2C2C2C" CornerRadius="6" Padding="10" Margin="0,0,0,4">
+                            <Border BackgroundColor="#2C2C2C" Padding="10" Margin="0,0,0,4"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 6">
                                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                                     <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontSize="14"
                                            FontAttributes="Bold" TextColor="White" />
@@ -291,14 +317,16 @@
                                            Text="{Binding CurrentAmount, StringFormat='Saved {0:C}'}"
                                            FontSize="11" TextColor="#9E9E9E" HorizontalOptions="End" />
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
-                   IsVisible="{Binding HasIncome}">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                   IsVisible="{Binding HasIncome}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Entry Placeholder="Goal name (e.g. Vacation)" Text="{Binding NewGoalName}"
                            PlaceholderColor="#666" TextColor="White" BackgroundColor="Transparent" />
@@ -316,14 +344,16 @@
                             BackgroundColor="#1976D2" TextColor="White"
                             CornerRadius="6" HeightRequest="40" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- ── REPORTS (C3 - Pro-gated) ───────────────────────── -->
             <Label Text="Budget Reports &amp; Insights" FontSize="14" FontAttributes="Bold" TextColor="White" />
 
             <!-- Pro gate -->
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="16"
-                   IsVisible="{Binding IsPro, Converter={StaticResource InvertBool}}">
+            <Border BackgroundColor="#2C2C2C" Padding="16"
+                   IsVisible="{Binding IsPro, Converter={StaticResource InvertBool}}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Pro Feature" FontSize="14" FontAttributes="Bold" TextColor="White"
                            HorizontalOptions="Center" />
@@ -331,11 +361,13 @@
                            FontSize="12" TextColor="#9E9E9E" HorizontalOptions="Center"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Report controls (Pro only) -->
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
-                   IsVisible="{Binding IsPro}">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                   IsVisible="{Binding IsPro}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                         <VerticalStackLayout Grid.Column="0" Spacing="4">
@@ -352,11 +384,13 @@
                                 VerticalOptions="End" />
                     </Grid>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Report results -->
-            <Frame BackgroundColor="#2C2C2C" CornerRadius="8" Padding="12"
-                   IsVisible="{Binding HasReport}">
+            <Border BackgroundColor="#2C2C2C" Padding="12"
+                   IsVisible="{Binding HasReport}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="*,*">
                         <Label Grid.Column="0" Text="Budget vs Actual" FontSize="13"
@@ -397,7 +431,7 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>
