@@ -506,7 +506,7 @@ public partial class CalculatorViewModel : ObservableObject
     public bool ShowBothDeductions =>
         (ResultCard?.PreTaxDeductions ?? 0m) > 0m && (ResultCard?.PostTaxDeductions ?? 0m) > 0m;
 
-    /// <summary>Shows a <c>DisplayAlert</c> for the explanation of a particular paycheck line identified by
+    /// <summary>Shows a <c>DisplayAlertAsync</c> for the explanation of a particular paycheck line identified by
     /// <paramref name="keyName"/>. Bound from XAML info-icon TapGestureRecognizers
     /// with a CommandParameter naming one of <see cref="ExplanationLineKey"/>.
     /// </summary>
@@ -522,7 +522,7 @@ public partial class CalculatorViewModel : ObservableObject
         var shell = Shell.Current;
         if (shell is null) return;
 
-        await shell.DisplayAlert(line.Title, FormatExplanation(line), "OK");
+        await shell.DisplayAlertAsync(line.Title, FormatExplanation(line), "OK");
     }
 
     private static string FormatExplanation(LineExplanation line)
@@ -575,7 +575,7 @@ public partial class CalculatorViewModel : ObservableObject
         var shell = Shell.Current;
         if (shell is null) return;
 
-        await shell.DisplayAlert(
+        await shell.DisplayAlertAsync(
             $"Accuracy & Sources ({ResultCard.TaxYear})",
             FormatSources(ResultCard.Explanation.Sources),
             "OK");
@@ -819,7 +819,7 @@ public partial class CalculatorViewModel : ObservableObject
     private async Task RemovePaycheck(SavedPaycheckViewModel? item)
     {
         if (item is null) return;
-        bool confirmed = await Shell.Current.DisplayAlert(
+        bool confirmed = await Shell.Current.DisplayAlertAsync(
             "Delete Paycheck", $"Delete \"{item.Name}\"?", "Delete", "Cancel");
         if (!confirmed) return;
 
@@ -1143,7 +1143,7 @@ public partial class CalculatorViewModel : ObservableObject
         catch (Exception ex)
         {
             if (Shell.Current is not null)
-                await Shell.Current.DisplayAlert("Export PDF", $"Could not export the PDF: {ex.Message}", "OK");
+                await Shell.Current.DisplayAlertAsync("Export PDF", $"Could not export the PDF: {ex.Message}", "OK");
         }
     }
 
@@ -1168,7 +1168,7 @@ public partial class CalculatorViewModel : ObservableObject
         catch (Exception ex)
         {
             if (Shell.Current is not null)
-                await Shell.Current.DisplayAlert("Export CSV", $"Could not export the CSV: {ex.Message}", "OK");
+                await Shell.Current.DisplayAlertAsync("Export CSV", $"Could not export the CSV: {ex.Message}", "OK");
         }
     }
 
@@ -1190,7 +1190,7 @@ public partial class CalculatorViewModel : ObservableObject
         catch (Exception ex)
         {
             if (Shell.Current is not null)
-                await Shell.Current.DisplayAlert("Print", $"Could not print the results: {ex.Message}", "OK");
+                await Shell.Current.DisplayAlertAsync("Print", $"Could not print the results: {ex.Message}", "OK");
         }
     }
 
@@ -1236,7 +1236,7 @@ public partial class CalculatorViewModel : ObservableObject
         catch (Exception ex)
         {
             if (Shell.Current is not null)
-                await Shell.Current.DisplayAlert("Export Comparison", $"Could not export the comparison PDF: {ex.Message}", "OK");
+                await Shell.Current.DisplayAlertAsync("Export Comparison", $"Could not export the comparison PDF: {ex.Message}", "OK");
         }
     }
 
@@ -1255,7 +1255,7 @@ public partial class CalculatorViewModel : ObservableObject
         catch (Exception ex)
         {
             if (Shell.Current is not null)
-                await Shell.Current.DisplayAlert("Export Comparison", $"Could not export the comparison CSV: {ex.Message}", "OK");
+                await Shell.Current.DisplayAlertAsync("Export Comparison", $"Could not export the comparison CSV: {ex.Message}", "OK");
         }
     }
 }

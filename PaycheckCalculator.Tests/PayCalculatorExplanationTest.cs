@@ -252,6 +252,10 @@ public sealed class PayCalculatorExplanationTest
         var medicareExpl = result.Explanation.Get(ExplanationLineKey.Medicare)!;
         var stateExpl = result.Explanation.Get(ExplanationLineKey.StateWithholding)!;
 
+        Assert.NotNull(federalExpl.Reference);
+        Assert.NotNull(ssExpl.Reference);
+        Assert.NotNull(medicareExpl.Reference);
+        Assert.NotNull(stateExpl.Reference);
         Assert.NotEmpty(federalExpl.Reference);
         Assert.NotEmpty(ssExpl.Reference);
         Assert.NotEmpty(medicareExpl.Reference);
