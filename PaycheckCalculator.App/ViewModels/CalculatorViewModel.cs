@@ -157,10 +157,6 @@ public partial class CalculatorViewModel : ObservableObject
     [ObservableProperty] public partial decimal YtdSupplementalWages { get; set; }
 
     /// <summary>Year-to-date Social Security wages from prior paychecks, for honoring the $184,500 wage-base cap.</summary>
-    [ObservableProperty] public partial decimal YtdSocialSecurityWages { get; set; }
-
-    /// <summary>Year-to-date Medicare wages from prior paychecks, for the 0.9% Additional Medicare threshold.</summary>
-    [ObservableProperty] public partial decimal YtdMedicareWages { get; set; }
 
     /// <summary>Annual net self-employment earnings (Schedule C net profit) for the 1099 calculation.</summary>
     [ObservableProperty] public partial decimal SelfEmploymentEarnings { get; set; } = 80000m;
