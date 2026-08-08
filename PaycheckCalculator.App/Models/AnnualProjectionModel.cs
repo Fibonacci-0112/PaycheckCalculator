@@ -1,3 +1,5 @@
+using PaycheckCalculator.Core.Explanation;
+
 namespace PaycheckCalculator.App.Models;
 
 /// <summary>
@@ -34,6 +36,7 @@ public sealed class AnnualProjectionModel
     public decimal EstimatedTotalLiability { get; init; }
     public decimal AnnualizedTotalWithholding { get; init; }
     public decimal OverUnderWithholding { get; init; }
+    public IReadOnlyList<AccuracyNote> AccuracyNotes { get; init; } = Array.Empty<AccuracyNote>();
 
     // ── Display helpers (UI-only concerns) ──────────────────
     /// <summary>True when annualized pre-tax deductions are non-zero and worth showing.</summary>
@@ -50,6 +53,7 @@ public sealed class AnnualProjectionModel
 
     /// <summary>Magnitude of the over/under figure, shown alongside a refund/owe label.</summary>
     public decimal OverUnderAbsolute => Math.Abs(OverUnderWithholding);
+    public bool HasAccuracyNotes => AccuracyNotes.Count > 0;
 
     /// <summary>"Paycheck 3 of 26"-style progress label for the projected-YTD card.</summary>
     public string PaycheckProgressLabel => $"Paycheck {CurrentPaycheckNumber} of {PayPeriodsPerYear}";

@@ -2,7 +2,9 @@ extern alias blazor;
 using System.Text;
 using blazor::PaycheckCalculator.Blazor.Models;
 using blazor::PaycheckCalculator.Blazor.Services.Export;
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
+using PaycheckCalculator.Core.Tax.Sources;
 using Xunit;
 
 namespace PaycheckCalculator.Tests;
@@ -17,7 +19,7 @@ namespace PaycheckCalculator.Tests;
 /// </summary>
 public sealed class PaycheckPdfRendererTest
 {
-    private static PaycheckResult SampleResult() => new()
+    private static PaycheckResult SampleResult(PaycheckExplanation? explanation = null) => new()
     {
         GrossPay = 2000.00m,
         FederalTaxableIncome = 1850.00m,
@@ -28,7 +30,8 @@ public sealed class PaycheckPdfRendererTest
         MedicareWithholding = 26.83m,
         StateWithholding = 75.00m,
         State = UsState.CA,
-        NetPay = 1453.47m
+        NetPay = 1453.47m,
+        Explanation = explanation ?? PaycheckExplanation.Empty
     };
 
     // Decode raw bytes 1:1 (Latin1) so ASCII content can be searched losslessly.
@@ -68,6 +71,31 @@ public sealed class PaycheckPdfRendererTest
         var text = AsText(pdf);
 
         Assert.Contains("Paycheck Summary - CA", text);
+    }
+
+    [Fact]
+    public void Render_WithManifestSource_IncludesStructuredMetadataAndExclusions()
+    {
+        var catalog = TaxSourceCatalog.Load(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "tax_source_manifest_2026.json")));
+        var explanation = new PaycheckExplanation(
+        [
+            new(
+                ExplanationLineKey.FederalWithholding,
+                "Federal Withholding",
+                180m,
+                Array.Empty<ExplanationStep>(),
+                SourceRuleIds: ["federal-irs-pub-15t-2026"])
+        ], catalog);
+
+        var text = AsText(PaycheckPdfRenderer.Render(SampleResult(explanation), "CA"));
+
+        Assert.Contains("ACCURACY & SOURCES", text);
+        Assert.Contains("Publication 15-T", text);
+        Assert.Contains("https://www.irs.gov/pub/irs-pdf/p15t.pdf", text);
+        Assert.Contains("Implementation: JsonTable", text);
+        Assert.Contains("Last verified: 2026-08-08", text);
+        Assert.Contains("ASSUMPTIONS & EXCLUSIONS", text);
     }
 
     [Fact]
@@ -158,7 +186,7 @@ public sealed class PaycheckPdfRendererTest
         Assert.Contains("ANNUALIZED AMOUNTS", text);
         Assert.Contains("PROJECTED YEAR-TO-DATE - PAYCHECK 3 OF 26", text);
         Assert.Contains("YEAR-END ESTIMATE", text);
-        Assert.Contains("Estimated Refund", text);
+        Assert.Contains("Withholding-Based Estimate", text);
         Assert.Contains("$52,000.00", text);
     }
 
@@ -167,8 +195,8 @@ public sealed class PaycheckPdfRendererTest
     {
         var text = AsText(PaycheckPdfRenderer.Render(SampleResult(), "CA", SampleProjection(overUnder: -125.00m)));
 
-        Assert.Contains("Estimated Amount Owed", text);
-        Assert.DoesNotContain("Estimated Refund", text);
+        Assert.Contains("Withholding-Based Estimate \\(Shortfall\\)", text);
+        Assert.DoesNotContain("Withholding-Based Estimate (Over)", text);
     }
 
     [Fact]

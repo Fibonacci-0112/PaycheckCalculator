@@ -14,6 +14,17 @@ namespace PaycheckCalculator.Tests;
 /// </summary>
 public sealed class AnnualProjectionCalculatorTest
 {
+    [Fact]
+    public void Projection_DisclosesWithholdingProxyAssumptionsAndExclusions()
+    {
+        var (projection, _) = RunProjection();
+
+        Assert.Contains(projection.AccuracyNotes, note => note.Description.Contains("Form 1040", StringComparison.Ordinal));
+        Assert.Contains(projection.AccuracyNotes, note => note.Description.Contains("state withholding", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(projection.AccuracyNotes, note => note.Description.Contains("$200,000", StringComparison.Ordinal));
+        Assert.Contains(projection.AccuracyNotes, note => note.Description.Contains("local taxes", StringComparison.OrdinalIgnoreCase));
+    }
+
     // ── Annualized amounts ──────────────────────────────────
 
     [Fact]
@@ -394,9 +405,9 @@ public sealed class AnnualProjectionCalculatorTest
     // ── Helpers ─────────────────────────────────────────────
 
     private static (AnnualProjection projection, PaycheckResult result) RunProjection(
-        PayFrequency frequency,
-        decimal hourlyRate,
-        decimal regularHours,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal hourlyRate = 50m,
+        decimal regularHours = 40m,
         int paycheckNumber = 1,
         decimal step4cExtra = 0m,
         decimal preTaxDeduction = 0m,

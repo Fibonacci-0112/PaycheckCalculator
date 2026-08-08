@@ -116,6 +116,22 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <Border BackgroundColor="#FFF8E1" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16,10"
+                        IsVisible="{Binding ResultCard.HasAccuracyNotes}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="ASSUMPTIONS &amp; EXCLUSIONS" TextColor="#795548"
+                               FontSize="10" FontAttributes="Bold" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding ResultCard.AccuracyNotes}" Spacing="5">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding Description}" TextColor="#6D4C41" FontSize="11" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Bonus summary (only shown for bonus / supplemental-wage results) -->
                 <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16,8"
@@ -622,7 +638,7 @@
                         <!-- Estimated refund (over-withheld) -->
                         <Grid ColumnDefinitions="*,Auto" Padding="0,12"
                               IsVisible="{Binding Projection.IsRefund}">
-                            <Label Text="Estimated Refund" TextColor="#2E7D32" FontSize="14"
+                            <Label Text="Withholding-Based Estimate (Over)" TextColor="#2E7D32" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
                                    Grid.Column="1" TextColor="#2E7D32" FontAttributes="Bold"
@@ -632,7 +648,7 @@
                         <!-- Estimated amount owed (under-withheld) -->
                         <Grid ColumnDefinitions="*,Auto" Padding="0,12"
                               IsVisible="{Binding Projection.IsOwe}">
-                            <Label Text="Estimated Amount Owed" TextColor="#C62828" FontSize="14"
+                            <Label Text="Withholding-Based Estimate (Shortfall)" TextColor="#C62828" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
                                    Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
@@ -642,7 +658,7 @@
                         <!-- Balanced -->
                         <Grid ColumnDefinitions="*,Auto" Padding="0,12"
                               IsVisible="{Binding Projection.IsBalanced}">
-                            <Label Text="Estimated Balance" TextColor="#37474F" FontSize="14"
+                            <Label Text="Withholding-Based Estimate (Balanced)" TextColor="#37474F" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
                                    Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
@@ -652,8 +668,21 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Label Text="Annual figures are estimates that project this single paycheck across the year. They assume the same pay and withholding every period."
-                       TextColor="#9E9E9E" FontSize="11" FontAttributes="Italic" Margin="4,0,0,4" />
+                <Border BackgroundColor="#FFF8E1" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12" Padding="16,10"
+                        IsVisible="{Binding Projection.HasAccuracyNotes}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="ANNUAL ASSUMPTIONS &amp; EXCLUSIONS" TextColor="#795548"
+                               FontSize="10" FontAttributes="Bold" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projection.AccuracyNotes}" Spacing="5">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding Description}" TextColor="#6D4C41" FontSize="11" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
 
             </VerticalStackLayout>
             <!-- /ANNUAL PROJECTION -->

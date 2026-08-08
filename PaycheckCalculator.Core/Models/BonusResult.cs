@@ -51,4 +51,7 @@ public sealed class BonusResult
 
     /// <summary>"Show Your Work" breakdown — one line per visible row, mirroring <see cref="PaycheckResult"/>.</summary>
     public PaycheckExplanation Explanation { get; init; } = PaycheckExplanation.Empty;
+
+    /// <summary>Mode-specific assumptions and exclusions users must consider.</summary>
+    public IReadOnlyList<AccuracyNote> AccuracyNotes { get; init; } = Array.Empty<AccuracyNote>();
 }

@@ -3,6 +3,7 @@ using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.Federal;
 using PaycheckCalculator.Core.Tax.Fica;
 using PaycheckCalculator.Core.Tax.Supplemental;
+using PaycheckCalculator.Core.Tax.Sources;
 
 namespace PaycheckCalculator.Core.Pay;
 
@@ -20,11 +21,13 @@ public sealed class BonusCalculator
     private readonly FederalSupplementalCalculator _federal;
     private readonly FicaCalculator _fica;
     private readonly StateSupplementalCalculator _state;
+    private readonly TaxSourceCatalog? _sourceCatalog;
 
     public BonusCalculator(
         FederalSupplementalCalculator federal,
         FicaCalculator fica,
-        StateSupplementalCalculator state)
+        StateSupplementalCalculator state,
+        TaxSourceCatalog? sourceCatalog = null)
     {
         ArgumentNullException.ThrowIfNull(federal);
         ArgumentNullException.ThrowIfNull(fica);
@@ -32,6 +35,7 @@ public sealed class BonusCalculator
         _federal = federal;
         _fica = fica;
         _state = state;
+        _sourceCatalog = sourceCatalog;
     }
 
     public BonusResult Calculate(BonusInput input)
@@ -68,7 +72,17 @@ public sealed class BonusCalculator
         var net = bonus - federalR - ssR - medicareR - addlR - stateR;
 
         var explanation = BuildExplanation(
-            bonus, federalExplanation, ficaDetail, stateResult, net);
+            bonus, federalExplanation, ficaDetail, stateResult, net, input.State, input.TaxYear);
+        var accuracyNotes = new List<AccuracyNote>
+        {
+            new("Exclusions", "Local taxes and state disability or paid-leave payroll assessments are not included in bonus mode.")
+        };
+        if (stateResult.UsesRegularMethod)
+        {
+            accuracyNotes.Add(new AccuracyNote(
+                "Unsupported state method",
+                $"{input.State} requires the regular/aggregate supplemental method. State withholding is omitted, so net bonus is before state income tax."));
+        }
 
         return new BonusResult
         {
@@ -84,16 +98,19 @@ public sealed class BonusCalculator
             StateUsesRegularMethod = stateResult.UsesRegularMethod,
             StateWithholdingDescription = stateResult.Description,
             NetBonus = RoundMoney(net),
-            Explanation = explanation
+            Explanation = explanation,
+            AccuracyNotes = accuracyNotes
         };
     }
 
-    private static PaycheckExplanation BuildExplanation(
+    private PaycheckExplanation BuildExplanation(
         decimal bonus,
         LineExplanation federalExplanation,
         FicaCalculationResult ficaDetail,
         StateSupplementalResult stateResult,
-        decimal net)
+        decimal net,
+        UsState state,
+        int taxYear)
     {
         var lines = new List<LineExplanation>
         {
@@ -107,19 +124,36 @@ public sealed class BonusCalculator
                         bonus,
                         $"= {Money(bonus)}"),
                 }),
-            federalExplanation,
-            ficaDetail.SocialSecurityExplanation,
-            ficaDetail.MedicareExplanation,
+            AttachSources(federalExplanation, RuleIds("US", taxYear, TaxRuleScope.SupplementalWithholding)),
+            AttachSources(ficaDetail.SocialSecurityExplanation, RuleIds("US", taxYear, TaxRuleScope.SocialSecurityMedicare)),
+            AttachSources(ficaDetail.MedicareExplanation, RuleIds("US", taxYear, TaxRuleScope.SocialSecurityMedicare)),
         };
 
         if (ficaDetail.AdditionalMedicare > 0m)
-            lines.Add(ficaDetail.AdditionalMedicareExplanation);
+            lines.Add(AttachSources(
+                ficaDetail.AdditionalMedicareExplanation,
+                RuleIds("US", taxYear, TaxRuleScope.AdditionalMedicare)));
 
-        lines.Add(stateResult.Explanation);
+        lines.Add(AttachSources(
+            stateResult.Explanation,
+            RuleIds(state, taxYear, TaxRuleScope.SupplementalWithholding)));
         lines.Add(BuildNetExplanation(bonus, federalExplanation.FinalAmount, ficaDetail, stateResult.Withholding, net));
 
-        return new PaycheckExplanation(lines);
+        return new PaycheckExplanation(lines, _sourceCatalog);
     }
+
+    private IReadOnlyList<string> RuleIds(UsState state, int taxYear, TaxRuleScope scope) =>
+        _sourceCatalog?.RuleIds(state, taxYear, scope, TaxCalculationMode.Bonus)
+        ?? Array.Empty<string>();
+
+    private IReadOnlyList<string> RuleIds(string jurisdiction, int taxYear, TaxRuleScope scope) =>
+        _sourceCatalog?.RuleIds(jurisdiction, taxYear, scope, TaxCalculationMode.Bonus)
+        ?? Array.Empty<string>();
+
+    private static LineExplanation AttachSources(
+        LineExplanation line,
+        IReadOnlyList<string> ruleIds) =>
+        ruleIds.Count == 0 ? line : line with { SourceRuleIds = ruleIds };
 
     private static LineExplanation BuildNetExplanation(
         decimal bonus, decimal federal, FicaCalculationResult ficaDetail, decimal state, decimal net)

@@ -2,6 +2,7 @@ using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.Fica;
 using PaycheckCalculator.Core.Tax.State;
+using PaycheckCalculator.Core.Tax.Sources;
 
 namespace PaycheckCalculator.Core.Pay;
 
@@ -43,8 +44,12 @@ public sealed class SelfEmploymentCalculator
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly decimal _socialSecurityWageBase;
     private readonly decimal _additionalMedicareThreshold;
+    private readonly TaxSourceCatalog? _sourceCatalog;
 
-    public SelfEmploymentCalculator(StateCalculatorRegistry stateRegistry, FicaCalculator fica)
+    public SelfEmploymentCalculator(
+        StateCalculatorRegistry stateRegistry,
+        FicaCalculator fica,
+        TaxSourceCatalog? sourceCatalog = null)
     {
         ArgumentNullException.ThrowIfNull(stateRegistry);
         ArgumentNullException.ThrowIfNull(fica);
@@ -52,6 +57,7 @@ public sealed class SelfEmploymentCalculator
         // Share the FICA wage base / Additional-Medicare threshold so SE tax stays in sync.
         _socialSecurityWageBase = fica.SocialSecurityWageBase;
         _additionalMedicareThreshold = fica.AdditionalMedicareEmployerThreshold;
+        _sourceCatalog = sourceCatalog;
     }
 
     public SelfEmploymentResult Calculate(SelfEmploymentInput input)
@@ -115,7 +121,7 @@ public sealed class SelfEmploymentCalculator
 
         var explanation = BuildExplanation(
             earnings, seBase, ssTaxable, remainingSsBase, ssR, medicareR, over, addlR, seTax,
-            input.State, stateResult, stateTax, takeHome, quarters, fedPerQuarter, statePerQuarter);
+            input.State, input.TaxYear, stateResult, stateTax, takeHome, quarters, fedPerQuarter, statePerQuarter);
 
         return new SelfEmploymentResult
         {
@@ -134,7 +140,14 @@ public sealed class SelfEmploymentCalculator
             FederalQuarterlyPayment = fedPerQuarter,
             StateQuarterlyPayment = statePerQuarter,
             QuarterlyEstimates = quarters,
-            Explanation = explanation
+            Explanation = explanation,
+            AccuracyNotes =
+            [
+                new AccuracyNote("Federal income tax excluded", "Self-employment mode estimates self-employment tax but does not calculate federal income tax."),
+                new AccuracyNote("State proxy", "The selected state's wage-withholding formula is applied to annual net earnings as a state-income-tax proxy."),
+                new AccuracyNote("Payroll assessments excluded", "State disability and paid-leave payroll assessments and filing-time adjustments are not included."),
+                new AccuracyNote("Installment dates", "Standard federal installment dates are used; state estimated-payment schedules can differ.")
+            ]
         };
     }
 
@@ -173,10 +186,11 @@ public sealed class SelfEmploymentCalculator
     private PaycheckExplanation BuildExplanation(
         decimal earnings, decimal seBase, decimal ssTaxable, decimal remainingSsBase,
         decimal ss, decimal medicare, decimal addlOver, decimal addl, decimal seTax,
-        UsState state, StateWithholdingResult stateResult, decimal stateTax,
+        UsState state, int taxYear, StateWithholdingResult stateResult, decimal stateTax,
         decimal takeHome, IReadOnlyList<QuarterlyEstimate> quarters,
         decimal fedPerQuarter, decimal statePerQuarter)
     {
+        var scheduleSeIds = RuleIds("US", taxYear, TaxRuleScope.SelfEmploymentTax);
         var lines = new List<LineExplanation>
         {
             new(ExplanationLineKey.GrossPay,
@@ -189,7 +203,7 @@ public sealed class SelfEmploymentCalculator
                         earnings,
                         $"= {Money(earnings)}"),
                 }),
-            new(ExplanationLineKey.FicaTaxableWages,
+            AttachSources(new LineExplanation(ExplanationLineKey.FicaTaxableWages,
                 "Net Earnings Subject to SE Tax",
                 RoundMoney(seBase),
                 new List<ExplanationStep>
@@ -200,8 +214,8 @@ public sealed class SelfEmploymentCalculator
                         RoundMoney(seBase),
                         $"{Money(earnings)} × {NetEarningsMultiplier:0.####} = {Money(RoundMoney(seBase))}"),
                 },
-                "IRS Schedule SE (2026)."),
-            new(ExplanationLineKey.SocialSecurity,
+                "IRS Schedule SE (2026)."), scheduleSeIds),
+            AttachSources(new LineExplanation(ExplanationLineKey.SocialSecurity,
                 "Social Security (12.4%)",
                 ss,
                 new List<ExplanationStep>
@@ -214,8 +228,8 @@ public sealed class SelfEmploymentCalculator
                     new("Earnings taxed for Social Security", "The smaller of the SE base or the remaining wage base.", RoundMoney(ssTaxable), $"min = {Money(RoundMoney(ssTaxable))}"),
                     new("Apply 12.4%", "Employer + employee Social Security halves combined.", ss, $"{Money(RoundMoney(ssTaxable))} × {SocialSecurityRate:P1} = {Money(ss)}"),
                 },
-                "Self-Employment Contributions Act — Social Security portion (2026)."),
-            new(ExplanationLineKey.Medicare,
+                "Self-Employment Contributions Act — Social Security portion (2026)."), scheduleSeIds),
+            AttachSources(new LineExplanation(ExplanationLineKey.Medicare,
                 "Medicare (2.9%)",
                 medicare,
                 new List<ExplanationStep>
@@ -223,12 +237,12 @@ public sealed class SelfEmploymentCalculator
                     new("Net earnings subject to SE tax", "Medicare has no wage cap.", RoundMoney(seBase), $"= {Money(RoundMoney(seBase))}"),
                     new("Apply 2.9%", "Employer + employee Medicare halves combined.", medicare, $"{Money(RoundMoney(seBase))} × {MedicareRate:P1} = {Money(medicare)}"),
                 },
-                "Self-Employment Contributions Act — Medicare portion (2026)."),
+                "Self-Employment Contributions Act — Medicare portion (2026)."), scheduleSeIds),
         };
 
         if (addl > 0m)
         {
-            lines.Add(new LineExplanation(
+            lines.Add(AttachSources(new LineExplanation(
                 ExplanationLineKey.AdditionalMedicare,
                 "Additional Medicare (0.9%)",
                 addl,
@@ -237,12 +251,13 @@ public sealed class SelfEmploymentCalculator
                     new("Earnings above the $200,000 threshold", "Net SE earnings (plus any other Medicare wages) over $200,000.", RoundMoney(addlOver), $"= {Money(RoundMoney(addlOver))}"),
                     new("Apply 0.9%", "Additional Medicare tax on the excess.", addl, $"{Money(RoundMoney(addlOver))} × {AdditionalMedicareRate:P1} = {Money(addl)}"),
                 },
-                "Additional Medicare Tax — IRC §1401(b)(2)."));
+                "Additional Medicare Tax — IRC §1401(b)(2)."),
+                RuleIds("US", taxYear, TaxRuleScope.AdditionalMedicare)));
         }
 
         // The "Self-Employment Tax" total reuses the federal-withholding key — SE tax is
         // the federal tax on these earnings, and this mode has no income-tax withholding row.
-        lines.Add(new LineExplanation(
+        lines.Add(AttachSources(new LineExplanation(
             ExplanationLineKey.FederalWithholding,
             "Self-Employment Tax",
             seTax,
@@ -253,9 +268,12 @@ public sealed class SelfEmploymentCalculator
                 new("Additional Medicare", "0.9% above $200,000.", addl, $"+ {Money(addl)}"),
                 new("Total self-employment tax", "Paid to the IRS with your federal return / estimated payments.", seTax, $"= {Money(seTax)}"),
             },
-            "IRS Schedule SE (2026). 15.3% combined (12.4% Social Security + 2.9% Medicare)."));
+            "IRS Schedule SE (2026). 15.3% combined (12.4% Social Security + 2.9% Medicare)."),
+            scheduleSeIds.Concat(RuleIds("US", taxYear, TaxRuleScope.EstimatedPayments)).ToList()));
 
-        lines.Add(BuildStateLine(state, earnings, stateResult, stateTax));
+        lines.Add(AttachSources(
+            BuildStateLine(state, earnings, stateResult, stateTax),
+            RuleIds(state, taxYear, TaxRuleScope.RegularWithholding)));
 
         lines.Add(new LineExplanation(
             ExplanationLineKey.NetPay,
@@ -269,8 +287,21 @@ public sealed class SelfEmploymentCalculator
                 new("Take-home", "What's left after SE tax and estimated state income tax (before federal income tax).", takeHome, $"= {Money(takeHome)}"),
             }));
 
-        return new PaycheckExplanation(lines);
+        return new PaycheckExplanation(lines, _sourceCatalog);
     }
+
+    private IReadOnlyList<string> RuleIds(UsState state, int taxYear, TaxRuleScope scope) =>
+        _sourceCatalog?.RuleIds(state, taxYear, scope, TaxCalculationMode.SelfEmployment)
+        ?? Array.Empty<string>();
+
+    private IReadOnlyList<string> RuleIds(string jurisdiction, int taxYear, TaxRuleScope scope) =>
+        _sourceCatalog?.RuleIds(jurisdiction, taxYear, scope, TaxCalculationMode.SelfEmployment)
+        ?? Array.Empty<string>();
+
+    private static LineExplanation AttachSources(
+        LineExplanation line,
+        IReadOnlyList<string> ruleIds) =>
+        ruleIds.Count == 0 ? line : line with { SourceRuleIds = ruleIds };
 
     private LineExplanation BuildStateLine(UsState state, decimal earnings, StateWithholdingResult stateResult, decimal stateTax)
     {

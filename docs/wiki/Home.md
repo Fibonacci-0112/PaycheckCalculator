@@ -19,6 +19,7 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 - **[Architecture](Architecture.md)** — Solution structure, project boundaries, dependency injection, front-end data flow, budget/report architecture, and sync layering.
 - **[Tax Calculation Engine](Tax-Calculation-Engine.md)** — Gross pay, deductions, FICA, federal withholding, state withholding, rounding, gross-up, and annual projection.
 - **[State Tax Coverage](State-Tax-Coverage.md)** — Supported states, calculator categories, dynamic schema model, disability / paid-leave premiums, and state-update workflow.
+- **[Accuracy & Source Governance](Accuracy-and-Source-Governance.md)** — Canonical source metadata, disclosures, incident reporting, and correction workflow.
 - **[Budgeting](Budgeting.md)** — Budget methods, categories, transactions, recurring bills, savings goals, reports, and sync.
 - **[Accounts & Sync](Accounts-and-Sync.md)** — Optional accounts, local stores, API endpoints, PostgreSQL persistence, and last-write-wins merge rules.
 
@@ -45,6 +46,7 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 | Shared contracts / sync | [`PaycheckCalculator.Shared/`](../../PaycheckCalculator.Shared/) |
 | Sync API | [`PaycheckCalculator.Api/`](../../PaycheckCalculator.Api/) |
 | Test Suite | [`PaycheckCalculator.Tests/`](../../PaycheckCalculator.Tests/) |
+| Accuracy incident process | [Accuracy & Source Governance](Accuracy-and-Source-Governance.md) |
 
 ---
 
@@ -59,4 +61,4 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 | Sync API | ASP.NET Core minimal APIs, ASP.NET Core Identity, EF Core, Npgsql/PostgreSQL |
 | Shared Layer | DTOs, JSON converters, deterministic mergers, API client, store abstractions, entitlements |
 | Tests | xUnit |
-| Tax Data | JSON-based IRS 15-T and state tax tables plus one dynamic-input schema JSON per state / DC |
+| Tax Data | JSON tax tables, canonical 2026 source manifest, and one dynamic-input schema JSON per state / DC |

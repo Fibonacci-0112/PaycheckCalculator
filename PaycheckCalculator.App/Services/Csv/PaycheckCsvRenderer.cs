@@ -53,17 +53,23 @@ internal static class PaycheckCsvRenderer
         Money(sb, "Summary", "Total Taxes", result.TotalTaxes);
         Money(sb, "Summary", "Net Pay", result.NetPay);
 
-        foreach (var source in result.Explanation.Sources)
-            Line(sb, "Sources", source.Label, source.Reference);
-
         if (annual is not null)
             WriteAnnual(sb, annual);
+        if (result.QuarterlyEstimates.Count > 0)
+            WriteQuarterlyEstimates(sb, result.QuarterlyEstimates);
         if (comparison is { Count: > 0 })
             WriteComparison(sb, comparison, comparisonNameA, comparisonNameB);
 
         var sources = result.Explanation.Sources;
         if (sources.Count > 0)
             WriteSources(sb, sources);
+        WriteAccuracyNotes(
+            sb,
+            result.Explanation.AccuracyNotes
+                .Concat(result.AccuracyNotes)
+                .Concat(annual?.AccuracyNotes ?? Array.Empty<AccuracyNote>())
+                .Distinct()
+                .ToList());
 
         return sb.ToString();
     }
@@ -103,7 +109,7 @@ internal static class PaycheckCsvRenderer
         Money(sb, "Year-End Estimate", "Est. Annual FICA Liability", a.EstimatedAnnualFicaLiability);
         Money(sb, "Year-End Estimate", "Estimated Total Liability", a.EstimatedTotalLiability);
         Money(sb, "Year-End Estimate", "Annualized Total Withholding", a.AnnualizedTotalWithholding);
-        Money(sb, "Year-End Estimate", "Over/Under Withholding", a.OverUnderWithholding);
+        Money(sb, "Year-End Estimate", "Withholding-Based Estimate", a.OverUnderWithholding);
     }
 
     private static void WriteComparison(StringBuilder sb, IReadOnlyList<ComparisonRow> rows, string nameA, string nameB)
@@ -117,9 +123,38 @@ internal static class PaycheckCsvRenderer
     private static void WriteSources(StringBuilder sb, IReadOnlyList<SourceCitation> sources)
     {
         sb.Append("\r\n"); // blank separator before the sources table
-        Line(sb, "Section", "Calculation Step", "Source");
+        Line(sb, "Section", "Calculation Step", "Source Metadata");
         foreach (var s in sources)
-            Line(sb, "Sources", s.Label, s.Reference);
+        {
+            Line(sb, "Accuracy & Sources", s.Label, s.PublicationTitle);
+            if (!string.IsNullOrWhiteSpace(s.OfficialUrl))
+                Line(sb, "Accuracy & Sources", "Official URL", s.OfficialUrl);
+            if (s.TaxYear is not null)
+                Line(sb, "Accuracy & Sources", "Tax Year", s.TaxYear.Value.ToString(Invariant));
+            if (s.RevisionDate is not null)
+                Line(sb, "Accuracy & Sources", "Revision Date", s.RevisionDate.Value.ToString("yyyy-MM-dd", Invariant));
+            if (s.EffectiveDate is not null)
+                Line(sb, "Accuracy & Sources", "Effective Date", s.EffectiveDate.Value.ToString("yyyy-MM-dd", Invariant));
+            if (s.ImplementationType is not null)
+                Line(sb, "Accuracy & Sources", "Implementation Type", s.ImplementationType.ToString()!);
+            if (s.LastVerificationDate is not null)
+                Line(sb, "Accuracy & Sources", "Last Verification Date", s.LastVerificationDate.Value.ToString("yyyy-MM-dd", Invariant));
+        }
+    }
+
+    private static void WriteAccuracyNotes(StringBuilder sb, IReadOnlyList<AccuracyNote> notes)
+    {
+        if (notes.Count == 0) return;
+        sb.Append("\r\n");
+        foreach (var note in notes)
+            Line(sb, "Assumptions & Exclusions", note.Title, note.Description);
+    }
+
+    private static void WriteQuarterlyEstimates(StringBuilder sb, IReadOnlyList<PaycheckCalculator.Core.Models.QuarterlyEstimate> quarters)
+    {
+        foreach (var quarter in quarters)
+            Line(sb, "Quarterly Estimate", $"{quarter.Label} due {quarter.DueDate:yyyy-MM-dd}",
+                $"Federal {Dec(quarter.FederalAmount)}; State {Dec(quarter.StateAmount)}; Total {Dec(quarter.TotalAmount)}");
     }
 
     private static string Dec(decimal value) => value.ToString("0.00", Invariant);

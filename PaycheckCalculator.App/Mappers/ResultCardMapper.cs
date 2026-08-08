@@ -46,6 +46,7 @@ public static class ResultCardMapper
             IsBonus = true,
             BonusStateUsesRegularMethod = result.StateUsesRegularMethod,
             BonusStateDescription = result.StateWithholdingDescription,
+            AccuracyNotes = result.AccuracyNotes,
             TaxYear = result.TaxYear
         };
 
@@ -76,6 +77,7 @@ public static class ResultCardMapper
             Explanation = result.Explanation,
             IsSelfEmployment = true,
             QuarterlyEstimates = result.QuarterlyEstimates,
+            AccuracyNotes = result.AccuracyNotes,
             TaxYear = result.TaxYear
         };
 

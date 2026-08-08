@@ -1,0 +1,114 @@
+name: Accuracy incident
+description: Report a suspected tax-rule, calculation, source, or disclosure error.
+title: "[Accuracy]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for reproducible accuracy concerns. Do not submit names, addresses, Social Security numbers, account details, employer records, credentials, or other personal or sensitive information.
+  - type: input
+    id: jurisdiction
+    attributes:
+      label: Jurisdiction
+      description: Federal, a two-letter state code, or DC.
+      placeholder: "CA"
+    validations:
+      required: true
+  - type: input
+    id: tax-year
+    attributes:
+      label: Tax year
+      placeholder: "2026"
+    validations:
+      required: true
+  - type: dropdown
+    id: calculation-mode
+    attributes:
+      label: Calculation mode
+      options:
+        - Standard paycheck
+        - Gross-up
+        - Annual projection
+        - Bonus / supplemental wages
+        - Self-employment / 1099
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: surface-version
+    attributes:
+      label: Application surface and version
+      description: Identify MAUI or Blazor and include the app version, release, or commit when known.
+      placeholder: "Blazor, v1.2.3"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction inputs and steps
+      description: Use fictional or redacted values only. Do not include personal or sensitive information.
+      placeholder: Describe the pay frequency, fictional wages, filing selections, state fields, deductions, and steps.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Include the affected line item and amount.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: State the expected amount and how it follows from the cited official rule.
+    validations:
+      required: true
+  - type: input
+    id: official-url
+    attributes:
+      label: Official publication URL
+      description: Link directly to the government agency publication or rule.
+      placeholder: "https://..."
+    validations:
+      required: true
+  - type: input
+    id: publication-revision
+    attributes:
+      label: Publication revision
+      placeholder: "Rev. 01-2026"
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Page, table, or worksheet
+      placeholder: "Page 12, Table 3"
+    validations:
+      required: true
+  - type: input
+    id: effective-date
+    attributes:
+      label: Effective date
+      placeholder: "2026-01-01"
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical — broadly incorrect net pay or withholding
+        - High — material error in a common calculation
+        - Medium — limited rule, threshold, or rounding error
+        - Low — source metadata, wording, or narrow edge case
+    validations:
+      required: true
+  - type: textarea
+    id: suspected-scope
+    attributes:
+      label: Suspected scope
+      description: List affected jurisdictions, modes, date ranges, releases, or result lines if known.
+    validations:
+      required: true

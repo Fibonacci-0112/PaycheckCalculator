@@ -34,6 +34,7 @@ public static class AnnualProjectionMapper
             EstimatedAnnualFicaLiability = p.EstimatedAnnualFicaLiability,
             EstimatedTotalLiability = p.EstimatedTotalLiability,
             AnnualizedTotalWithholding = p.AnnualizedTotalWithholding,
-            OverUnderWithholding = p.OverUnderWithholding
+            OverUnderWithholding = p.OverUnderWithholding,
+            AccuracyNotes = p.AccuracyNotes
         };
 }

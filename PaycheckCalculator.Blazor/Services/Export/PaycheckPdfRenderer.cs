@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using PaycheckCalculator.Blazor.Models;
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
 
 namespace PaycheckCalculator.Blazor.Services.Export;
@@ -35,7 +36,9 @@ public static class PaycheckPdfRenderer
     public static byte[] Render(PaycheckResult result, string stateLabel,
         AnnualProjection? annual = null,
         IReadOnlyList<ComparisonRow>? comparison = null,
-        string comparisonNameA = "Paycheck A", string comparisonNameB = "Paycheck B")
+        string comparisonNameA = "Paycheck A", string comparisonNameB = "Paycheck B",
+        IReadOnlyList<AccuracyNote>? accuracyNotes = null,
+        IReadOnlyList<QuarterlyEstimate>? quarterlyEstimates = null)
     {
         ArgumentNullException.ThrowIfNull(result);
 
@@ -52,9 +55,18 @@ public static class PaycheckPdfRenderer
         WritePerPeriod(layout, result);
         if (annual is not null)
             WriteAnnual(layout, annual);
+        if (quarterlyEstimates is { Count: > 0 })
+            WriteQuarterlyEstimates(layout, quarterlyEstimates);
         if (comparison is { Count: > 0 })
             WriteComparison(layout, comparison, comparisonNameA, comparisonNameB);
         WriteSources(layout, result.Explanation);
+        WriteAccuracyNotes(
+            layout,
+            result.Explanation.AccuracyNotes
+                .Concat(annual?.AccuracyNotes ?? Array.Empty<AccuracyNote>())
+                .Concat(accuracyNotes ?? Array.Empty<AccuracyNote>())
+                .Distinct()
+                .ToList());
 
         layout.Finish(catalogId);
         return doc.Build(catalogId);
@@ -127,11 +139,11 @@ public static class PaycheckPdfRenderer
         layout.Row("Estimated Total Liability", Money(a.EstimatedTotalLiability), TextDark, bold: true);
         layout.Row("Annualized Total Withholding", Money(a.AnnualizedTotalWithholding), TextDark, bold: true);
         if (a.OverUnderWithholding > 0m)
-            layout.Row("Estimated Refund", Money(a.OverUnderWithholding), Green, bold: true);
+            layout.Row("Withholding-Based Estimate (Over)", Money(a.OverUnderWithholding), Green, bold: true);
         else if (a.OverUnderWithholding < 0m)
-            layout.Row("Estimated Amount Owed", Money(Math.Abs(a.OverUnderWithholding)), Red, bold: true);
+            layout.Row("Withholding-Based Estimate (Shortfall)", Money(Math.Abs(a.OverUnderWithholding)), Red, bold: true);
         else
-            layout.Row("Estimated Balance", Money(0m), TextDark, bold: true);
+            layout.Row("Withholding-Based Estimate (Balanced)", Money(0m), TextDark, bold: true);
     }
 
     private static void WriteComparison(PdfLayout layout, IReadOnlyList<ComparisonRow> rows, string nameA, string nameB)
@@ -149,7 +161,31 @@ public static class PaycheckPdfRenderer
 
         layout.SectionHeader("Accuracy & Sources");
         foreach (var source in sources)
-            layout.Paragraph($"{source.Label}: {source.Reference}");
+        {
+            layout.Paragraph($"{source.Label}: {source.PublicationTitle}");
+            if (!string.IsNullOrWhiteSpace(source.OfficialUrl))
+                layout.Paragraph($"Official URL: {source.OfficialUrl}");
+            layout.Paragraph(
+                $"Tax year: {source.TaxYear}; Effective/revised: {source.EffectiveDate?.ToString("yyyy-MM-dd") ?? source.RevisionDate?.ToString("yyyy-MM-dd")}; " +
+                $"Implementation: {source.ImplementationType}; Last verified: {source.LastVerificationDate?.ToString("yyyy-MM-dd")}");
+        }
+    }
+
+    private static void WriteAccuracyNotes(PdfLayout layout, IReadOnlyList<AccuracyNote> notes)
+    {
+        if (notes.Count == 0) return;
+        layout.SectionHeader("Assumptions & Exclusions");
+        foreach (var note in notes)
+            layout.Paragraph($"{note.Title}: {note.Description}");
+    }
+
+    private static void WriteQuarterlyEstimates(PdfLayout layout, IReadOnlyList<QuarterlyEstimate> quarters)
+    {
+        layout.SectionHeader("Quarterly Estimated Payments");
+        foreach (var quarter in quarters)
+            layout.Paragraph(
+                $"{quarter.Label} due {quarter.DueDate:yyyy-MM-dd}: Federal {Money(quarter.FederalAmount)}, " +
+                $"State {Money(quarter.StateAmount)}, Total {Money(quarter.TotalAmount)}");
     }
 
     // The PDF content stream is ASCII; ComparisonRow.DifferenceDisplay uses a U+2212

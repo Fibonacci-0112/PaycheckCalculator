@@ -49,6 +49,10 @@
       <Link>TaxData\state_supplemental_2026.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\PaycheckCalculator.Core\Data\tax_source_manifest_2026.json">
+      <Link>TaxData\tax_source_manifest_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <!-- State schemas — logical name prefix "schemas/" matches AddPaycheckCalculatorCore -->
     <None Include="..\PaycheckCalculator.Core\Data\Schemas\*.json">
       <Link>TaxData\schemas\%(Filename)%(Extension)</Link>

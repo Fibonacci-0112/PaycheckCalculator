@@ -3,6 +3,7 @@ using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.Fica;
 using PaycheckCalculator.Core.Tax.Federal;
 using PaycheckCalculator.Core.Tax.State;
+using PaycheckCalculator.Core.Tax.Sources;
 
 namespace PaycheckCalculator.Core.Pay;
 
@@ -11,15 +12,18 @@ public sealed class PayCalculator
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly FicaCalculator _fica;
     private readonly Irs15TPercentageCalculator _fed;
+    private readonly TaxSourceCatalog? _sourceCatalog;
 
     public PayCalculator(
         StateCalculatorRegistry stateRegistry,
         FicaCalculator fica,
-        Irs15TPercentageCalculator fed)
+        Irs15TPercentageCalculator fed,
+        TaxSourceCatalog? sourceCatalog = null)
     {
         _stateRegistry = stateRegistry;
         _fica = fica;
         _fed = fed;
+        _sourceCatalog = sourceCatalog;
     }
 
     public PaycheckResult Calculate(PaycheckInput input)
@@ -94,6 +98,7 @@ public sealed class PayCalculator
             ficaDetail: ficaDetail,
             stateResult: stateResult,
             stateName: input.State,
+            taxYear: input.TaxYear,
             stateGross: gross,
             preTaxReducingStateWages: preTaxState,
             net: RoundMoney(net));
@@ -120,7 +125,7 @@ public sealed class PayCalculator
         };
     }
 
-    private static PaycheckExplanation BuildExplanation(
+    private PaycheckExplanation BuildExplanation(
         decimal grossPay,
         PayType payType,
         decimal salaryAmount,
@@ -141,42 +146,63 @@ public sealed class PayCalculator
         FicaCalculationResult ficaDetail,
         StateWithholdingResult stateResult,
         UsState stateName,
+        int taxYear,
         decimal stateGross,
         decimal preTaxReducingStateWages,
         decimal net)
     {
+        var stateRuleIds = RuleIds(stateName, taxYear, TaxRuleScope.RegularWithholding);
         var lines = new List<LineExplanation>
         {
             BuildGrossExplanation(grossPay, payType, salaryAmount, salaryBasis, payPeriods,
                 regularHours, hourlyRate, overtimeHours, overtimeMultiplier),
             BuildFederalTaxableIncomeExplanation(grossPay, federalPreTaxReducing, federalTaxableIncome),
             BuildFicaTaxableIncomeExplanation(grossPay, ficaPreTaxReducing, ficaTaxableWages),
-            BuildStateTaxableIncomeExplanation(
+            AttachSources(BuildStateTaxableIncomeExplanation(
                 stateName, grossPay, RoundMoney(preTaxReducingStateWages),
-                RoundMoney(stateResult.TaxableWages), stateResult.Description),
-            federalExplanation,
-            ficaDetail.SocialSecurityExplanation,
-            ficaDetail.MedicareExplanation,
+                RoundMoney(stateResult.TaxableWages), stateResult.Description), stateRuleIds),
+            AttachSources(federalExplanation, RuleIds("US", taxYear, TaxRuleScope.FederalWithholding)),
+            AttachSources(ficaDetail.SocialSecurityExplanation, RuleIds("US", taxYear, TaxRuleScope.SocialSecurityMedicare)),
+            AttachSources(ficaDetail.MedicareExplanation, RuleIds("US", taxYear, TaxRuleScope.SocialSecurityMedicare)),
         };
 
         if (ficaDetail.AdditionalMedicare > 0m)
         {
-            lines.Add(ficaDetail.AdditionalMedicareExplanation);
+            lines.Add(AttachSources(
+                ficaDetail.AdditionalMedicareExplanation,
+                RuleIds("US", taxYear, TaxRuleScope.AdditionalMedicare)));
         }
 
-        lines.Add(BuildStateExplanation(stateResult, stateName, stateGross, preTaxReducingStateWages));
+        lines.Add(AttachSources(
+            BuildStateExplanation(stateResult, stateName, stateGross, preTaxReducingStateWages),
+            stateRuleIds));
 
         if (stateResult.DisabilityInsurance > 0m)
         {
-            lines.Add(BuildStateDisabilityExplanation(stateResult, stateName));
+            lines.Add(AttachSources(
+                BuildStateDisabilityExplanation(stateResult, stateName),
+                RuleIds(stateName, taxYear, TaxRuleScope.PayrollAssessment)));
         }
 
         lines.Add(BuildNetExplanation(grossPay, preTax, postTax, federalWithholding,
             ficaDetail.SocialSecurity, ficaDetail.Medicare, ficaDetail.AdditionalMedicare,
             stateResult.Withholding, stateResult.DisabilityInsurance, net));
 
-        return new PaycheckExplanation(lines);
+        return new PaycheckExplanation(lines, _sourceCatalog);
     }
+
+    private IReadOnlyList<string> RuleIds(UsState state, int taxYear, TaxRuleScope scope) =>
+        _sourceCatalog?.RuleIds(state, taxYear, scope, TaxCalculationMode.Standard)
+        ?? Array.Empty<string>();
+
+    private IReadOnlyList<string> RuleIds(string jurisdiction, int taxYear, TaxRuleScope scope) =>
+        _sourceCatalog?.RuleIds(jurisdiction, taxYear, scope, TaxCalculationMode.Standard)
+        ?? Array.Empty<string>();
+
+    private static LineExplanation AttachSources(
+        LineExplanation line,
+        IReadOnlyList<string> ruleIds) =>
+        ruleIds.Count == 0 ? line : line with { SourceRuleIds = ruleIds };
 
     private static LineExplanation BuildGrossExplanation(
         decimal grossPay, PayType payType, decimal salaryAmount, SalaryBasis salaryBasis, int payPeriods,

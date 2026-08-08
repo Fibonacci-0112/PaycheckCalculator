@@ -522,10 +522,16 @@ public partial class CalculatorViewModel : ObservableObject
         var shell = Shell.Current;
         if (shell is null) return;
 
-        await shell.DisplayAlertAsync(line.Title, FormatExplanation(line), "OK");
+        var sources = ResultCard.Explanation.Sources
+            .Where(source => source.RuleId is not null
+                && line.SourceRuleIds?.Contains(source.RuleId) == true)
+            .ToList();
+        await shell.DisplayAlertAsync(line.Title, FormatExplanation(line, sources), "OK");
     }
 
-    private static string FormatExplanation(LineExplanation line)
+    private static string FormatExplanation(
+        LineExplanation line,
+        IReadOnlyList<SourceCitation> sources)
     {
         var sb = new StringBuilder();
         var us = CultureInfo.GetCultureInfo("en-US");
@@ -554,7 +560,12 @@ public partial class CalculatorViewModel : ObservableObject
             sb.AppendLine();
         }
 
-        if (!string.IsNullOrEmpty(line.Reference))
+        if (sources.Count > 0)
+        {
+            sb.AppendLine("Sources:");
+            AppendSources(sb, sources);
+        }
+        else if (!string.IsNullOrEmpty(line.Reference))
         {
             sb.Append("Source: ").Append(line.Reference);
         }
@@ -592,11 +603,37 @@ public partial class CalculatorViewModel : ObservableObject
         foreach (var source in sources)
         {
             sb.Append(source.Label).AppendLine(":");
-            sb.Append("  ").AppendLine(source.Reference);
+            sb.Append("  Publication: ").AppendLine(source.PublicationTitle);
+            if (!string.IsNullOrWhiteSpace(source.OfficialUrl))
+                sb.Append("  Official URL: ").AppendLine(source.OfficialUrl);
+            if (source.TaxYear is not null)
+                sb.Append("  Tax year: ").AppendLine(source.TaxYear.Value.ToString(CultureInfo.InvariantCulture));
+            if (source.RevisionDate is not null)
+                sb.Append("  Revised: ").AppendLine(source.RevisionDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            if (source.EffectiveDate is not null)
+                sb.Append("  Effective: ").AppendLine(source.EffectiveDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            if (source.ImplementationType is not null)
+                sb.Append("  Implementation: ").AppendLine(source.ImplementationType.ToString());
+            if (source.LastVerificationDate is not null)
+                sb.Append("  Verified: ").AppendLine(source.LastVerificationDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            foreach (var note in source.Approximations)
+                sb.Append("  Approximation: ").AppendLine(note);
+            foreach (var note in source.Exclusions)
+                sb.Append("  Exclusion: ").AppendLine(note);
             sb.AppendLine();
         }
 
         return sb.ToString().TrimEnd();
+    }
+
+    private static void AppendSources(StringBuilder sb, IReadOnlyList<SourceCitation> sources)
+    {
+        foreach (var source in sources)
+        {
+            sb.Append("  ").AppendLine(source.PublicationTitle);
+            if (!string.IsNullOrWhiteSpace(source.OfficialUrl))
+                sb.Append("  ").AppendLine(source.OfficialUrl);
+        }
     }
 
     public IReadOnlyList<PickerItem<PayFrequency>> Frequencies { get; } =

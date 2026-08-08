@@ -96,6 +96,8 @@ public sealed class BonusCalculatorTest
         Assert.True(result.StateUsesRegularMethod);
         Assert.Equal(0m, result.StateWithholding);
         Assert.Equal(3_517.50m, result.NetBonus); // same as the no-state-tax case
+        Assert.Contains(result.AccuracyNotes, note => note.Description.Contains("regular/aggregate", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.AccuracyNotes, note => note.Description.Contains("payroll assessments", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

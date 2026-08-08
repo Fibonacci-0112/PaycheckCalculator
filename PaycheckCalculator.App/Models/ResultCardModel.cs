@@ -65,6 +65,11 @@ public sealed class ResultCardModel
     /// </summary>
     public IReadOnlyList<QuarterlyEstimate> QuarterlyEstimates { get; init; } = Array.Empty<QuarterlyEstimate>();
 
+    /// <summary>Mode-specific assumptions and exclusions displayed with this result.</summary>
+    public IReadOnlyList<AccuracyNote> AccuracyNotes { get; init; } = Array.Empty<AccuracyNote>();
+
+    public bool HasAccuracyNotes => AccuracyNotes.Count > 0;
+
     // ── Display helpers (UI-only concerns) ──────────────────
     /// <summary>True when state disability insurance is non-zero and should be shown.</summary>
     public bool ShowStateDisabilityInsurance => StateDisabilityInsurance > 0;
