@@ -166,7 +166,8 @@ public static class PaycheckPdfRenderer
             if (!string.IsNullOrWhiteSpace(source.OfficialUrl))
                 layout.Paragraph($"Official URL: {source.OfficialUrl}");
             layout.Paragraph(
-                $"Tax year: {source.TaxYear}; Effective/revised: {source.EffectiveDate?.ToString("yyyy-MM-dd") ?? source.RevisionDate?.ToString("yyyy-MM-dd")}; " +
+                $"Tax year: {source.TaxYear}; Effective/revised: {source.EffectiveDate?.ToString("yyyy-MM-dd") ?? source.RevisionDate?.ToString("yyyy-MM-dd")}");
+            layout.Paragraph(
                 $"Implementation: {source.ImplementationType}; Last verified: {source.LastVerificationDate?.ToString("yyyy-MM-dd")}");
         }
     }
