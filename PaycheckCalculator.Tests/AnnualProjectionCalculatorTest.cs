@@ -405,9 +405,9 @@ public sealed class AnnualProjectionCalculatorTest
     // ── Helpers ─────────────────────────────────────────────
 
     private static (AnnualProjection projection, PaycheckResult result) RunProjection(
-        PayFrequency frequency,
-        decimal hourlyRate,
-        decimal regularHours,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal hourlyRate = 50m,
+        decimal regularHours = 40m,
         int paycheckNumber = 1,
         decimal step4cExtra = 0m,
         decimal preTaxDeduction = 0m,
