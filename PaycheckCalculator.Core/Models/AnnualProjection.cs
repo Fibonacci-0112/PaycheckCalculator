@@ -1,3 +1,5 @@
+using PaycheckCalculator.Core.Explanation;
+
 namespace PaycheckCalculator.Core.Models;
 
 /// <summary>
@@ -42,4 +44,7 @@ public sealed class AnnualProjection
     /// negative = under-withholding (likely owe).
     /// </summary>
     public decimal OverUnderWithholding { get; init; }
+
+    /// <summary>Assumptions and exclusions that bound this withholding-based projection.</summary>
+    public IReadOnlyList<AccuracyNote> AccuracyNotes { get; init; } = Array.Empty<AccuracyNote>();
 }

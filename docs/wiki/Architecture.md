@@ -74,7 +74,8 @@ PaycheckCalculator.Tests   → Core + Shared + Api + Blazor
 
 `AddPaycheckCalculatorCore` is the composition root for Core. It:
 
-- Reads IRS 15-T and state tax JSON through `ITaxDataReader`.
+- Reads IRS 15-T, state tax JSON, and `tax_source_manifest_2026.json` through `ITaxDataReader`.
+- Validates the source catalog, complete state/DC regular-withholding coverage, and manifest calculator-class mappings at startup.
 - Reads every available `schemas/<state>.json` file into `JsonStateSchemaProvider`.
 - Registers FICA, federal, state, pay, gross-up, annual projection, budget, and budget-report calculators.
 - Builds the `StateCalculatorRegistry` and registers all 50 states plus DC.
@@ -87,6 +88,7 @@ Important Core services:
 | `FicaCalculator` | Social Security, Medicare, Additional Medicare |
 | `Irs15TPercentageCalculator` | Federal withholding using IRS 15-T data |
 | `StateCalculatorRegistry` | Maps `UsState` to `IStateWithholdingCalculator` |
+| `TaxSourceCatalog` | Resolves validated official-source metadata by jurisdiction, year, scope, and calculation mode |
 | `AnnualProjectionCalculator` | Full-year annualization and over/under estimate |
 | `GrossUpCalculator` | Inverse solver for target net pay |
 | `BonusCalculator` | Supplemental-wage (bonus) take-home using flat-rate federal + FICA + state supplemental rates |

@@ -9,10 +9,12 @@ namespace PaycheckCalculator.Core.Explanation;
 /// <param name="Title">Display title for the modal (e.g. "Federal Withholding").</param>
 /// <param name="FinalAmount">The amount actually shown on the line, included for the modal heading.</param>
 /// <param name="Steps">Ordered list of worksheet-style steps that produced <paramref name="FinalAmount"/>.</param>
-/// <param name="Reference">Optional citation, e.g. "IRS Publication 15-T (2026), Worksheet 1A".</param>
+/// <param name="Reference">Optional legacy citation retained for compatibility.</param>
+/// <param name="SourceRuleIds">Stable IDs of source-manifest rules used by this line.</param>
 public sealed record LineExplanation(
     ExplanationLineKey Key,
     string Title,
     decimal FinalAmount,
     IReadOnlyList<ExplanationStep> Steps,
-    string? Reference = null);
+    string? Reference = null,
+    IReadOnlyList<string>? SourceRuleIds = null);

@@ -26,7 +26,35 @@
                     }
                 </div>
             }
-            @if (!string.IsNullOrEmpty(Explanation.Reference))
+            @{
+                var lineSources = Sources
+                    .Where(source => source.RuleId is not null
+                        && Explanation.SourceRuleIds?.Contains(source.RuleId) == true)
+                    .ToList();
+            }
+            @if (lineSources.Count > 0)
+            {
+                @foreach (var source in lineSources)
+                {
+                    <div class="explanation-reference">
+                        Source: <a href="@source.OfficialUrl" target="_blank" rel="noopener noreferrer">@source.PublicationTitle</a>
+                        @if (source.EffectiveDate is not null)
+                        {
+                            <span> (effective @source.EffectiveDate.Value.ToString("yyyy-MM-dd"))</span>
+                        }
+                        <div>Implementation: @source.ImplementationType; verified @source.LastVerificationDate?.ToString("yyyy-MM-dd")</div>
+                        @foreach (var note in source.Approximations)
+                        {
+                            <div>Approximation: @note</div>
+                        }
+                        @foreach (var note in source.Exclusions)
+                        {
+                            <div>Exclusion: @note</div>
+                        }
+                    </div>
+                }
+            }
+            else if (!string.IsNullOrEmpty(Explanation.Reference))
             {
                 <div class="explanation-reference">Source: @Explanation.Reference</div>
             }
@@ -39,6 +67,8 @@
 
 @code {
     [Parameter, EditorRequired] public LineExplanation Explanation { get; set; } = null!;
+    [Parameter] public IReadOnlyList<PaycheckCalculator.Core.Explanation.SourceCitation> Sources { get; set; }
+        = Array.Empty<PaycheckCalculator.Core.Explanation.SourceCitation>();
     [Parameter, EditorRequired] public EventCallback OnClose { get; set; }
 
     private Task OnOverlayClick() => OnClose.InvokeAsync();

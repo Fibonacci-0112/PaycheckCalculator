@@ -19,7 +19,40 @@
                 {
                     <div class="explanation-step">
                         <div class="step-label">@source.Label</div>
-                        <div class="explanation-reference">@source.Reference</div>
+                        <div class="step-detail"><strong>@source.PublicationTitle</strong></div>
+                        @if (!string.IsNullOrWhiteSpace(source.OfficialUrl))
+                        {
+                            <div class="explanation-reference">
+                                <a href="@source.OfficialUrl" target="_blank" rel="noopener noreferrer">Official publication</a>
+                            </div>
+                        }
+                        <div class="step-detail">
+                            Tax year: @(source.TaxYear?.ToString() ?? TaxYear.ToString())
+                            @if (source.EffectiveDate is not null)
+                            {
+                                <span> &middot; Effective @source.EffectiveDate.Value.ToString("yyyy-MM-dd")</span>
+                            }
+                            @if (source.RevisionDate is not null)
+                            {
+                                <span> &middot; Revised @source.RevisionDate.Value.ToString("yyyy-MM-dd")</span>
+                            }
+                        </div>
+                        @if (source.ImplementationType is not null)
+                        {
+                            <div class="step-detail">Implementation: @source.ImplementationType</div>
+                        }
+                        @if (source.LastVerificationDate is not null)
+                        {
+                            <div class="step-detail">Last verified: @source.LastVerificationDate.Value.ToString("yyyy-MM-dd")</div>
+                        }
+                        @foreach (var note in source.Approximations)
+                        {
+                            <div class="step-detail"><strong>Approximation:</strong> @note</div>
+                        }
+                        @foreach (var note in source.Exclusions)
+                        {
+                            <div class="step-detail"><strong>Exclusion:</strong> @note</div>
+                        }
                     </div>
                 }
             }

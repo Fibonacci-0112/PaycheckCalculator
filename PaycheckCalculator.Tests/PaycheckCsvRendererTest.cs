@@ -1,7 +1,9 @@
 extern alias blazor;
 using blazor::PaycheckCalculator.Blazor.Models;
 using blazor::PaycheckCalculator.Blazor.Services.Export;
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
+using PaycheckCalculator.Core.Tax.Sources;
 using Xunit;
 
 namespace PaycheckCalculator.Tests;
@@ -18,7 +20,7 @@ public sealed class PaycheckCsvRendererTest
     // A fully-populated per-period result with round, explicit values.
     //   TotalTaxes = State 75.00 + SDI 0 + SS 114.70 + Medicare 26.83 + AddlMed 0 + Federal 180.00 = 396.53
     //   NetPay     = Gross 2000.00 - TotalTaxes 396.53 - Deductions 150.00 = 1453.47
-    private static PaycheckResult SampleResult() => new()
+    private static PaycheckResult SampleResult(PaycheckExplanation? explanation = null) => new()
     {
         GrossPay = 2000.00m,
         FederalTaxableIncome = 1850.00m,
@@ -33,7 +35,8 @@ public sealed class PaycheckCsvRendererTest
         PreTaxDeductions = 150.00m,
         PostTaxDeductions = 0m,
         State = UsState.CA,
-        NetPay = 1453.47m
+        NetPay = 1453.47m,
+        Explanation = explanation ?? PaycheckExplanation.Empty
     };
 
     [Fact]
@@ -58,6 +61,32 @@ public sealed class PaycheckCsvRendererTest
             "Summary,Net Pay,1453.47\r\n";
 
         Assert.Equal(expected, csv);
+    }
+
+    [Fact]
+    public void Render_WithManifestSource_IncludesStructuredMetadataNotesAndNoDuplicates()
+    {
+        var catalog = TaxSourceCatalog.Load(
+            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "tax_source_manifest_2026.json")));
+        var explanation = new PaycheckExplanation(
+        [
+            new(
+                ExplanationLineKey.FederalWithholding,
+                "Federal Withholding",
+                180m,
+                Array.Empty<ExplanationStep>(),
+                SourceRuleIds: ["federal-irs-pub-15t-2026"])
+        ], catalog);
+
+        var csv = PaycheckCsvRenderer.Render(SampleResult(explanation), "CA");
+
+        Assert.Contains("Accuracy & Sources,Federal Withholding,\"IRS Publication 15-T", csv);
+        Assert.Contains("Accuracy & Sources,Official URL,https://www.irs.gov/pub/irs-pdf/p15t.pdf", csv);
+        Assert.Contains("Accuracy & Sources,Tax Year,2026", csv);
+        Assert.Contains("Accuracy & Sources,Implementation Type,JsonTable", csv);
+        Assert.Contains("Accuracy & Sources,Last Verification Date,2026-08-08", csv);
+        Assert.Contains("Assumptions & Exclusions,Exclusion", csv);
+        Assert.Equal(1, Count(csv, "https://www.irs.gov/pub/irs-pdf/p15t.pdf"));
     }
 
     [Fact]
@@ -222,7 +251,7 @@ public sealed class PaycheckCsvRendererTest
         Assert.Contains("Projected YTD,Remaining Paychecks,23\r\n", csv);
         Assert.Contains("Projected YTD,Net Pay,4326.00\r\n", csv);
         Assert.Contains("Year-End Estimate,Estimated Total Liability,10608.00\r\n", csv);
-        Assert.Contains("Year-End Estimate,Over/Under Withholding,250.00\r\n", csv);
+        Assert.Contains("Year-End Estimate,Withholding-Based Estimate,250.00\r\n", csv);
     }
 
     [Fact]
@@ -252,4 +281,7 @@ public sealed class PaycheckCsvRendererTest
 
         Assert.StartsWith("Metric,\"Job, A\",Job B,Difference\r\n", csv);
     }
+
+    private static int Count(string value, string needle) =>
+        (value.Length - value.Replace(needle, string.Empty, StringComparison.Ordinal).Length) / needle.Length;
 }

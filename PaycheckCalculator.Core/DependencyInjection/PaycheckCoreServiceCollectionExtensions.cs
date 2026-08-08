@@ -43,6 +43,7 @@ using PaycheckCalculator.Core.Tax.RhodeIsland;
 using PaycheckCalculator.Core.Tax.SouthCarolina;
 using PaycheckCalculator.Core.Tax.State;
 using PaycheckCalculator.Core.Tax.Supplemental;
+using PaycheckCalculator.Core.Tax.Sources;
 using PaycheckCalculator.Core.Tax.Utah;
 using PaycheckCalculator.Core.Tax.Vermont;
 using PaycheckCalculator.Core.Tax.Virginia;
@@ -69,6 +70,8 @@ public static class PaycheckCoreServiceCollectionExtensions
         var coJson     = dataReader.ReadAllText("co_dr0004_2026.json");
         var ctJson     = dataReader.ReadAllText("connecticut_withholding_2026.json");
         var suppJson   = dataReader.ReadAllText("state_supplemental_2026.json");
+        var sourceManifestJson = dataReader.ReadAllText("tax_source_manifest_2026.json");
+        var sourceCatalog = TaxSourceCatalog.Load(sourceManifestJson);
 
         var schemaJsonMap = new Dictionary<UsState, string>();
         foreach (var state in Enum.GetValues<UsState>())
@@ -87,6 +90,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         services.AddSingleton<IStateSchemaProvider>(schemaProvider);
 
         services.AddSingleton(dataReader);
+        services.AddSingleton(sourceCatalog);
 
         var fica = new FicaCalculator();
         services.AddSingleton(fica);
@@ -163,20 +167,21 @@ public static class PaycheckCoreServiceCollectionExtensions
         foreach (var (state, config) in StateTaxConfigs2026.Configs)
             stateRegistry.Register(new PercentageMethodWithholdingAdapter(state, config, schemaProvider));
 
+        sourceCatalog.ValidateCalculatorRegistrations(stateRegistry);
         services.AddSingleton(stateRegistry);
 
-        var payCalculator = new PayCalculator(stateRegistry, fica, irs15t);
+        var payCalculator = new PayCalculator(stateRegistry, fica, irs15t, sourceCatalog);
         services.AddSingleton(payCalculator);
         services.AddSingleton(new AnnualProjectionCalculator(irs15t, fica));
         services.AddSingleton(new GrossUpCalculator(payCalculator));
-        services.AddSingleton(new SelfEmploymentCalculator(stateRegistry, fica));
+        services.AddSingleton(new SelfEmploymentCalculator(stateRegistry, fica, sourceCatalog));
         services.AddSingleton(new HourlySalaryCalculator());
 
         var federalSupplemental = new FederalSupplementalCalculator();
         var stateSupplemental = new StateSupplementalCalculator(suppJson);
         services.AddSingleton(federalSupplemental);
         services.AddSingleton(stateSupplemental);
-        services.AddSingleton(new BonusCalculator(federalSupplemental, fica, stateSupplemental));
+        services.AddSingleton(new BonusCalculator(federalSupplemental, fica, stateSupplemental, sourceCatalog));
 
         services.AddSingleton(new BudgetCalculator());
         services.AddSingleton(new BudgetReportCalculator());

@@ -123,6 +123,8 @@ Intentional examples that should not be removed casually:
 
 Tests should cover filing statuses, bracket boundaries, exemptions/allowances, extra withholding, pre-tax deduction effects, rounding, and state-specific premium lines.
 
+Also update `Data/tax_source_manifest_2026.json` when a rule, source publication, calculator mapping, approximation, or exclusion changes. Verify the official agency publication before changing its verification date, and follow the [accuracy correction process](Accuracy-and-Source-Governance.md) for suspected calculation errors.
+
 ---
 
 ## Budgeting and Reports

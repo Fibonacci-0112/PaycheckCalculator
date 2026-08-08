@@ -307,14 +307,11 @@
             @if (_result != null || _bonusResult != null || _selfEmpResult != null)
             {
                 <div class="results-actions no-print">
-                    @if (_result != null)
-                    {
-                        <input type="text" class="export-name-input" @bind="_exportFileName"
-                               placeholder="File name" title="Name for exported files" aria-label="Export file name" />
-                        <button class="btn-export" @onclick="ExportCsvAsync" title="Download results (with annual projection) as CSV">CSV</button>
-                        <button class="btn-export" @onclick="ExportPdfAsync" title="Download results (with annual projection) as PDF">PDF</button>
-                        <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
-                    }
+                    <input type="text" class="export-name-input" @bind="_exportFileName"
+                           placeholder="File name" title="Name for exported files" aria-label="Export file name" />
+                    <button class="btn-export" @onclick="ExportCsvAsync" title="Download results as CSV">CSV</button>
+                    <button class="btn-export" @onclick="ExportPdfAsync" title="Download results as PDF">PDF</button>
+                    <button class="btn-export" @onclick="PrintAsync" title="Print results">Print</button>
                     <button class="btn-export" @onclick="OpenAccuracySources" title="View the tax-rule citations behind these results">Sources</button>
                 </div>
             }
@@ -408,6 +405,13 @@
                         <span class="net-label">@(_bonusResult.StateUsesRegularMethod ? "Net Bonus (before state tax)" : "Net Bonus")</span>
                         <span class="result-value net-value">@_bonusResult.NetBonus.ToString("C")</span>
                     </div>
+                </div>
+                <div class="result-card">
+                    <div class="result-card-title">Assumptions &amp; Exclusions</div>
+                    @foreach (var note in _bonusResult.AccuracyNotes)
+                    {
+                        <p class="form-note"><strong>@note.Title:</strong> @note.Description</p>
+                    }
                 </div>
             </div>
         }
@@ -519,6 +523,13 @@
                         </tbody>
                     </table>
                     <p class="form-note">Equal installments of your estimated annual tax. The federal portion is paid to the IRS; the state portion, when shown, goes to your state. Most states use these same due dates.</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-card-title">Assumptions &amp; Exclusions</div>
+                    @foreach (var note in _selfEmpResult.AccuracyNotes)
+                    {
+                        <p class="form-note"><strong>@note.Title:</strong> @note.Description</p>
+                    }
                 </div>
             </div>
         }
@@ -757,23 +768,30 @@
                         @if (_projection.OverUnderWithholding > 0)
                         {
                             <div class="result-row over-under-row">
-                                <span class="over-under-label">Estimated Refund</span>
+                                <span class="over-under-label">Withholding-Based Estimate (Over)</span>
                                 <span class="result-value refund-value">@_projection.OverUnderWithholding.ToString("C")</span>
                             </div>
                         }
                         else if (_projection.OverUnderWithholding < 0)
                         {
                             <div class="result-row over-under-row">
-                                <span class="over-under-label">Estimated Amount Owed</span>
+                                <span class="over-under-label">Withholding-Based Estimate (Shortfall)</span>
                                 <span class="result-value owe-value">@Math.Abs(_projection.OverUnderWithholding).ToString("C")</span>
                             </div>
                         }
                         else
                         {
                             <div class="result-row over-under-row">
-                                <span class="over-under-label">Estimated Balance</span>
+                                <span class="over-under-label">Withholding-Based Estimate (Balanced)</span>
                                 <span class="result-value">$0.00</span>
                             </div>
+                        }
+                    </div>
+                    <div class="result-card">
+                        <div class="result-card-title">Annual Assumptions &amp; Exclusions</div>
+                        @foreach (var note in _projection.AccuracyNotes)
+                        {
+                            <p class="form-note"><strong>@note.Title:</strong> @note.Description</p>
                         }
                     </div>
                 </div>
@@ -948,7 +966,7 @@
 
 @if (_showModal && _modalExplanation != null)
 {
-    <ExplanationModal Explanation="_modalExplanation" OnClose="CloseModal" />
+    <ExplanationModal Explanation="_modalExplanation" Sources="ActiveSources" OnClose="CloseModal" />
 }
 
 @if (_showSourcesModal)
@@ -1021,6 +1039,12 @@
     /// <summary>The tax year backing whichever result mode is currently active.</summary>
     private int ActiveTaxYear =>
         _result?.TaxYear ?? _bonusResult?.TaxYear ?? _selfEmpResult?.TaxYear ?? TaxYearSupport.Default;
+
+    private IReadOnlyList<AccuracyNote> ActiveAccuracyNotes =>
+        _bonusResult?.AccuracyNotes ?? _selfEmpResult?.AccuracyNotes ?? Array.Empty<AccuracyNote>();
+
+    private IReadOnlyList<QuarterlyEstimate> ActiveQuarterlyEstimates =>
+        _selfEmpResult?.QuarterlyEstimates ?? Array.Empty<QuarterlyEstimate>();
 
     // Saved paychecks (session) + account
     private string _paycheckName = "";
@@ -1490,25 +1514,85 @@
     // captures whichever results tab (Per Paycheck or Annual) is on screen.
     private async Task ExportCsvAsync()
     {
-        if (_result is null) return;
-        var comparison = BuildComparisonRows();
-        var csv = PaycheckCsvRenderer.Render(_result, _result.State.ToString(), _projection,
-            comparison.Count > 0 ? comparison : null, _compareAName ?? "Paycheck A", _compareBName ?? "Paycheck B");
+        var exportResult = BuildActiveExportResult();
+        if (exportResult is null) return;
+        var comparison = _result is null ? Array.Empty<ComparisonRow>() : BuildComparisonRows();
+        var csv = PaycheckCsvRenderer.Render(
+            exportResult,
+            exportResult.State.ToString(),
+            _projection,
+            comparison.Count > 0 ? comparison : null,
+            _compareAName ?? "Paycheck A",
+            _compareBName ?? "Paycheck B",
+            ActiveAccuracyNotes,
+            ActiveQuarterlyEstimates);
         var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(csv));
         await JS.InvokeVoidAsync("paycheckExport.downloadFile", ExportFileName("csv"), "text/csv", base64);
     }
 
     private async Task ExportPdfAsync()
     {
-        if (_result is null) return;
-        var comparison = BuildComparisonRows();
-        var bytes = PaycheckPdfRenderer.Render(_result, _result.State.ToString(), _projection,
-            comparison.Count > 0 ? comparison : null, _compareAName ?? "Paycheck A", _compareBName ?? "Paycheck B");
+        var exportResult = BuildActiveExportResult();
+        if (exportResult is null) return;
+        var comparison = _result is null ? Array.Empty<ComparisonRow>() : BuildComparisonRows();
+        var bytes = PaycheckPdfRenderer.Render(
+            exportResult,
+            exportResult.State.ToString(),
+            _projection,
+            comparison.Count > 0 ? comparison : null,
+            _compareAName ?? "Paycheck A",
+            _compareBName ?? "Paycheck B",
+            ActiveAccuracyNotes,
+            ActiveQuarterlyEstimates);
         var base64 = Convert.ToBase64String(bytes);
         await JS.InvokeVoidAsync("paycheckExport.downloadFile", ExportFileName("pdf"), "application/pdf", base64);
     }
 
     private async Task PrintAsync() => await JS.InvokeVoidAsync("paycheckExport.print");
+
+    private PaycheckResult? BuildActiveExportResult()
+    {
+        if (_result is not null) return _result;
+        if (_bonusResult is not null)
+        {
+            return new PaycheckResult
+            {
+                GrossPay = _bonusResult.BonusAmount,
+                FederalTaxableIncome = _bonusResult.BonusAmount,
+                FicaTaxableWages = _bonusResult.BonusAmount,
+                StateTaxableWages = _bonusResult.BonusAmount,
+                FederalWithholding = _bonusResult.FederalWithholding,
+                SocialSecurityWithholding = _bonusResult.SocialSecurityWithholding,
+                MedicareWithholding = _bonusResult.MedicareWithholding,
+                AdditionalMedicareWithholding = _bonusResult.AdditionalMedicareWithholding,
+                StateWithholding = _bonusResult.StateWithholding,
+                NetPay = _bonusResult.NetBonus,
+                State = _bonusResult.State,
+                TaxYear = _bonusResult.TaxYear,
+                Explanation = _bonusResult.Explanation
+            };
+        }
+        if (_selfEmpResult is not null)
+        {
+            return new PaycheckResult
+            {
+                GrossPay = _selfEmpResult.AnnualNetEarnings,
+                FederalTaxableIncome = _selfEmpResult.NetEarningsSubjectToSeTax,
+                FicaTaxableWages = _selfEmpResult.NetEarningsSubjectToSeTax,
+                StateTaxableWages = _selfEmpResult.AnnualNetEarnings,
+                FederalWithholding = _selfEmpResult.SelfEmploymentTax,
+                SocialSecurityWithholding = _selfEmpResult.SocialSecurityTax,
+                MedicareWithholding = _selfEmpResult.MedicareTax,
+                AdditionalMedicareWithholding = _selfEmpResult.AdditionalMedicareTax,
+                StateWithholding = _selfEmpResult.StateIncomeTax,
+                NetPay = _selfEmpResult.TakeHome,
+                State = _selfEmpResult.State,
+                TaxYear = _selfEmpResult.TaxYear,
+                Explanation = _selfEmpResult.Explanation
+            };
+        }
+        return null;
+    }
 
     // Dedicated A/B comparison export (the comparison table on its own).
     private async Task ExportComparisonCsvAsync(IReadOnlyList<ComparisonRow> rows)

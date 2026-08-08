@@ -132,6 +132,8 @@ The following calculators load tax-table data from JSON at startup:
 
 If a tax-data file is renamed, update `AddPaycheckCalculatorCore`, MAUI `MauiAsset` entries, Blazor `TaxData` links, test project copy/link entries, and any tests or docs that reference the file.
 
+`tax_source_manifest_2026.json` separately maps every state/DC regular-withholding calculator, supplemental method, and applicable payroll assessment to official publications. `TaxSourceCatalog` validates complete regular-withholding coverage and calculator-class correspondence during startup. Update the manifest whenever a state rule or calculator mapping changes, following [Accuracy and Source Governance](Accuracy-and-Source-Governance.md).
+
 ---
 
 ## Legacy Generic Adapter

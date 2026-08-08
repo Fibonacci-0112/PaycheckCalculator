@@ -210,6 +210,6 @@ Both front-ends surface annual projection data alongside the per-paycheck result
 
 ## Explanation Model
 
-`PaycheckResult` carries a `PaycheckExplanation`. Each important output line can expose a `LineExplanation` with a title, final amount, reference, and ordered calculation steps.
+`PaycheckResult` carries a `PaycheckExplanation`. Each important output line can expose a `LineExplanation` with a title, final amount, stable source-manifest rule IDs, and ordered calculation steps.
 
-Both front-ends use these records for the **Show Your Work** experience. The explanation model belongs in Core so MAUI, Blazor, tests, and exports can all rely on the same calculation trace.
+`TaxSourceCatalog` resolves those IDs from `tax_source_manifest_2026.json` into official publication metadata and accuracy notes. Both front-ends use these records for the **Show Your Work** experience, and contextual CSV/PDF exports use the same citations. See [Accuracy and Source Governance](Accuracy-and-Source-Governance.md) for manifest maintenance and incident correction.

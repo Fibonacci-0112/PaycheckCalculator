@@ -24,6 +24,9 @@
     <None Include="Data\state_supplemental_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Data\tax_source_manifest_2026.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Data\Schemas\*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

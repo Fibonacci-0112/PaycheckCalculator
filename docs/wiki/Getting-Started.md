@@ -164,6 +164,7 @@ Tax data lives in [`PaycheckCalculator.Core/Data/`](../../PaycheckCalculator.Cor
 | `connecticut_withholding_2026.json` | Connecticut withholding tables |
 | `ok_ow2_2026_percentage.json` | Oklahoma OW-2 withholding tables |
 | `state_supplemental_2026.json` | State supplemental (bonus) withholding rates for all 50 states + DC |
+| `tax_source_manifest_2026.json` | Canonical official-source metadata, implementation mapping, approximations, and exclusions |
 | `Schemas/*.json` | Dynamic state-input schema files for every state / DC |
 
-`AddPaycheckCalculatorCore` reads the JSON files at startup and registers the corresponding calculators and schema provider. If a JSON file is renamed or moved, update all consumers: Core loader, MAUI assets, Blazor `TaxData` links, test project links, and any tests or documentation that reference the old name.
+`AddPaycheckCalculatorCore` reads the JSON files at startup, validates the source catalog and state calculator mapping, and registers the corresponding calculators and schema provider. If a JSON file is renamed or moved, update all consumers: Core loader/output content, MAUI assets, Blazor `TaxData` links, test project links, and any tests or documentation that reference the old name.

@@ -1,4 +1,5 @@
 using PaycheckCalculator.Core.Models;
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Tax.Federal;
 using PaycheckCalculator.Core.Tax.Fica;
 
@@ -104,7 +105,15 @@ public sealed class AnnualProjectionCalculator
             EstimatedAnnualFicaLiability = estimatedFicaLiability,
             AnnualizedTotalWithholding = annualTotalWithholding,
             EstimatedTotalLiability = estimatedTotal,
-            OverUnderWithholding = overUnder
+            OverUnderWithholding = overUnder,
+            AccuracyNotes =
+            [
+                new AccuracyNote("Assumption", "The current paycheck is assumed to repeat unchanged for every remaining pay period."),
+                new AccuracyNote("Federal proxy", "IRS Publication 15-T withholding is used as a proxy; this is not a Form 1040 income-tax liability calculation."),
+                new AccuracyNote("State proxy", "Annualized state withholding is used as a proxy for annual state income-tax liability."),
+                new AccuracyNote("Exclusions", "Filing-time deductions, credits, other jobs, local taxes, and jurisdiction-specific reconciliation are not fully modeled."),
+                new AccuracyNote("Additional Medicare", "The employer's $200,000 Additional Medicare withholding threshold is used and may differ from final filing liability.")
+            ]
         };
     }
 

@@ -18,6 +18,21 @@ namespace PaycheckCalculator.Tests;
 public sealed class SelfEmploymentCalculatorTest
 {
     [Fact]
+    public void Se_DisclosesRequiredModeExclusions()
+    {
+        var result = Create().Calculate(new SelfEmploymentInput
+        {
+            AnnualNetEarnings = 100_000m,
+            State = UsState.TX
+        });
+
+        Assert.Contains(result.AccuracyNotes, note => note.Description.Contains("federal income tax", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.AccuracyNotes, note => note.Description.Contains("wage-withholding", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.AccuracyNotes, note => note.Description.Contains("paid-leave", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.AccuracyNotes, note => note.Description.Contains("state estimated-payment schedules", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void Se_NoStateTax_BasicEarnings()
     {
         // $100,000 net profit, Texas (no income tax), no YTD wages:

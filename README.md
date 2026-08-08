@@ -44,7 +44,7 @@ PaycheckCalculator.slnx
 │   ├── Budgeting/               # Budget, categories, transactions, recurring bills, savings goals, reports
 │   ├── Explanation/             # Show-your-work explanation records
 │   ├── DependencyInjection/     # AddPaycheckCalculatorCore and ITaxDataReader
-│   ├── Data/                    # JSON tax tables and dynamic state schemas
+│   ├── Data/                    # JSON tax tables, source manifest, and dynamic state schemas
 │   │   └── Schemas/             # One schema JSON file per state / DC
 │   └── Tax/                     # Federal, FICA, State contracts/registry, and one folder per jurisdiction
 ├── PaycheckCalculator.App/            # .NET MAUI app for Android, iOS, macOS, and Windows
@@ -221,4 +221,5 @@ The API persists those sets in PostgreSQL through `BudgetEntity`, `BudgetTransac
 
 - [Roadmap](ROADMAP.md) — Prioritized product milestones, engineering improvements, feature recommendations, and release criteria.
 - [Wiki](docs/wiki/Home.md) — Architecture, getting started, tax engine, state coverage, budgeting, accounts/sync, UI guide, and contributing notes.
+- [Accuracy & Source Governance](docs/wiki/Accuracy-and-Source-Governance.md) — Official-source manifest rules and the accuracy-incident correction process.
 - [UML Class Diagram](docs/class-diagram.md) — Mermaid diagrams for the solution, core pipeline, MAUI layer, shared sync layer, and API persistence model.

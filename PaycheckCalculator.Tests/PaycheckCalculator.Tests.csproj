@@ -59,6 +59,10 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>state_supplemental_2026.json</Link>
     </None>
+    <None Include="..\PaycheckCalculator.Core\Data\tax_source_manifest_2026.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>tax_source_manifest_2026.json</Link>
+    </None>
     <None Include="..\PaycheckCalculator.Core\Data\Schemas\*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>Schemas\%(Filename)%(Extension)</Link>
