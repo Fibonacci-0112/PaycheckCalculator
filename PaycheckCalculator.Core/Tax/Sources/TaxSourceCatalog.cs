@@ -163,9 +163,10 @@ public sealed class TaxSourceCatalog
                 throw new InvalidOperationException($"Tax source manifest is missing regular-withholding coverage for {state}.");
             }
         }
+    }
 
-        private static void ValidateRawMetadata(string json)
-        {
+    private static void ValidateRawMetadata(string json)
+    {
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty("rules", out var rules)
                 || rules.ValueKind != JsonValueKind.Array)
@@ -210,6 +211,5 @@ public sealed class TaxSourceCatalog
                     }
                 }
             }
-        }
     }
 }
