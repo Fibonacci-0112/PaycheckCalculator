@@ -177,7 +177,7 @@
                                 <SwipeItems>
                                     <SwipeItem Text="Delete" BackgroundColor="Red"
                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BudgetViewModel}},
-                                                                  Path=RemoveTransactionAsyncCommand}"
+                                                                  Path=RemoveTransactionCommand}"
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
@@ -216,7 +216,7 @@
                                 <SwipeItems>
                                     <SwipeItem Text="Delete" BackgroundColor="Red"
                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BudgetViewModel}},
-                                                                  Path=RemoveBillAsyncCommand}"
+                                                                  Path=RemoveBillCommand}"
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
@@ -273,7 +273,7 @@
                                 <SwipeItems>
                                     <SwipeItem Text="Delete" BackgroundColor="Red"
                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BudgetViewModel}},
-                                                                  Path=RemoveGoalAsyncCommand}"
+                                                                  Path=RemoveGoalCommand}"
                                                CommandParameter="{Binding}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>
