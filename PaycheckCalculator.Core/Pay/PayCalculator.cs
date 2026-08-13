@@ -73,9 +73,11 @@ public sealed class PayCalculator
         var stateValues = input.StateInputValues ?? new StateInputValues();
         var stateResult = calc.Calculate(context, stateValues);
 
-        var net = gross - preTax - postTax
-                - stateResult.Withholding - stateResult.DisabilityInsurance
-                - ss - medicare - addl - federal;
+        // Derive net from the same cent-rounded components returned to callers so
+        // every displayed paycheck balances exactly.
+        var net = RoundMoney(gross) - RoundMoney(preTax) - RoundMoney(postTax)
+                - RoundMoney(stateResult.Withholding) - RoundMoney(stateResult.DisabilityInsurance)
+                - RoundMoney(ss) - RoundMoney(medicare) - RoundMoney(addl) - RoundMoney(federal);
 
         var explanation = BuildExplanation(
             grossPay: RoundMoney(gross),
