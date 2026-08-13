@@ -85,7 +85,7 @@ The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalc
 | Component | Technology |
 |---|---|
 | Primary SDK | .NET 11 preview pinned in `global.json` |
-| Core library | `net11.0;net9.0` when built with the .NET 11 SDK; `net9.0` fallback on older SDKs |
+| Core library | UI-agnostic `net11.0` library |
 | MAUI app | .NET MAUI, `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, `net11.0-windows10.0.19041.0`, CommunityToolkit.Mvvm |
 | Web app | ASP.NET Core Blazor Server, `net11.0` |
 | Sync API | ASP.NET Core minimal APIs, ASP.NET Core Identity, EF Core, Npgsql/PostgreSQL |
@@ -131,6 +131,8 @@ dotnet test PaycheckCalculator.Tests
 ```
 
 The test project covers the paycheck pipeline, federal withholding, FICA, all state calculators, dynamic schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, reports, snapshot JSON, merge behavior, sync API integration, and export renderers.
+
+CI explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux. Its project references build `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, and `PaycheckCalculator.Blazor` transitively; the MAUI app is not built by that workflow. CodeQL runs in a separate workflow.
 
 ### Run the Blazor web app
 

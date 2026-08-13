@@ -6,9 +6,9 @@ This file provides guidance to coding agents (e.g. Codex) when working with code
 
 PaycheckCalculator is a simple US paycheck calculator (2026 tax tables) with two front-ends — a **.NET MAUI** app (`PaycheckCalculator.App`, Android, iOS, Mac Catalyst, and Windows) and a **Blazor Server** web app (`PaycheckCalculator.Blazor`) — both backed by the same UI-agnostic core engine (`PaycheckCalculator.Core`) and exercised by an xUnit suite (`PaycheckCalculator.Tests`). It takes pay/W-4/state/deduction inputs and computes gross pay, federal/state withholding, FICA, deductions, and net pay. The annual projection (annualized totals, projected YTD, year-end over/under withholding) is shown in **both** front-ends, on a Per Paycheck / Annual sub-tab of the results. There is no annual Form 1040 planner. A **self-employment / 1099 module** (a calculation mode in both front-ends) estimates self-employment tax, state income tax, and quarterly estimated payments on annual net earnings; it does not model federal income tax.
 
-Saved paychecks can optionally sync across the two front-ends via a user account. Two more projects support this: `PaycheckCalculator.Shared` (wire/storage contracts, JSON serialization, the last-write-wins merge, the typed HTTP client, and an `ISavedPaycheckStore` abstraction) and `PaycheckCalculator.Api` (a standalone ASP.NET Core Web API with ASP.NET Core Identity email/password accounts over EF Core SQLite, exposing a `/api/paychecks/sync` endpoint). The MAUI app **also persists saved paychecks locally on device** (works fully offline / without an account); the Blazor app keeps anonymous saved paychecks **only until the browser tab closes** (circuit-scoped memory). See `docs/wiki/Accounts-and-Sync.md`.
+Saved paychecks can optionally sync across the two front-ends via a user account. Two more projects support this: `PaycheckCalculator.Shared` (wire/storage contracts, JSON serialization, the last-write-wins merge, the typed HTTP client, and an `ISavedPaycheckStore` abstraction) and `PaycheckCalculator.Api` (a standalone ASP.NET Core Web API with ASP.NET Core Identity email/password accounts over EF Core PostgreSQL, with SQLite used by integration tests, exposing a `/api/paychecks/sync` endpoint). The MAUI app **also persists saved paychecks locally on device** (works fully offline / without an account); the Blazor app keeps anonymous saved paychecks **only until the browser tab closes** (circuit-scoped memory). See `docs/wiki/Accounts-and-Sync.md`.
 
-Solution: `PaycheckCalculator.slnx`. The SDK version is pinned in `global.json` (11.0.100-preview.6.26359.118, latestPatch roll-forward, prerelease allowed). A project wiki lives in `docs/wiki/` and a Mermaid class diagram in `docs/class-diagram.md`.
+Solution: `PaycheckCalculator.slnx`. The SDK version is pinned in `global.json` (11.0.100-preview.7.26381.103, latestFeature roll-forward, prerelease allowed). A project wiki lives in `docs/wiki/` and a Mermaid class diagram in `docs/class-diagram.md`.
 
 ## Common commands
 
@@ -21,7 +21,7 @@ dotnet build
 # Build a single project (Core, Shared, Api, Blazor, and Tests build without the MAUI workload)
 dotnet build PaycheckCalculator.Core
 
-# Run all tests (transitively builds Shared + Api, which the suite references)
+# Run all tests (transitively builds Core, Shared, Api, and Blazor)
 dotnet test PaycheckCalculator.Tests
 
 # Run a single test class or single test
@@ -39,9 +39,9 @@ dotnet build PaycheckCalculator.App
 dotnet run --project PaycheckCalculator.App
 ```
 
-`PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` are `net11.0` and build on Linux/CI without the MAUI workload. The Blazor app calls the API server-side (so no CORS); for end-to-end account/sync testing run `PaycheckCalculator.Api` and `PaycheckCalculator.Blazor` together.
+`PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` target `net11.0` and build on Linux without the MAUI workload. The Blazor app calls the API server-side (so no CORS); for end-to-end account/sync testing run `PaycheckCalculator.Api` and `PaycheckCalculator.Blazor` together.
 
-`PaycheckCalculator.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is present, otherwise it falls back to `net9.0` only. `PaycheckCalculator.App` targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows`; Apple targets are excluded on Linux and the Windows target is included only on Windows. `PaycheckCalculator.Blazor` and `PaycheckCalculator.Tests` are `net11.0` only. CI (`.github/workflows/dotnet.yml`) builds and tests `PaycheckCalculator.Tests` on Linux; the MAUI and Blazor apps are not built in CI (`codeql.yml` runs CodeQL scanning separately).
+`PaycheckCalculator.App` targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows`; Apple targets are included only on macOS and the Windows target only on Windows. CI (`.github/workflows/dotnet.yml`) explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux, transitively building Core, Shared, API, and Blazor through its project references. MAUI is not built by that workflow; `codeql.yml` runs CodeQL separately.
 
 ## Architecture
 

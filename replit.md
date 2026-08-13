@@ -22,7 +22,7 @@ Both scripts export `ASPNETCORE_URLS`/`DOTNET_ROOT`/`PATH` and start the process
 
 ### .NET SDK
 
-This project pins `global.json` to a **.NET 11 preview SDK** (`11.0.100-preview.6.26359.118`), which isn't available as a Replit Nix module (the highest module is .NET 10). It's installed locally instead:
+This project pins `global.json` to a **.NET 11 preview SDK** (`11.0.100-preview.7.26381.103`), which isn't available as a Replit Nix module (the highest module is .NET 10). It's installed locally instead:
 
 - Downloaded via `dotnet-install.sh` into `.dotnet/` (git-ignored) — matches the exact preview version pinned in `global.json`.
 - `icu` was added as a system dependency (required by the preview SDK's globalization support).

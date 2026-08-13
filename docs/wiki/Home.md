@@ -55,8 +55,8 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 | Component | Technology |
 |---|---|
 | Primary SDK | .NET 11 preview pinned in `global.json` |
-| Core | UI-agnostic `net11.0;net9.0` library when built with the .NET 11 SDK; `net9.0` fallback on older SDKs |
-| MAUI App | .NET MAUI, Android, Windows 10+, CommunityToolkit.Mvvm |
+| Core | UI-agnostic `net11.0` library |
+| MAUI App | .NET MAUI, Android, iOS, Mac Catalyst, Windows 10+, CommunityToolkit.Mvvm |
 | Web App | ASP.NET Core Blazor Server |
 | Sync API | ASP.NET Core minimal APIs, ASP.NET Core Identity, EF Core, Npgsql/PostgreSQL |
 | Shared Layer | DTOs, JSON converters, deterministic mergers, API client, store abstractions, entitlements |
