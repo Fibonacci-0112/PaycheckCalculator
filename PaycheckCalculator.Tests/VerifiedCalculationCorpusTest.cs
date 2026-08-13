@@ -168,7 +168,12 @@ public sealed class VerifiedCalculationCorpusTest
             var expectedNet = first.GrossPay
                 - first.PreTaxDeductions
                 - first.PostTaxDeductions
-                - first.TotalTaxes;
+                - first.FederalWithholding
+                - first.StateWithholding
+                - first.StateDisabilityInsurance
+                - first.SocialSecurityWithholding
+                - first.MedicareWithholding
+                - first.AdditionalMedicareWithholding;
 
             Assert.Equal(expectedNet, first.NetPay);
             AssertNonNegativeTaxes(first, state);
