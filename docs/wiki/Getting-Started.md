@@ -107,7 +107,7 @@ For a PostgreSQL container that publishes port `5432` to the host, pass the conn
 the standard .NET environment-variable form when starting the API:
 
 ```bash
-ConnectionStrings__Sync='Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;******' \
+ConnectionStrings__Sync='YOUR_POSTGRESQL_CONNECTION_STRING' \
   dotnet run --project PaycheckCalculator.Api
 ```
 
