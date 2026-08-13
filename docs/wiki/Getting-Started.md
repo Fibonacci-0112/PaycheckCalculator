@@ -103,7 +103,17 @@ The API defaults to `http://localhost:5201` and reads its database connection fr
 Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres
 ```
 
-When running against PostgreSQL, EF Core migrations are applied at startup. Run the API and Blazor app together for manual end-to-end account/sync testing.
+For a PostgreSQL container that publishes port `5432` to the host, pass the connection string through
+the standard .NET environment-variable form when starting the API:
+
+```bash
+ConnectionStrings__Sync='Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;******' \
+  dotnet run --project PaycheckCalculator.Api
+```
+
+Replace the database name, username, and password with the values configured for the container. When
+running against PostgreSQL, EF Core migrations are applied at startup. Keep the API running alongside
+the MAUI or Blazor client for manual end-to-end account/sync testing.
 
 ### MAUI app
 
