@@ -1,6 +1,6 @@
 # PaycheckCalculator Roadmap
 
-_Last updated: July 16, 2026_
+_Last updated: August 13, 2026_
 
 This is the living product and engineering roadmap for PaycheckCalculator. It describes intended direction, not a promise of dates. Milestones are ordered by dependency and risk; accuracy, explainability, and data safety take priority over feature count.
 
@@ -24,7 +24,7 @@ The repository already has a substantial foundation:
 
 - Federal withholding, FICA, and state withholding for all 50 states plus the District of Columbia.
 - Hourly and salary pay, deductions, annual projections, gross-up, supplemental wages, hourly/salary conversion, and self-employment estimates.
-- MAUI clients for Android and Windows, a Blazor Server app, and an optional account/sync API.
+- MAUI clients for Android, iOS, Mac Catalyst, and Windows, a Blazor Server app, and an optional account/sync API.
 - Saved-paycheck comparison, CSV/PDF export, budgeting, recurring bills, savings goals, and reports.
 - A UI-agnostic Core project, shared sync contracts, schema-driven state inputs, xUnit tests, and CodeQL.
 
@@ -63,11 +63,12 @@ Planning sizes assume focused development and should be revised after issues are
 
 ### 0.3 Documentation reconciliation
 
-Reconcile documentation with the code before treating it as release documentation. Known examples include:
+Documentation has been reconciled with the code and should retain these baselines:
 
-- The README describes Core as conditionally targeting both .NET 11 and .NET 9, while the current project targets .NET 11 only.
-- AGENTS.md describes SQLite as the API store, while the current API configures Npgsql/PostgreSQL and uses SQLite only in integration tests.
-- Build and CI descriptions should state which projects are built explicitly and which are reached transitively.
+- Core targets .NET 11 only.
+- The API uses Npgsql/PostgreSQL in normal operation; SQLite is limited to integration tests.
+- The main .NET CI workflow explicitly restores, builds, and tests `PaycheckCalculator.Tests`. Core, Shared, API, and Blazor are built transitively through its project references; MAUI is not built by that workflow.
+- SDK version and roll-forward details should match `global.json`.
 
 ### Exit criteria
 

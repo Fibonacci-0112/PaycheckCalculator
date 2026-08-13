@@ -6,7 +6,7 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
 
 ## Prerequisites
 
-- **.NET 11 SDK preview** pinned in [`global.json`](../../global.json): `11.0.100-preview.6.26359.118`, `latestPatch` roll-forward, prerelease allowed.
+- **.NET 11 SDK preview** pinned in [`global.json`](../../global.json): `11.0.100-preview.7.26381.103`, `latestFeature` roll-forward, prerelease allowed.
 - **.NET MAUI workload** only when building or running `PaycheckCalculator.App`:
   ```bash
   dotnet workload install maui
@@ -16,7 +16,7 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
 
 `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
 
-`PaycheckCalculator.Core` multi-targets `net11.0;net9.0` when the .NET 11 SDK is available and falls back to `net9.0` on older SDKs. The other non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows10.0.19041.0`; Apple targets are excluded when MSBuild runs on Linux, and the Windows target is included only on Windows.
+All non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows10.0.19041.0`; Apple targets are included only when MSBuild runs on macOS, and the Windows target is included only on Windows.
 
 ---
 
@@ -77,7 +77,7 @@ dotnet test PaycheckCalculator.Tests
 
 The test suite covers federal withholding, FICA, all state calculators, dynamic state schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, budget reports, snapshot JSON round-trips, deterministic merge behavior, sync API integration, and CSV/PDF export renderers.
 
-CI (`.github/workflows/dotnet.yml`) restores, builds, and tests `PaycheckCalculator.Tests` on Linux with the pinned .NET 11 preview SDK. CodeQL runs separately.
+CI (`.github/workflows/dotnet.yml`) explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux with the pinned .NET 11 preview SDK. The test project's references build Core, Shared, API, and Blazor transitively; MAUI is not built by this workflow. CodeQL runs separately.
 
 ---
 

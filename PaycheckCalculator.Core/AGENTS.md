@@ -34,4 +34,4 @@ dotnet build PaycheckCalculator.Core
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~<CalculatorOrScenarioName>"
 ```
 
-`PaycheckCalculator.Core` multi-targets based on the installed SDK. Avoid APIs that would break the `net9.0` fallback unless the project file is intentionally changed.
+`PaycheckCalculator.Core` targets `net11.0`.
