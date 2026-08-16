@@ -51,7 +51,8 @@ else
     </section>
 }
 
-<Calculator InitialState="_info?.State" />
+<Calculator InitialState="_info?.State"
+            PageTitle="@(_info is null ? "Paycheck Calculator" : $"{_info.FullName} Paycheck Calculator")" />
 
 @code {
     [Parameter] public string StateSlug { get; set; } = "";

@@ -1,0 +1,78 @@
+@* Blue summary banner: annual net take-home with a per-period inset and a
+   projected-net sparkline. All figures come from the real projection. *@
+
+<section class="hero-card">
+    <div class="hero-main">
+        <div class="hero-label">Estimated Annual Net Take-Home</div>
+        <div class="hero-figure">
+            @WholePart<span class="hero-cents">@CentsPart</span>
+        </div>
+        <p class="hero-sub">@Subtitle</p>
+    </div>
+
+    <div class="hero-aside">
+        <div class="hero-inset">
+            <div class="hero-inset-label">Per Pay Period</div>
+            <div class="hero-inset-value">@Result.NetPay.ToString("C")</div>
+            <div class="hero-inset-meta">@FrequencyText &middot; @Projection.PayPeriodsPerYear cycles</div>
+        </div>
+
+        <div class="hero-spark" aria-hidden="true">
+            <svg viewBox="0 0 200 64" preserveAspectRatio="none">
+                <polyline points="@SparkPoints" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="@MarkerX.ToString("F1", Culture)" cy="@MarkerY.ToString("F1", Culture)" r="3.5" fill="currentColor" />
+            </svg>
+        </div>
+    </div>
+</section>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Culture =
+        System.Globalization.CultureInfo.InvariantCulture;
+
+    [Parameter, EditorRequired] public PaycheckResult Result { get; set; } = null!;
+    [Parameter, EditorRequired] public AnnualProjection Projection { get; set; } = null!;
+
+    /// <summary>Friendly pay-frequency label, e.g. "Semi-Monthly".</summary>
+    [Parameter] public string FrequencyText { get; set; } = "";
+
+    /// <summary>Context line, e.g. "Based on a $110,000 gross salary · Single · California".</summary>
+    [Parameter] public string Subtitle { get; set; } = "";
+
+    // The headline currency figure is split so the cents render smaller, per the design.
+    private string WholePart => Math.Truncate(Projection.AnnualizedNetPay).ToString("C0");
+    private string CentsPart => (Projection.AnnualizedNetPay - Math.Truncate(Projection.AnnualizedNetPay))
+        .ToString("F2").Substring(1);
+
+    // Cumulative net pay across the year — the projection is linear, so this is a
+    // straight rise; the marker shows where the current paycheck number falls on it.
+    private string SparkPoints
+    {
+        get
+        {
+            var periods = Math.Max(Projection.PayPeriodsPerYear, 1);
+            var pts = new List<string>(periods + 1);
+            for (var i = 0; i <= periods; i++)
+            {
+                var x = 200d * i / periods;
+                var y = 60d - (52d * i / periods);
+                pts.Add(FormattableString.Invariant($"{x:F1},{y:F1}"));
+            }
+            return string.Join(" ", pts);
+        }
+    }
+
+    private double Progress
+    {
+        get
+        {
+            var periods = Math.Max(Projection.PayPeriodsPerYear, 1);
+            var current = Math.Clamp(Projection.CurrentPaycheckNumber, 0, periods);
+            return (double)current / periods;
+        }
+    }
+
+    private double MarkerX => 200d * Progress;
+    private double MarkerY => 60d - (52d * Progress);
+}

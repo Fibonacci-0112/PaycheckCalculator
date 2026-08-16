@@ -3,93 +3,89 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PaycheckCalculator.App.Views.AccountPage"
              Title="Account"
-             BackgroundColor="#F5F5F5">
+             BackgroundColor="{StaticResource Canvas}">
 
     <Grid RowDefinitions="Auto,*">
 
         <!-- Page Header -->
-        <Grid Grid.Row="0" BackgroundColor="#333333" Padding="16,14,16,14">
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource Surface}" Padding="16,14,16,10">
             <Label Text="Account &amp; Sync"
-                   TextColor="White" FontSize="20" FontAttributes="Bold"
-                   HorizontalTextAlignment="Center" />
+                   TextColor="{StaticResource Ink}" FontSize="18" FontAttributes="Bold" />
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="16" Spacing="14">
 
                 <Label Text="Create an optional account to sync your saved paychecks between this app and the web app. Your paychecks are always saved on this device — an account just keeps them in sync across devices."
-                       FontSize="12" TextColor="#9E9E9E" />
+                       FontSize="12" TextColor="{StaticResource MutedFaint}" />
 
                 <!-- Signed-in view -->
-                <Border IsVisible="{Binding IsSignedIn}" BackgroundColor="White" StrokeThickness="0"
+                <Border IsVisible="{Binding IsSignedIn}" BackgroundColor="{StaticResource Surface}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="You are signed in." TextColor="#2E7D32"
+                        <Label Text="You are signed in." TextColor="{StaticResource Primary}"
                                FontSize="15" FontAttributes="Bold" />
                         <Button Text="Sync Now" Command="{Binding SyncNowCommand}"
-                                BackgroundColor="#333333" TextColor="White" CornerRadius="8" />
+                                BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}" CornerRadius="8" />
                         <Button Text="Export Account Data (JSON)" Command="{Binding ExportAccountDataCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource BodyText}" CornerRadius="8" />
                         <Button Text="Delete Account" Command="{Binding DeleteAccountCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#C62828" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource DangerStrong}" CornerRadius="8" />
                         <Button Text="Sign Out" Command="{Binding LogoutCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#C62828" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource DangerStrong}" CornerRadius="8" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Signed-out view: sign in / create account -->
-                <Border IsVisible="{Binding IsSignedOut}" BackgroundColor="White" StrokeThickness="0"
+                <Border IsVisible="{Binding IsSignedOut}" BackgroundColor="{StaticResource Surface}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16">
                     <VerticalStackLayout Spacing="10">
-                        <Label Text="EMAIL" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                        <Label Text="EMAIL" Style="{StaticResource EyebrowLabel}" />
                         <Entry Text="{Binding Email}" Keyboard="Email" Placeholder="you@example.com"
-                               BackgroundColor="#F2F2F2" TextColor="Black" />
-                        <Label Text="PASSWORD" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                               BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource Ink}" />
+                        <Label Text="PASSWORD" Style="{StaticResource EyebrowLabel}" />
                         <Entry Text="{Binding Password}" IsPassword="True" Placeholder="Password"
-                               BackgroundColor="#F2F2F2" TextColor="Black" />
+                               BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource Ink}" />
                         <Button Text="Sign In" Command="{Binding LoginCommand}"
-                                BackgroundColor="#333333" TextColor="White" CornerRadius="8" Margin="0,4,0,0" />
+                                BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}" CornerRadius="8" Margin="0,4,0,0" />
                         <Button Text="Create Account" Command="{Binding RegisterCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource BodyText}" CornerRadius="8" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Busy indicator + status -->
-                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#333333" />
-                <Label Text="{Binding StatusMessage}" FontSize="12" TextColor="#37474F"
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Primary}" />
+                <Label Text="{Binding StatusMessage}" FontSize="12" TextColor="{StaticResource BodyText}"
                        HorizontalTextAlignment="Center" />
 
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <VerticalStackLayout Spacing="8">
-                        <Label Text="DATA CONTROLS" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                        <Label Text="DATA CONTROLS" Style="{StaticResource EyebrowLabel}" />
                         <Button Text="Delete Local Data" Command="{Binding DeleteLocalDataCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#C62828" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource DangerStrong}" CornerRadius="8" />
                         <Label Text="Deletes paychecks and budgets saved on this device only."
-                               FontSize="11" TextColor="#9E9E9E" />
+                               FontSize="11" TextColor="{StaticResource MutedFaint}" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Server URL -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <VerticalStackLayout Spacing="8">
-                        <Label Text="SERVER URL" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                        <Label Text="SERVER URL" Style="{StaticResource EyebrowLabel}" />
                         <Entry Text="{Binding ServerUrl}" Keyboard="Url"
-                               BackgroundColor="#F2F2F2" TextColor="Black" />
+                               BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource Ink}" />
                         <Label Text="The address of the sync server. Change this only if you host your own."
-                               FontSize="11" TextColor="#9E9E9E" />
+                               FontSize="11" TextColor="{StaticResource MutedFaint}" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <VerticalStackLayout Spacing="8">
-                        <Label Text="LEGAL" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                        <Label Text="LEGAL" Style="{StaticResource EyebrowLabel}" />
                         <Button Text="Privacy Policy" Command="{Binding ViewPrivacyPolicyCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource BodyText}" CornerRadius="8" />
                         <Button Text="Terms of Use" Command="{Binding ViewTermsCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#333333" CornerRadius="8" />
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource BodyText}" CornerRadius="8" />
                     </VerticalStackLayout>
                 </Border>
 

@@ -1,5 +1,5 @@
 @page "/budget"
-@rendermode InteractiveServer
+@* Render mode is set globally on <Routes> in App.razor. *@
 @using PaycheckCalculator.Core.Budgeting
 @using PaycheckCalculator.Core.Models
 @using PaycheckCalculator.Core.Pay
@@ -556,8 +556,12 @@
     private BudgetReport? _report;
     private int _reportMonthsBack = 5;
 
+    [CascadingParameter] private ShellState Shell { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
+        Shell.Set("Budget");
+
         var budgetSet = await Store.LoadBudgetsAsync();
         var txSet     = await Store.LoadTransactionsAsync();
         var billSet   = await Store.LoadRecurringBillsAsync();

@@ -5,7 +5,7 @@
              xmlns:helpers="clr-namespace:PaycheckCalculator.App.Helpers"
              x:Class="PaycheckCalculator.App.Views.ResultsPage"
              Title="Results"
-             BackgroundColor="#F5F5F5">
+             BackgroundColor="{StaticResource Canvas}">
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Print"
@@ -29,16 +29,38 @@
     <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- Page Header -->
-        <Grid Grid.Row="0" BackgroundColor="#333333" Padding="16,14,16,14">
-            <Label Text="Your Paycheck Summary"
-                   TextColor="White"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   HorizontalTextAlignment="Center" />
+        <!-- Blue summary strip: the two figures that matter at a glance. -->
+        <Grid Grid.Row="0" BackgroundColor="{StaticResource Primary}" Padding="16,14,16,14"
+              ColumnDefinitions="*,*" ColumnSpacing="12"
+              IsVisible="{Binding HasResult}">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="NET PAY / PERIOD"
+                       TextColor="{StaticResource OnPrimaryMuted}"
+                       FontSize="10"
+                       FontAttributes="Bold"
+                       CharacterSpacing="1" />
+                <Label Text="{Binding ResultCard.NetPay, StringFormat='{0:C}'}"
+                       TextColor="{StaticResource OnPrimary}"
+                       FontSize="22"
+                       FontAttributes="Bold" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End">
+                <Label Text="ANNUAL TAKE-HOME"
+                       TextColor="{StaticResource OnPrimaryMuted}"
+                       FontSize="10"
+                       FontAttributes="Bold"
+                       CharacterSpacing="1"
+                       HorizontalTextAlignment="End" />
+                <Label Text="{Binding Projection.AnnualizedNetPay, StringFormat='{0:C0}'}"
+                       TextColor="{StaticResource OnPrimary}"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="End" />
+            </VerticalStackLayout>
         </Grid>
 
         <!-- Per Paycheck / Annual sub-tab switcher (annual projection is standard-mode only) -->
-        <Grid Grid.Row="1" BackgroundColor="White" Padding="12,8" ColumnSpacing="8"
+        <Grid Grid.Row="1" BackgroundColor="{StaticResource Surface}" Padding="12,8" ColumnSpacing="8"
               ColumnDefinitions="*,*" IsVisible="{Binding ShowResultTabs}">
             <Button Grid.Column="0" Text="Per Paycheck"
                     Command="{Binding ShowPerPeriodTabCommand}"
@@ -46,12 +68,12 @@
                     AutomationProperties.Name="Show per-paycheck results">
                 <Button.Triggers>
                     <DataTrigger TargetType="Button" Binding="{Binding IsPerPeriodTabActive}" Value="True">
-                        <Setter Property="BackgroundColor" Value="#2E7D32" />
-                        <Setter Property="TextColor" Value="White" />
+                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                        <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
                     </DataTrigger>
                     <DataTrigger TargetType="Button" Binding="{Binding IsPerPeriodTabActive}" Value="False">
-                        <Setter Property="BackgroundColor" Value="#ECECEC" />
-                        <Setter Property="TextColor" Value="#37474F" />
+                        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceSunken}" />
+                        <Setter Property="TextColor" Value="{StaticResource Muted}" />
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
@@ -61,12 +83,12 @@
                     AutomationProperties.Name="Show annual projection">
                 <Button.Triggers>
                     <DataTrigger TargetType="Button" Binding="{Binding IsAnnualTabActive}" Value="True">
-                        <Setter Property="BackgroundColor" Value="#2E7D32" />
-                        <Setter Property="TextColor" Value="White" />
+                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                        <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
                     </DataTrigger>
                     <DataTrigger TargetType="Button" Binding="{Binding IsAnnualTabActive}" Value="False">
-                        <Setter Property="BackgroundColor" Value="#ECECEC" />
-                        <Setter Property="TextColor" Value="#37474F" />
+                        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceSunken}" />
+                        <Setter Property="TextColor" Value="{StaticResource Muted}" />
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
@@ -77,7 +99,7 @@
 
             <!-- Export file name (used by the Print / Export PDF / Export CSV toolbar actions) -->
             <VerticalStackLayout Padding="16,12,16,0" Spacing="4">
-                <Label Text="EXPORT FILE NAME" TextColor="#78909C" FontSize="10" FontAttributes="Bold" />
+                <Label Text="EXPORT FILE NAME" Style="{StaticResource EyebrowLabel}" />
                 <Entry Text="{Binding ExportFileName}" Placeholder="Paycheck-Summary"
                        AutomationProperties.Name="Export file name" />
             </VerticalStackLayout>
@@ -86,46 +108,46 @@
             <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding IsPerPeriodTabVisible}">
 
                 <!-- Gross-Up summary (only shown for gross-up results) -->
-                <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource PrimaryTint}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16,8"
                         IsVisible="{Binding ResultCard.IsGrossUp}">
                     <VerticalStackLayout Spacing="0">
-                        <Label Text="GROSS-UP" TextColor="#2E7D32"
+                        <Label Text="GROSS-UP" TextColor="{StaticResource Primary}"
                                FontSize="10" FontAttributes="Bold" Margin="0,2,0,4" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Desired Net Pay (take-home)" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Desired Net Pay (take-home)" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.TargetNetPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Taxes &amp; Deductions Covered" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Taxes &amp; Deductions Covered" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.GrossUpCost, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Required Gross Pay" TextColor="#1B5E20" FontSize="14"
+                            <Label Text="Required Gross Pay" TextColor="{StaticResource Primary}" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.GrossPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#1B5E20" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource Primary}" FontAttributes="Bold"
                                    FontSize="15" VerticalTextAlignment="Center" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
 
-                <Border BackgroundColor="#FFF8E1" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource WarningBg}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16,10"
                         IsVisible="{Binding ResultCard.HasAccuracyNotes}">
                     <VerticalStackLayout Spacing="6">
-                        <Label Text="ASSUMPTIONS &amp; EXCLUSIONS" TextColor="#795548"
+                        <Label Text="ASSUMPTIONS &amp; EXCLUSIONS" TextColor="{StaticResource Warning}"
                                FontSize="10" FontAttributes="Bold" />
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding ResultCard.AccuracyNotes}" Spacing="5">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Label Text="{Binding Description}" TextColor="#6D4C41" FontSize="11" />
+                                    <Label Text="{Binding Description}" TextColor="{StaticResource Warning}" FontSize="11" />
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
@@ -133,104 +155,103 @@
                 </Border>
 
                 <!-- Bonus summary (only shown for bonus / supplemental-wage results) -->
-                <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource PrimaryTint}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16,8"
                         IsVisible="{Binding ResultCard.IsBonus}">
                     <VerticalStackLayout Spacing="0">
-                        <Label Text="BONUS / SUPPLEMENTAL WAGE" TextColor="#2E7D32"
+                        <Label Text="BONUS / SUPPLEMENTAL WAGE" TextColor="{StaticResource Primary}"
                                FontSize="10" FontAttributes="Bold" Margin="0,2,0,4" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Bonus Amount" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Bonus Amount" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.GrossPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Total Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Total Withholding" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.TotalTaxes, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Net Bonus" TextColor="#1B5E20" FontSize="14"
+                            <Label Text="Net Bonus" TextColor="{StaticResource Primary}" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.NetPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#1B5E20" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource Primary}" FontAttributes="Bold"
                                    FontSize="15" VerticalTextAlignment="Center" />
                         </Grid>
                         <Label Text="{Binding ResultCard.BonusStateDescription}"
-                               TextColor="#9E9E9E" FontSize="11" Margin="0,6,0,0"
+                               TextColor="{StaticResource MutedFaint}" FontSize="11" Margin="0,6,0,0"
                                IsVisible="{Binding ResultCard.BonusStateUsesRegularMethod}" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Self-employment summary (only shown for self-employment / 1099 results) -->
-                <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource PrimaryTint}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16,8"
                         IsVisible="{Binding ResultCard.IsSelfEmployment}">
                     <VerticalStackLayout Spacing="0">
-                        <Label Text="SELF-EMPLOYMENT / 1099 (ANNUAL)" TextColor="#2E7D32"
+                        <Label Text="SELF-EMPLOYMENT / 1099 (ANNUAL)" TextColor="{StaticResource Primary}"
                                FontSize="10" FontAttributes="Bold" Margin="0,2,0,4" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Net Self-Employment Income" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Net Self-Employment Income" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.GrossPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Self-Employment Tax (15.3%)" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Self-Employment Tax (15.3%)" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.FederalWithholding, StringFormat='-{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="{Binding ResultCard.StateName, StringFormat='Estimated State Income Tax ({0})'}" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ResultCard.StateName, StringFormat='Estimated State Income Tax ({0})'}" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.StateWithholding, StringFormat='-{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#C8E6C9" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
                         <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                            <Label Text="Take-Home (before federal income tax)" TextColor="#1B5E20" FontSize="14"
+                            <Label Text="Take-Home (before federal income tax)" TextColor="{StaticResource Primary}" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.NetPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#1B5E20" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource Primary}" FontAttributes="Bold"
                                    FontSize="15" VerticalTextAlignment="Center" />
                         </Grid>
                         <Label Text="No U.S. state levies a separate self-employment tax — self-employment income is taxed as ordinary state income (estimate)."
-                               TextColor="#9E9E9E" FontSize="11" Margin="0,6,0,0" />
+                               TextColor="{StaticResource MutedFaint}" FontSize="11" Margin="0,6,0,0" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Quarterly estimated payments (only shown for self-employment / 1099 results) -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8"
+                <Border Style="{StaticResource CardBorder}" Padding="16,8"
                         IsVisible="{Binding ResultCard.IsSelfEmployment}">
                     <VerticalStackLayout Spacing="0">
-                        <Label Text="Quarterly Estimated Payments (Form 1040-ES)" TextColor="#1B5E20"
+                        <Label Text="Quarterly Estimated Payments (Form 1040-ES)" TextColor="{StaticResource Primary}"
                                FontSize="13" FontAttributes="Bold" Margin="0,4,0,6" />
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding ResultCard.QuarterlyEstimates}" Spacing="0">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <VerticalStackLayout Spacing="0">
                                         <Grid ColumnDefinitions="Auto,*,Auto" Padding="0,8" ColumnSpacing="8">
-                                            <Label Text="{Binding Label}" TextColor="#1B5E20" FontAttributes="Bold" FontSize="13" VerticalTextAlignment="Center" />
-                                            <Label Text="{Binding DueDate, StringFormat='due {0:MMM d, yyyy}'}" Grid.Column="1" TextColor="#37474F" FontSize="12" VerticalTextAlignment="Center" />
-                                            <Label Text="{Binding TotalAmount, StringFormat='{0:C}'}" Grid.Column="2" TextColor="#37474F" FontAttributes="Bold" FontSize="13" VerticalTextAlignment="Center" />
+                                            <Label Text="{Binding Label}" TextColor="{StaticResource Primary}" FontAttributes="Bold" FontSize="13" VerticalTextAlignment="Center" />
+                                            <Label Text="{Binding DueDate, StringFormat='due {0:MMM d, yyyy}'}" Grid.Column="1" TextColor="{StaticResource BodyText}" FontSize="12" VerticalTextAlignment="Center" />
+                                            <Label Text="{Binding TotalAmount, StringFormat='{0:C}'}" Grid.Column="2" TextColor="{StaticResource BodyText}" FontAttributes="Bold" FontSize="13" VerticalTextAlignment="Center" />
                                         </Grid>
-                                        <Label Text="{Binding FederalAmount, StringFormat='Federal {0:C}'}" TextColor="#9E9E9E" FontSize="11" Margin="0,0,0,2" />
-                                        <Label Text="{Binding StateAmount, StringFormat='State {0:C}'}" TextColor="#9E9E9E" FontSize="11" Margin="0,0,0,4" />
-                                        <BoxView HeightRequest="1" Color="#EEEEEE" />
+                                        <Label Text="{Binding FederalAmount, StringFormat='Federal {0:C}'}" TextColor="{StaticResource MutedFaint}" FontSize="11" Margin="0,0,0,2" />
+                                        <Label Text="{Binding StateAmount, StringFormat='State {0:C}'}" TextColor="{StaticResource MutedFaint}" FontSize="11" Margin="0,0,0,4" />
+                                        <BoxView Style="{StaticResource RowSeparator}" />
                                     </VerticalStackLayout>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
                         <Label Text="Equal installments of your estimated annual tax. The federal portion goes to the IRS; the state portion, when shown, goes to your state. Most states use these same due dates."
-                               TextColor="#9E9E9E" FontSize="11" Margin="0,6,0,0" />
+                               TextColor="{StaticResource MutedFaint}" FontSize="11" Margin="0,6,0,0" />
                     </VerticalStackLayout>
                 </Border>
 
@@ -239,13 +260,12 @@
                 <!-- ═══════════════════════════════════════════════════ -->
 
                 <!-- Income card: Gross Pay, Federal Taxable Income, FICA Taxable Income, State Taxable Income -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                <Border Style="{StaticResource CardBorder}" Padding="16,8">
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="Gross Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="Gross Pay" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Gross Pay is calculated">
                                 <Label.GestureRecognizers>
@@ -254,14 +274,14 @@
                             </Label>
                             <Label Text="{Binding ResultCard.GrossPay, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#37474F" FontAttributes="Bold"
+                                   TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="14" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="Federal Taxable Income" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="Federal Taxable Income" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Federal Taxable Income is calculated">
                                 <Label.GestureRecognizers>
@@ -270,14 +290,14 @@
                             </Label>
                             <Label Text="{Binding ResultCard.FederalTaxableIncome, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#37474F" FontAttributes="Bold"
+                                   TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="FICA Taxable Income" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="FICA Taxable Income" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how FICA Taxable Income is calculated">
                                 <Label.GestureRecognizers>
@@ -286,14 +306,14 @@
                             </Label>
                             <Label Text="{Binding ResultCard.FicaTaxableWages, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#37474F" FontAttributes="Bold"
+                                   TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="State Taxable Income" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="State Taxable Income" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how State Taxable Income is calculated">
                                 <Label.GestureRecognizers>
@@ -302,7 +322,7 @@
                             </Label>
                             <Label Text="{Binding ResultCard.StateTaxableWages, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#37474F" FontAttributes="Bold"
+                                   TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
@@ -310,18 +330,17 @@
                 </Border>
 
                 <!-- Taxes Section Header -->
-                <Label Text="TAX WITHHOLDINGS" TextColor="#78909C"
+                <Label Text="TAX WITHHOLDINGS" TextColor="{StaticResource MutedFaint}"
                        FontSize="10" FontAttributes="Bold"
                        Margin="4,4,0,0" />
 
                 <!-- Tax rows card: Federal Tax, Social Security Tax, Medicare Tax, State Tax -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                <Border Style="{StaticResource CardBorder}" Padding="16,8">
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="Federal Tax" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="Federal Tax" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Federal Tax is calculated">
                                 <Label.GestureRecognizers>
@@ -330,14 +349,14 @@
                             </Label>
                             <Label Text="{Binding ResultCard.FederalWithholding, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#C62828" FontAttributes="Bold"
+                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="Social Security Tax" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="Social Security Tax" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Social Security is calculated">
                                 <Label.GestureRecognizers>
@@ -346,14 +365,14 @@
                             </Label>
                             <Label Text="{Binding ResultCard.SocialSecurityWithholding, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#C62828" FontAttributes="Bold"
+                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="Medicare Tax" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="Medicare Tax" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Medicare is calculated">
                                 <Label.GestureRecognizers>
@@ -362,14 +381,14 @@
                             </Label>
                             <Label Text="{Binding ResultCard.MedicareWithholding, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#C62828" FontAttributes="Bold"
+                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="State Income Tax" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="State Income Tax" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how State Income Tax is calculated">
                                 <Label.GestureRecognizers>
@@ -378,17 +397,17 @@
                             </Label>
                             <Label Text="{Binding ResultCard.StateWithholding, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#C62828" FontAttributes="Bold"
+                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
-                        <BoxView HeightRequest="1" Color="#F0F0F0"
+                        <BoxView HeightRequest="1" Color="{StaticResource BorderSubtle}"
                                  IsVisible="{Binding ResultCard.StateDisabilityInsurance, Converter={StaticResource GreaterThanZeroConverter}}" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10"
                               IsVisible="{Binding ResultCard.StateDisabilityInsurance, Converter={StaticResource GreaterThanZeroConverter}}">
-                            <Label Text="{Binding ResultCard.StateDisabilityInsuranceLabel}" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="#555555"
+                            <Label Text="{Binding ResultCard.StateDisabilityInsuranceLabel}" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
                                    FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
                                    AutomationProperties.Name="Show how State Disability is calculated">
                                 <Label.GestureRecognizers>
@@ -397,7 +416,7 @@
                             </Label>
                             <Label Text="{Binding ResultCard.StateDisabilityInsurance, StringFormat='{0:C}'}"
                                    Grid.Column="2"
-                                   TextColor="#C62828" FontAttributes="Bold"
+                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
@@ -405,35 +424,34 @@
                 </Border>
 
                 <!-- Deductions Section Header -->
-                <Label Text="DEDUCTIONS" TextColor="#78909C"
+                <Label Text="DEDUCTIONS" TextColor="{StaticResource MutedFaint}"
                        FontSize="10" FontAttributes="Bold"
                        Margin="4,4,0,0"
                        IsVisible="{Binding ShowDeductions}" />
 
                 <!-- Deductions card: Pre-Tax, Post-Tax -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8"
+                <Border Style="{StaticResource CardBorder}" Padding="16,8"
                         IsVisible="{Binding ShowDeductions}">
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10"
                               IsVisible="{Binding ResultCard.PreTaxDeductions, Converter={StaticResource GreaterThanZeroConverter}}">
-                            <Label Text="Pre-Tax Deductions" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Pre-Tax Deductions" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.PreTaxDeductions, StringFormat='{0:C}'}"
                                    Grid.Column="1"
-                                   TextColor="#5D4037" FontAttributes="Bold"
+                                   TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
-                        <BoxView HeightRequest="1" Color="#F0F0F0"
+                        <BoxView HeightRequest="1" Color="{StaticResource BorderSubtle}"
                                  IsVisible="{Binding ShowBothDeductions}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10"
                               IsVisible="{Binding ResultCard.PostTaxDeductions, Converter={StaticResource GreaterThanZeroConverter}}">
-                            <Label Text="Post-Tax Deductions" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Post-Tax Deductions" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding ResultCard.PostTaxDeductions, StringFormat='{0:C}'}"
                                    Grid.Column="1"
-                                   TextColor="#5D4037" FontAttributes="Bold"
+                                   TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
@@ -441,27 +459,26 @@
                 </Border>
 
                 <!-- Net Pay card -->
-                <Border BackgroundColor="#2E7D32" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource Primary}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 16" Padding="20,18">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ShowExplanationCommand}" CommandParameter="NetPay" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout Spacing="4">
                         <Grid ColumnDefinitions="*,Auto,*" HorizontalOptions="FillAndExpand">
-                            <Label Grid.Column="1" Text="NET PAY &#x24D8;" TextColor="#A5D6A7"
+                            <Label Grid.Column="1" Text="NET PAY &#x24D8;" TextColor="{StaticResource OnPrimaryMuted}"
                                    FontSize="11" FontAttributes="Bold"
                                    HorizontalTextAlignment="Center"
                                    AutomationProperties.Name="Show how Net Pay is calculated" />
                         </Grid>
                         <Label Text="{Binding ResultCard.NetPay, StringFormat='{0:C}'}"
-                               TextColor="White" FontAttributes="Bold" FontSize="32"
+                               TextColor="{StaticResource OnPrimary}" FontAttributes="Bold" FontSize="32"
                                HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Doughnut Chart -->
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="12">
+                <Border Style="{StaticResource CardBorder}" Padding="12">
                     <GraphicsView x:Name="DoughnutChart"
                                   HeightRequest="380"
                                   HorizontalOptions="FillAndExpand" />
@@ -474,53 +491,52 @@
             <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding IsAnnualTabVisible}">
 
                 <!-- Annualized amounts -->
-                <Label Text="ANNUALIZED AMOUNTS" TextColor="#78909C"
+                <Label Text="ANNUALIZED AMOUNTS" TextColor="{StaticResource MutedFaint}"
                        FontSize="10" FontAttributes="Bold" Margin="4,0,0,0" />
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                <Border Style="{StaticResource CardBorder}" Padding="16,8">
                     <VerticalStackLayout Spacing="0">
 
                         <Label Text="{Binding Projection.PayPeriodsPerYear, StringFormat='{0} pay periods per year'}"
-                               TextColor="#9E9E9E" FontSize="11" Margin="0,6,0,2" />
+                               TextColor="{StaticResource MutedFaint}" FontSize="11" Margin="0,6,0,2" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Gross Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Gross Pay" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.AnnualizedGrossPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0"
+                        <BoxView HeightRequest="1" Color="{StaticResource BorderSubtle}"
                                  IsVisible="{Binding Projection.ShowAnnualizedPreTaxDeductions}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10"
                               IsVisible="{Binding Projection.ShowAnnualizedPreTaxDeductions}">
-                            <Label Text="Pre-Tax Deductions" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Pre-Tax Deductions" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.AnnualizedPreTaxDeductions, StringFormat='-{0:C}'}"
-                                   Grid.Column="1" TextColor="#5D4037" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Federal Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Federal Withholding" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.AnnualizedFederalWithholding, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="State Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="State Withholding" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.AnnualizedStateWithholding, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="FICA (SS + Medicare)" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="FICA (SS + Medicare)" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.AnnualizedFica, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
@@ -528,69 +544,68 @@
                 </Border>
 
                 <!-- Annual Net Pay -->
-                <Border BackgroundColor="#2E7D32" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource Primary}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 16" Padding="20,18">
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="ANNUALIZED NET PAY" TextColor="#A5D6A7"
+                        <Label Text="ANNUALIZED NET PAY" TextColor="{StaticResource OnPrimaryMuted}"
                                FontSize="11" FontAttributes="Bold"
                                HorizontalTextAlignment="Center" />
                         <Label Text="{Binding Projection.AnnualizedNetPay, StringFormat='{0:C}'}"
-                               TextColor="White" FontAttributes="Bold" FontSize="32"
+                               TextColor="{StaticResource OnPrimary}" FontAttributes="Bold" FontSize="32"
                                HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Projected year-to-date -->
                 <Label Text="{Binding Projection.PaycheckProgressLabel, StringFormat='PROJECTED YEAR-TO-DATE — {0}'}"
-                       TextColor="#78909C" FontSize="10" FontAttributes="Bold" Margin="4,4,0,0" />
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                       Style="{StaticResource EyebrowLabel}" Margin="4,4,0,0" />
+                <Border Style="{StaticResource CardBorder}" Padding="16,8">
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Remaining Paychecks" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Remaining Paychecks" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.RemainingPaychecks}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Projected YTD Gross Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Projected YTD Gross Pay" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.ProjectedYtdGrossPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Projected YTD Federal Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Projected YTD Federal Withholding" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.ProjectedYtdFederalWithholding, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Projected YTD State Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Projected YTD State Withholding" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.ProjectedYtdStateWithholding, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Projected YTD FICA" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Projected YTD FICA" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.ProjectedYtdFica, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Projected YTD Net Pay" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Projected YTD Net Pay" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.ProjectedYtdNetPay, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#2E7D32" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource Primary}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
@@ -598,86 +613,85 @@
                 </Border>
 
                 <!-- Year-end estimate -->
-                <Label Text="YEAR-END ESTIMATE" TextColor="#78909C"
+                <Label Text="YEAR-END ESTIMATE" TextColor="{StaticResource MutedFaint}"
                        FontSize="10" FontAttributes="Bold" Margin="4,4,0,0" />
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16,8">
+                <Border Style="{StaticResource CardBorder}" Padding="16,8">
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Est. Annual Federal Tax Liability" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Est. Annual Federal Tax Liability" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.EstimatedAnnualFederalLiability, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Est. Annual FICA Liability" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Est. Annual FICA Liability" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.EstimatedAnnualFicaLiability, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Estimated Total Liability" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Estimated Total Liability" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.EstimatedTotalLiability, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <Grid ColumnDefinitions="*,Auto" Padding="0,10">
-                            <Label Text="Annualized Total Withholding" TextColor="#37474F" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="Annualized Total Withholding" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.AnnualizedTotalWithholding, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="13" VerticalTextAlignment="Center" />
                         </Grid>
 
-                        <BoxView HeightRequest="1" Color="#F0F0F0" />
+                        <BoxView Style="{StaticResource RowSeparator}" />
 
                         <!-- Estimated refund (over-withheld) -->
                         <Grid ColumnDefinitions="*,Auto" Padding="0,12"
                               IsVisible="{Binding Projection.IsRefund}">
-                            <Label Text="Withholding-Based Estimate (Over)" TextColor="#2E7D32" FontSize="14"
+                            <Label Text="Withholding-Based Estimate (Over)" TextColor="{StaticResource Primary}" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#2E7D32" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource Primary}" FontAttributes="Bold"
                                    FontSize="15" VerticalTextAlignment="Center" />
                         </Grid>
 
                         <!-- Estimated amount owed (under-withheld) -->
                         <Grid ColumnDefinitions="*,Auto" Padding="0,12"
                               IsVisible="{Binding Projection.IsOwe}">
-                            <Label Text="Withholding-Based Estimate (Shortfall)" TextColor="#C62828" FontSize="14"
+                            <Label Text="Withholding-Based Estimate (Shortfall)" TextColor="{StaticResource DangerStrong}" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#C62828" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
                                    FontSize="15" VerticalTextAlignment="Center" />
                         </Grid>
 
                         <!-- Balanced -->
                         <Grid ColumnDefinitions="*,Auto" Padding="0,12"
                               IsVisible="{Binding Projection.IsBalanced}">
-                            <Label Text="Withholding-Based Estimate (Balanced)" TextColor="#37474F" FontSize="14"
+                            <Label Text="Withholding-Based Estimate (Balanced)" TextColor="{StaticResource BodyText}" FontSize="14"
                                    FontAttributes="Bold" VerticalTextAlignment="Center" />
                             <Label Text="{Binding Projection.OverUnderAbsolute, StringFormat='{0:C}'}"
-                                   Grid.Column="1" TextColor="#37474F" FontAttributes="Bold"
+                                   Grid.Column="1" TextColor="{StaticResource BodyText}" FontAttributes="Bold"
                                    FontSize="15" VerticalTextAlignment="Center" />
                         </Grid>
 
                     </VerticalStackLayout>
                 </Border>
 
-                <Border BackgroundColor="#FFF8E1" StrokeThickness="0"
+                <Border BackgroundColor="{StaticResource WarningBg}" StrokeThickness="0"
                         StrokeShape="RoundRectangle 12" Padding="16,10"
                         IsVisible="{Binding Projection.HasAccuracyNotes}">
                     <VerticalStackLayout Spacing="6">
-                        <Label Text="ANNUAL ASSUMPTIONS &amp; EXCLUSIONS" TextColor="#795548"
+                        <Label Text="ANNUAL ASSUMPTIONS &amp; EXCLUSIONS" TextColor="{StaticResource Warning}"
                                FontSize="10" FontAttributes="Bold" />
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projection.AccuracyNotes}" Spacing="5">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Label Text="{Binding Description}" TextColor="#6D4C41" FontSize="11" />
+                                    <Label Text="{Binding Description}" TextColor="{StaticResource Warning}" FontSize="11" />
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
@@ -697,10 +711,10 @@
                              Padding="32" Spacing="10">
             <Label Text="No paycheck calculated yet"
                    FontSize="16" FontAttributes="Bold"
-                   TextColor="#424242"
+                   TextColor="{StaticResource Muted}"
                    HorizontalTextAlignment="Center" />
             <Label Text="Enter your pay details on the Inputs tab and tap Calculate to see your paycheck breakdown here."
-                   FontSize="12" TextColor="#9E9E9E"
+                   FontSize="12" TextColor="{StaticResource MutedFaint}"
                    HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
 

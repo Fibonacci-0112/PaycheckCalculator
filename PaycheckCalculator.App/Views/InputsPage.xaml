@@ -4,67 +4,74 @@
              xmlns:behaviors="clr-namespace:PaycheckCalculator.App.Behaviors"
              x:Class="PaycheckCalculator.App.Views.InputsPage"
              Title="Inputs"
-             BackgroundColor="#F5F5F5">
+             BackgroundColor="{StaticResource Canvas}">
     <Grid RowDefinitions="Auto,*">
 
-        <!-- Tab header row -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*"
-              BackgroundColor="#ECECEC" Padding="0" ColumnSpacing="0">
-            <Button x:Name="TabPayHours" Text="Pay &amp; Hours"
-                    Clicked="OnTabClicked"
-                    BackgroundColor="#333333" TextColor="White"
-                    FontSize="12" FontAttributes="Bold"
-                    CornerRadius="0" BorderWidth="0"
-                    Padding="4,10" Grid.Column="0" />
-            <Button x:Name="TabFederal" Text="Federal"
-                    Clicked="OnTabClicked"
-                    BackgroundColor="#ECECEC" TextColor="#777777"
-                    FontSize="12"
-                    CornerRadius="0" BorderWidth="0"
-                    Padding="4,10" Grid.Column="1" />
-            <Button x:Name="TabState" Text="State"
-                    Clicked="OnTabClicked"
-                    BackgroundColor="#ECECEC" TextColor="#777777"
-                    FontSize="12"
-                    CornerRadius="0" BorderWidth="0"
-                    Padding="4,10" Grid.Column="2" />
-            <Button x:Name="TabDeductions" Text="Deductions"
-                    Clicked="OnTabClicked"
-                    BackgroundColor="#ECECEC" TextColor="#777777"
-                    FontSize="12"
-                    CornerRadius="0" BorderWidth="0"
-                    Padding="4,10" Grid.Column="3" />
-        </Grid>
+        <!-- Sub-tab pills. Selection is applied in code-behind (OnTabClicked),
+             which reads the same colour tokens this markup uses. -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource SurfaceSunken}"
+                Stroke="{StaticResource BorderSubtle}"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 12"
+                Padding="4"
+                Margin="12,12,12,8">
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
+                <Button x:Name="TabPayHours" Text="Pay &amp; Hours"
+                        Clicked="OnTabClicked"
+                        BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
+                        FontSize="12" FontAttributes="Bold"
+                        CornerRadius="8" BorderWidth="0"
+                        Padding="2,8" Grid.Column="0" />
+                <Button x:Name="TabFederal" Text="Federal"
+                        Clicked="OnTabClicked"
+                        BackgroundColor="Transparent" TextColor="{StaticResource Muted}"
+                        FontSize="12"
+                        CornerRadius="8" BorderWidth="0"
+                        Padding="2,8" Grid.Column="1" />
+                <Button x:Name="TabState" Text="State"
+                        Clicked="OnTabClicked"
+                        BackgroundColor="Transparent" TextColor="{StaticResource Muted}"
+                        FontSize="12"
+                        CornerRadius="8" BorderWidth="0"
+                        Padding="2,8" Grid.Column="2" />
+                <Button x:Name="TabDeductions" Text="Deductions"
+                        Clicked="OnTabClicked"
+                        BackgroundColor="Transparent" TextColor="{StaticResource Muted}"
+                        FontSize="12"
+                        CornerRadius="8" BorderWidth="0"
+                        Padding="2,8" Grid.Column="3" />
+            </Grid>
+        </Border>
 
         <!-- Pay & Hours content -->
         <ScrollView Grid.Row="1" x:Name="PayHoursContent" IsVisible="True">
             <VerticalStackLayout Padding="16" Spacing="10">
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <VerticalStackLayout Spacing="14">
 
                         <!-- Paycheck name (identifies a saved paycheck for comparison) -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Paycheck Name" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding PaycheckName}" Placeholder="e.g. Job 1"
-                                   Grid.Column="1" TextColor="Black" BackgroundColor="#F2F2F2" />
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}" />
                         </Grid>
 
                         <!-- Pay Frequency -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Pay Frequency" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Picker ItemsSource="{Binding Frequencies}" SelectedItem="{Binding SelectedFrequencyPickerItem}"
-                                    Grid.Column="1" TextColor="Black" />
+                                    Grid.Column="1" TextColor="{StaticResource Ink}" />
                         </Grid>
 
                         <!-- Calculation Mode: Standard vs Gross-Up -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Mode" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Picker ItemsSource="{Binding CalculationModes}" SelectedItem="{Binding SelectedCalculationModePickerItem}"
-                                    Grid.Column="1" TextColor="Black" />
+                                    Grid.Column="1" TextColor="{StaticResource Ink}" />
                         </Grid>
 
                         <!-- Standard paycheck inputs (Type + Hourly/Salary), hidden in gross-up mode -->
@@ -73,18 +80,18 @@
                         <!-- Type: Hourly vs Salary -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Type" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Picker ItemsSource="{Binding PayTypes}" SelectedItem="{Binding SelectedPayTypePickerItem}"
-                                    Grid.Column="1" TextColor="Black" />
+                                    Grid.Column="1" TextColor="{StaticResource Ink}" />
                         </Grid>
 
                         <!-- Hourly inputs (shown when Type = Hourly) -->
                         <VerticalStackLayout Spacing="14" IsVisible="{Binding IsHourly}">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Pay Rate" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding HourlyRate}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                     </Entry.Behaviors>
@@ -92,9 +99,9 @@
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Regular Hours" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding RegularHours}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior />
                                     </Entry.Behaviors>
@@ -102,9 +109,9 @@
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Overtime Hours" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding OvertimeHours}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior />
                                     </Entry.Behaviors>
@@ -112,9 +119,9 @@
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="OT Multiplier" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding OvertimeMultiplier}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior />
                                     </Entry.Behaviors>
@@ -126,15 +133,15 @@
                         <VerticalStackLayout Spacing="14" IsVisible="{Binding IsSalary}">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Gross Pay Method" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Picker ItemsSource="{Binding GrossPayMethods}" SelectedItem="{Binding SelectedGrossPayMethodPickerItem}"
-                                        Grid.Column="1" TextColor="Black" />
+                                        Grid.Column="1" TextColor="{StaticResource Ink}" />
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="{Binding SalaryAmountLabel}" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding SalaryAmount}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                     </Entry.Behaviors>
@@ -148,25 +155,25 @@
                         <VerticalStackLayout Spacing="6" IsVisible="{Binding IsGrossUpMode}">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Desired Net Pay" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding TargetNetPay}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                     </Entry.Behaviors>
                                 </Entry>
                             </Grid>
                             <Label Text="Gross-up finds the gross pay that nets this take-home amount after taxes and deductions."
-                                   TextColor="#9E9E9E" FontSize="11" />
+                                   TextColor="{StaticResource MutedFaint}" FontSize="11" />
                         </VerticalStackLayout>
 
                         <!-- Bonus / supplemental-wage input (shown when Mode = Bonus) -->
                         <VerticalStackLayout Spacing="6" IsVisible="{Binding IsBonusMode}">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Bonus Amount" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding BonusAmount}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                     </Entry.Behaviors>
@@ -174,48 +181,48 @@
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Prior Supplemental Wages (this year)" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding YtdSupplementalWages}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                     </Entry.Behaviors>
                                 </Entry>
                             </Grid>
                             <Label Text="Bonuses use the federal flat supplemental rate — 22% (37% over $1,000,000) — plus FICA and your state's supplemental rate. Choose your work state on the State tab."
-                                   TextColor="#9E9E9E" FontSize="11" />
+                                   TextColor="{StaticResource MutedFaint}" FontSize="11" />
                         </VerticalStackLayout>
 
                         <!-- Self-employment / 1099 input (shown when Mode = Self-Employment) -->
                         <VerticalStackLayout Spacing="6" IsVisible="{Binding IsSelfEmploymentMode}">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Net Self-Employment Income (annual)" Grid.Column="0"
-                                       VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                       Style="{StaticResource FieldLabel}" />
                                 <Entry Text="{Binding SelfEmploymentEarnings}" Keyboard="Numeric" Grid.Column="1"
-                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                     </Entry.Behaviors>
                                 </Entry>
                             </Grid>
                             <Label Text="Enter your annual net profit (Schedule C). Self-employment tax is 15.3% — 12.4% Social Security (to the $184,500 cap) + 2.9% Medicare — on 92.35% of it. Choose your state on the State tab for an income-tax estimate. No state has a separate self-employment tax."
-                                   TextColor="#9E9E9E" FontSize="11" />
+                                   TextColor="{StaticResource MutedFaint}" FontSize="11" />
                         </VerticalStackLayout>
 
                         <!-- Paycheck number (for annual projection) -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Paycheck # (this year)" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding PaycheckNumber}" Keyboard="Numeric" Grid.Column="1"
-                                   TextColor="Black" BackgroundColor="#F2F2F2" />
+                                   TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}" />
                         </Grid>
 
                         <!-- YTD FICA wages (for wage-base cap accuracy) -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Prior Social Security Wages (this year)" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding YtdSocialSecurityWages}" Keyboard="Numeric" Grid.Column="1"
-                                   TextColor="Black" BackgroundColor="#F2F2F2">
+                                   TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                 <Entry.Behaviors>
                                     <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                 </Entry.Behaviors>
@@ -223,9 +230,9 @@
                         </Grid>
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Prior Medicare Wages (this year)" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding YtdMedicareWages}" Keyboard="Numeric" Grid.Column="1"
-                                   TextColor="Black" BackgroundColor="#F2F2F2">
+                                   TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                 <Entry.Behaviors>
                                     <behaviors:DecimalFormatBehavior IsCurrency="True" />
                                 </Entry.Behaviors>
@@ -233,7 +240,7 @@
                         </Grid>
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
-                                BackgroundColor="#333333" TextColor="White"
+                                BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </VerticalStackLayout>
@@ -244,53 +251,52 @@
         <!-- Federal content -->
         <ScrollView Grid.Row="1" x:Name="FederalContent" IsVisible="False">
             <VerticalStackLayout Padding="16" Spacing="10">
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnSpacing="12" RowSpacing="14">
                         <Label Text="Filing Status" Grid.Row="0" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                               Style="{StaticResource FieldLabel}" />
                         <Picker ItemsSource="{Binding FederalStatuses}" SelectedItem="{Binding SelectedFederalPickerItem}"
-                                Grid.Row="0" Grid.Column="1" TextColor="Black" />
+                                Grid.Row="0" Grid.Column="1" TextColor="{StaticResource Ink}" />
                         <Label Text="Step 2 checked?" Grid.Row="1" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                               Style="{StaticResource FieldLabel}" />
                         <CheckBox IsChecked="{Binding FederalStep2Checked}" Grid.Row="1" Grid.Column="1"
-                                  Color="#333333" />
+                                  Color="{StaticResource Primary}" />
                         <Label Text="Step 3 credits (annual)" Grid.Row="2" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                               Style="{StaticResource FieldLabel}" />
                         <Entry Text="{Binding FederalStep3Credits}" Keyboard="Numeric" Grid.Row="2" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
+                               TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Step 4(a) other income (annual)" Grid.Row="3" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                               Style="{StaticResource FieldLabel}" />
                         <Entry Text="{Binding FederalStep4aOtherIncome}" Keyboard="Numeric" Grid.Row="3" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
+                               TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Step 4(b) deductions (annual)" Grid.Row="4" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                               Style="{StaticResource FieldLabel}" />
                         <Entry Text="{Binding FederalStep4bDeductions}" Keyboard="Numeric" Grid.Row="4" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
+                               TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Label Text="Step 4(c) extra per pay" Grid.Row="5" Grid.Column="0"
-                               VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                               Style="{StaticResource FieldLabel}" />
                         <Entry Text="{Binding FederalStep4cExtraWithholding}" Keyboard="Numeric" Grid.Row="5" Grid.Column="1"
-                               TextColor="Black" BackgroundColor="#F2F2F2">
+                               TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                             <Entry.Behaviors>
                                 <behaviors:DecimalFormatBehavior IsCurrency="True" />
                             </Entry.Behaviors>
                         </Entry>
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
                                 Grid.Row="6" Grid.ColumnSpan="2"
-                                BackgroundColor="#333333" TextColor="White"
+                                BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </Grid>
@@ -301,19 +307,18 @@
         <!-- State content -->
         <ScrollView Grid.Row="1" x:Name="StateContent" IsVisible="False">
             <VerticalStackLayout Padding="16" Spacing="10">
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <VerticalStackLayout Spacing="14">
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="State" Grid.Column="0"
-                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                   Style="{StaticResource FieldLabel}" />
                             <Picker ItemsSource="{Binding StatePickerItems}" SelectedItem="{Binding SelectedStatePickerItem}"
-                                    Grid.Column="1" TextColor="Black" />
+                                    Grid.Column="1" TextColor="{StaticResource Ink}" />
                         </Grid>
 
                         <Label Text="No extra inputs required for this state."
                                IsVisible="{Binding HasNoStateFields}"
-                               TextColor="#9E9E9E" FontSize="12"
+                               TextColor="{StaticResource MutedFaint}" FontSize="12"
                                FontAttributes="Italic"
                                HorizontalTextAlignment="Center"
                                Margin="0,8,0,0" />
@@ -324,29 +329,29 @@
                                     <VerticalStackLayout Spacing="4">
                                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                             <Label Text="{Binding Label}" Grid.Column="0"
-                                                   VerticalTextAlignment="Center" TextColor="#424242" FontSize="12" />
+                                                   Style="{StaticResource FieldLabel}" />
                                             <Picker IsVisible="{Binding IsPicker}"
                                                     ItemsSource="{Binding Options}"
                                                     SelectedItem="{Binding SelectedOption}"
-                                                    Grid.Column="1" TextColor="Black" />
+                                                    Grid.Column="1" TextColor="{StaticResource Ink}" />
                                             <Entry IsVisible="{Binding IsNumeric}"
                                                    Text="{Binding StringValue}"
                                                    Keyboard="Numeric"
                                                    Grid.Column="1"
-                                                   TextColor="Black" BackgroundColor="#F2F2F2" />
+                                                   TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}" />
                                             <Entry IsVisible="{Binding IsText}"
                                                    Text="{Binding StringValue}"
                                                    Keyboard="Default"
                                                    Grid.Column="1"
-                                                   TextColor="Black" BackgroundColor="#F2F2F2" />
+                                                   TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}" />
                                             <Switch IsVisible="{Binding IsToggle}"
                                                     IsToggled="{Binding BoolValue}"
                                                     Grid.Column="1"
-                                                    OnColor="#333333" />
+                                                    OnColor="{StaticResource Primary}" />
                                         </Grid>
                                         <Label Text="{Binding ErrorMessage}"
                                                IsVisible="{Binding HasError}"
-                                               TextColor="#D32F2F" FontSize="10"
+                                               TextColor="{StaticResource DangerStrong}" FontSize="10"
                                                Margin="0,-2,0,0" />
                                     </VerticalStackLayout>
                                 </DataTemplate>
@@ -358,13 +363,13 @@
                                              Spacing="2" Margin="0,4,0,0">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
-                                    <Label Text="{Binding .}" TextColor="#D32F2F" FontSize="11" />
+                                    <Label Text="{Binding .}" TextColor="{StaticResource DangerStrong}" FontSize="11" />
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
-                                BackgroundColor="#333333" TextColor="White"
+                                BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </VerticalStackLayout>
@@ -375,35 +380,34 @@
         <!-- Deductions content -->
         <ScrollView Grid.Row="1" x:Name="DeductionsContent" IsVisible="False">
             <VerticalStackLayout Padding="16" Spacing="10">
-                <Border BackgroundColor="White" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 12" Padding="16">
+                <Border Style="{StaticResource CardBorder}">
                     <VerticalStackLayout Spacing="10">
 
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding Deductions}" Spacing="10">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BackgroundColor="#FAFAFA" StrokeThickness="1" Stroke="#E0E0E0"
+                                    <Border BackgroundColor="{StaticResource SurfaceSunken}" StrokeThickness="1" Stroke="{StaticResource BorderSubtle}"
                                             StrokeShape="RoundRectangle 8" Padding="12">
                                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto"
                                               RowSpacing="8" ColumnSpacing="8">
                                             <Entry Grid.Row="0" Grid.Column="0" Placeholder="Name (e.g. 401k)"
-                                                   Text="{Binding Name}" TextColor="Black" BackgroundColor="#F2F2F2">
+                                                   Text="{Binding Name}" TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                                 <Entry.Triggers>
                                                     <DataTrigger TargetType="Entry" Binding="{Binding HasNameError}" Value="True">
-                                                        <Setter Property="BackgroundColor" Value="#FFEBEE" />
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource DangerBg}" />
                                                     </DataTrigger>
                                                 </Entry.Triggers>
                                             </Entry>
                                             <Button Grid.Row="0" Grid.Column="1" Text="✕"
                                                     FontSize="12" Padding="6,2"
-                                                    BackgroundColor="#EF5350" TextColor="White" CornerRadius="4"
+                                                    BackgroundColor="{StaticResource Danger}" TextColor="{StaticResource OnPrimary}" CornerRadius="4"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveDeductionCommand}"
                                                     CommandParameter="{Binding .}" />
                                             <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                <Label Text="Amount" TextColor="#424242" FontSize="12"
+                                                <Label Text="Amount" TextColor="{StaticResource Muted}" FontSize="12"
                                                        VerticalTextAlignment="Center" />
                                                 <Entry Grid.Column="1" Text="{Binding Amount}" Keyboard="Numeric"
-                                                       TextColor="Black" BackgroundColor="#F2F2F2">
+                                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                                     <Entry.Behaviors>
                                                         <behaviors:DecimalFormatBehavior IsCurrency="{Binding IsDollarAmount}"
                                                                                         IsPercentage="{Binding IsPercentageAmount}" />
@@ -411,34 +415,34 @@
                                                 </Entry>
                                             </Grid>
                                             <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                <Label Text="Amount Type" TextColor="#424242" FontSize="12"
+                                                <Label Text="Amount Type" TextColor="{StaticResource Muted}" FontSize="12"
                                                        VerticalTextAlignment="Center" />
                                                 <Picker Grid.Column="1" ItemsSource="{Binding AmountTypes}"
-                                                        SelectedItem="{Binding AmountType}" TextColor="Black" />
+                                                        SelectedItem="{Binding AmountType}" TextColor="{StaticResource Ink}" />
                                             </Grid>
                                             <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                                                <Label Text="Type" TextColor="#424242" FontSize="12"
+                                                <Label Text="Type" TextColor="{StaticResource Muted}" FontSize="12"
                                                        VerticalTextAlignment="Center" />
                                                 <Picker Grid.Column="1" ItemsSource="{Binding DeductionTypeItems}"
-                                                        SelectedItem="{Binding SelectedDeductionTypePickerItem}" TextColor="Black" />
+                                                        SelectedItem="{Binding SelectedDeductionTypePickerItem}" TextColor="{StaticResource Ink}" />
                                             </Grid>
                                             <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <Label Text="Reduces Federal Taxable Income" TextColor="#424242" FontSize="12"
+                                                <Label Text="Reduces Federal Taxable Income" TextColor="{StaticResource Muted}" FontSize="12"
                                                        VerticalTextAlignment="Center" />
                                                 <Switch Grid.Column="1" IsToggled="{Binding ReducesFederalTaxableWages}"
-                                                        OnColor="#333333" />
+                                                        OnColor="{StaticResource Primary}" />
                                             </Grid>
                                             <Grid Grid.Row="5" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <Label Text="Reduces State Taxable Income" TextColor="#424242" FontSize="12"
+                                                <Label Text="Reduces State Taxable Income" TextColor="{StaticResource Muted}" FontSize="12"
                                                        VerticalTextAlignment="Center" />
                                                 <Switch Grid.Column="1" IsToggled="{Binding ReducesStateTaxableWages}"
-                                                        OnColor="#333333" />
+                                                        OnColor="{StaticResource Primary}" />
                                             </Grid>
                                             <Grid Grid.Row="6" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <Label Text="Reduces FICA Taxable Income" TextColor="#424242" FontSize="12"
+                                                <Label Text="Reduces FICA Taxable Income" TextColor="{StaticResource Muted}" FontSize="12"
                                                        VerticalTextAlignment="Center" />
                                                 <Switch Grid.Column="1" IsToggled="{Binding ReducesFicaWages}"
-                                                        OnColor="#333333" />
+                                                        OnColor="{StaticResource Primary}" />
                                             </Grid>
                                         </Grid>
                                     </Border>
@@ -447,11 +451,11 @@
                         </VerticalStackLayout>
 
                         <Button Text="+ Add Deduction" Command="{Binding AddDeductionCommand}"
-                                BackgroundColor="#ECECEC" TextColor="#333333"
+                                BackgroundColor="{StaticResource SurfaceSunken}" TextColor="{StaticResource BodyText}"
                                 FontAttributes="Bold" CornerRadius="8" />
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
-                                BackgroundColor="#333333" TextColor="White"
+                                BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
                     </VerticalStackLayout>

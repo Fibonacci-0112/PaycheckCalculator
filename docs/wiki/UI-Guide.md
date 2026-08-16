@@ -9,6 +9,27 @@ Both front-ends expose the paycheck calculator, gross-up mode, annual projection
 
 ---
 
+## Design system
+
+Both front-ends are built on one shared token set, so they read as the same product.
+
+| Surface | Token source |
+|---|---|
+| MAUI | `Resources/Styles/Colors.xaml` (palette) and `Resources/Styles/Styles.xaml` (keyed + implicit styles), merged from `App.xaml` |
+| Blazor | the `:root` custom-property block at the top of `wwwroot/app.css` |
+
+The token names match across the two files (`Primary`/`--primary`, `Ink`/`--ink`, `BorderSubtle`/`--border`, and so on). Pages reference tokens rather than hex literals; the only intentional exceptions are the chart slice colours, which are written into an SVG `fill` attribute (Blazor) or set on an `ICanvas` (MAUI) and so cannot read the resource dictionary at draw time.
+
+Key visual conventions:
+
+- Cards are white, `1px` bordered, `16px` radius, with a very soft shadow — bordered rather than floated.
+- Currency figures are the largest type on any surface; uppercase micro-labels sit above them.
+- Blue is take-home/primary, red is tax, slate is FICA and deductions.
+
+The MAUI keyed styles cover only the patterns that actually repeat: `CardBorder`, `RowSeparator`, `EyebrowLabel`, `FieldLabel`.
+
+---
+
 ## MAUI Navigation
 
 The MAUI app uses a Shell `TabBar` with five tabs.
@@ -22,6 +43,8 @@ The MAUI app uses a Shell `TabBar` with five tabs.
 | Account | `Account` | `AccountPage` | Optional sign-in, sync, sign-out, and server URL |
 
 Inputs, Results, and Paychecks share the singleton `CalculatorViewModel`. Budget and Account use their own view models.
+
+The tab bar is white with the primary colour marking selection, and each tab has an icon from `Resources/Images/tab_*.svg`. The brand mark and "Tax Year 2026" subtitle are set once on the Shell via `Shell.TitleView`, which keeps the native nav bar — and therefore the Results page's toolbar actions — intact.
 
 ---
 
@@ -69,7 +92,7 @@ Each deduction has:
 
 ## Results Page
 
-The Results page shows a per-paycheck view and an annual view.
+The Results page shows a per-paycheck view and an annual view. A blue summary strip above the sub-tabs shows net pay per period and annual take-home; it appears only once a calculation has produced a result.
 
 ### Per Paycheck
 
@@ -100,7 +123,9 @@ Result lines expose explanation details from Core's `PaycheckExplanation` model.
 
 ### Chart
 
-The doughnut chart visualizes the gross-pay breakdown across net pay, taxes, state premiums, and deductions.
+The doughnut chart visualizes the gross-pay breakdown across net pay, taxes, state premiums, and deductions. The centre of the ring shows the share of gross that survives as take-home; each legend row carries a colour dot, label and percentage.
+
+Both front-ends keep all five slices (net pay, federal, state, FICA, deductions) rather than rolling them into coarser groups, so nothing the engine computes is hidden.
 
 ### Export and Print
 
@@ -185,14 +210,29 @@ Without an account, the app still works locally. With an account, saved paycheck
 
 The Blazor app mirrors the MAUI feature set in a web layout.
 
-Main areas:
+### Shell
+
+`MainLayout.razor` renders a fixed left sidebar and a top bar:
+
+- **Sidebar** — brand mark, "Tax Year 2026", and navigation: Calculator (`/`), Budget (`/budget`), Saved Paychecks and Account & Sync (anchors into the calculator page's panels). The Saved Paychecks entry carries a live count badge. Privacy and Terms links sit in the sidebar footer.
+- **Top bar** — page title, an IRS-tables status pill sourced from `TaxYearSupport`, and an Export Pay Stub action.
+
+Per-page title and top-bar content are pushed to the layout through `Components/Layout/ShellState.cs`, a cascaded object the page sets in `OnInitialized`. This keeps page concerns out of the layout.
+
+The render mode is set globally on `<Routes>` and `<HeadOutlet>` in `App.razor` rather than per page, because the layout itself needs interactivity for the badge and the export action. Prerendering is unaffected, so the SEO landing pages still serve server-rendered HTML.
+
+### Areas
 
 - Home page.
-- Per-state SEO landing pages.
+- Per-state SEO landing pages (these pass a state-specific top-bar title).
 - Calculator page.
 - Saved Paychecks & Account panel.
 - Budget page.
 - Sitemap and robots endpoints.
+
+The calculator page leads with a blue hero (annual net take-home, per-period inset, projected-net sparkline) and a four-card KPI row (gross, FICA, federal, state, each with a percent-of-gross badge), both drawn from `AnnualProjection`. Below that, inputs and results sit side by side, with an income-allocation chart card, a setup checklist, and a payroll log.
+
+The setup checklist and the log are driven by real state, not placeholders: the checklist's completed/in-progress/pending steps come from whether pay is entered, the state's schema fields validate, deductions exist, and a calculation has been saved; the log's rows, search and All/Hourly/Salary/Gross-Up filters all read the session's `SavedPaycheckDto` list.
 
 The calculator page displays inputs and results side by side. It includes four calculation modes (standard, gross-up, bonus/supplemental wage, self-employment), YTD Social Security and Medicare wage inputs, exports, printing, saved paycheck comparison, and annual projection.
 
@@ -208,4 +248,6 @@ Anonymous Blazor saved paychecks and budget state live in circuit memory until t
 - `EnumDisplay` provides friendly labels such as `Biweekly` to `Bi-Weekly`.
 - `StateFieldViewModel` adapts schema-driven fields to MAUI controls.
 - Blazor renders dynamic state fields from the same schema model.
-- Result charts and category bars use fixed UI palettes defined in the front-end layers.
+- Result charts and category bars draw from the shared token palette (see **Design system** above).
+
+Neither front-end has a dark theme yet. The token layer is the prerequisite for one: before it existed there was nothing to re-point, and the Blazor doughnut chart hardcoded `fill="white"`. That chart now takes its hole and slice strokes from CSS, so adding a dark theme is a matter of redefining tokens rather than editing markup.

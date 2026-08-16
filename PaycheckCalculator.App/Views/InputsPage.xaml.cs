@@ -30,14 +30,14 @@ public partial class InputsPage : ContentPage
         // Reset all tabs to inactive style
         foreach (var tab in _tabButtons)
         {
-            tab.BackgroundColor = Color.FromArgb("#ECECEC");
-            tab.TextColor = Color.FromArgb("#777777");
+            tab.BackgroundColor = Colors.Transparent;
+            tab.TextColor = Token("Muted", Colors.Gray);
             tab.FontAttributes = FontAttributes.None;
         }
 
         // Activate selected tab
-        tapped.BackgroundColor = Color.FromArgb("#333333");
-        tapped.TextColor = Colors.White;
+        tapped.BackgroundColor = Token("Primary", Colors.RoyalBlue);
+        tapped.TextColor = Token("OnPrimary", Colors.White);
         tapped.FontAttributes = FontAttributes.Bold;
 
         // Toggle content visibility
@@ -46,4 +46,13 @@ public partial class InputsPage : ContentPage
 
         _activeTab = tapped;
     }
+
+    /// <summary>
+    /// Resolves a colour from Resources/Styles/Colors.xaml so the selected-tab styling
+    /// stays in step with the XAML rather than duplicating hex literals here.
+    /// </summary>
+    private static Color Token(string key, Color fallback) =>
+        Application.Current?.Resources.TryGetValue(key, out var value) == true && value is Color color
+            ? color
+            : fallback;
 }

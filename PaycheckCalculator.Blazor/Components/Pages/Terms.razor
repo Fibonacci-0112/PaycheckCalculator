@@ -2,7 +2,7 @@
 
 <PageTitle>Terms of Use — PaycheckCalculator</PageTitle>
 
-<section class="calc-panel" style="max-width: 980px; margin: 0 auto;">
+<section class="calc-panel legal-panel">
     <div class="panel-header">
         <h2>Terms of Use</h2>
     </div>
@@ -12,3 +12,9 @@
         <p>By using account sync features, you agree that synced data is processed and stored on the configured API server.</p>
     </div>
 </section>
+
+@code {
+    [CascadingParameter] private ShellState Shell { get; set; } = default!;
+
+    protected override void OnInitialized() => Shell.Set("Terms of Use");
+}
