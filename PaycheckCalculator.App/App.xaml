@@ -4,25 +4,12 @@
              x:Class="PaycheckCalculator.App.App">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Compact sizing so inputs and results fit better on small mobile
-                 screens. Controls without an explicit FontSize inherit these
-                 slightly smaller defaults; the pages set reduced FontSize values
-                 to match. -->
-            <Style TargetType="Label">
-                <Setter Property="FontSize" Value="13" />
-            </Style>
-            <Style TargetType="Entry">
-                <Setter Property="FontSize" Value="13" />
-            </Style>
-            <Style TargetType="Editor">
-                <Setter Property="FontSize" Value="13" />
-            </Style>
-            <Style TargetType="Picker">
-                <Setter Property="FontSize" Value="13" />
-            </Style>
-            <Style TargetType="Button">
-                <Setter Property="FontSize" Value="13" />
-            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Colors must come first: Styles.xaml resolves its setters
+                     against these keys with StaticResource. -->
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

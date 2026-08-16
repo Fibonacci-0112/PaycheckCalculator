@@ -3,33 +3,65 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:PaycheckCalculator.App.Views"
        x:Class="PaycheckCalculator.App.AppShell"
-       Shell.TabBarBackgroundColor="#333333"
-       Shell.TabBarForegroundColor="White"
-       Shell.TabBarUnselectedColor="#9E9E9E"
-       Shell.TabBarTitleColor="White"
+       Shell.TabBarBackgroundColor="{StaticResource Surface}"
+       Shell.TabBarForegroundColor="{StaticResource Primary}"
+       Shell.TabBarUnselectedColor="{StaticResource MutedFaint}"
+       Shell.TabBarTitleColor="{StaticResource Primary}"
        Shell.NavBarHasShadow="False"
-       Shell.BackgroundColor="#333333"
-       Shell.TitleColor="White"
+       Shell.BackgroundColor="{StaticResource Surface}"
+       Shell.TitleColor="{StaticResource Ink}"
+       Shell.ForegroundColor="{StaticResource Ink}"
        FlyoutBehavior="Disabled">
 
+    <!-- Brand bar. Set on the Shell so every page inherits it, which keeps the
+         native nav bar (and therefore the Results page's toolbar actions) while
+         still showing the app mark. -->
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" VerticalOptions="Center">
+            <Border Grid.Column="0"
+                    BackgroundColor="{StaticResource Primary}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    VerticalOptions="Center">
+                <Label Text="$"
+                       TextColor="{StaticResource OnPrimary}"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center" />
+            </Border>
+            <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                <Label Text="PaycheckCalculator"
+                       TextColor="{StaticResource Ink}"
+                       FontSize="15"
+                       FontAttributes="Bold" />
+                <Label Text="Tax Year 2026"
+                       TextColor="{StaticResource MutedFaint}"
+                       FontSize="10" />
+            </VerticalStackLayout>
+        </Grid>
+    </Shell.TitleView>
+
     <TabBar>
-        <Tab Title="Inputs">
+        <Tab Title="Inputs" Icon="tab_inputs.png">
             <ShellContent Route="Inputs"
                           ContentTemplate="{DataTemplate views:InputsPage}" />
         </Tab>
-        <Tab Title="Results">
+        <Tab Title="Results" Icon="tab_results.png">
             <ShellContent Route="Results"
                           ContentTemplate="{DataTemplate views:ResultsPage}" />
         </Tab>
-        <Tab Title="Paychecks">
+        <Tab Title="Paychecks" Icon="tab_paychecks.png">
             <ShellContent Route="Paychecks"
                           ContentTemplate="{DataTemplate views:PaychecksPage}" />
         </Tab>
-        <Tab Title="Budget">
+        <Tab Title="Budget" Icon="tab_budget.png">
             <ShellContent Route="Budget"
                           ContentTemplate="{DataTemplate views:BudgetPage}" />
         </Tab>
-        <Tab Title="Account">
+        <Tab Title="Account" Icon="tab_account.png">
             <ShellContent Route="Account"
                           ContentTemplate="{DataTemplate views:AccountPage}" />
         </Tab>

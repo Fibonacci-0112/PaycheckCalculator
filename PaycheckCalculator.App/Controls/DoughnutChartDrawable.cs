@@ -12,17 +12,23 @@ public sealed class DoughnutChartDrawable : IDrawable
 
     public ResultCardModel? Result { get; set; }
 
+    // Mirrors the token ramp in Resources/Styles/Colors.xaml. Kept as literals because
+    // IDrawable has no access to the XAML resource dictionary at draw time.
     private static readonly Color[] SliceColors =
     {
-        Color.FromArgb("#C62828"), // Federal Tax - red
-        Color.FromArgb("#1565C0"), // Social Security Tax - blue
-        Color.FromArgb("#6A1B9A"), // Medicare Tax - purple
-        Color.FromArgb("#EF6C00"), // State Income Tax - orange
-        Color.FromArgb("#F9A825"), // State Disability Insurance - amber
-        Color.FromArgb("#5D4037"), // Pre-Tax Deductions - brown
-        Color.FromArgb("#795548"), // Post-Tax Deductions - light brown
-        Color.FromArgb("#2E7D32"), // Net Pay - green
+        Color.FromArgb("#EF4444"), // Federal Tax        — Danger
+        Color.FromArgb("#94A3B8"), // Social Security    — Chart3
+        Color.FromArgb("#CBD5E1"), // Medicare Tax       — BorderStrong
+        Color.FromArgb("#60A5FA"), // State Income Tax   — Chart2
+        Color.FromArgb("#93C5FD"), // State Disability   — Chart2 (light)
+        Color.FromArgb("#475569"), // Pre-Tax Deductions — Chart4
+        Color.FromArgb("#64748B"), // Post-Tax Deductions— Muted
+        Color.FromArgb("#2563EB"), // Net Pay            — Primary
     };
+
+    private static readonly Color InkColor = Color.FromArgb("#0F172A");
+    private static readonly Color MutedColor = Color.FromArgb("#64748B");
+    private static readonly Color BodyColor = Color.FromArgb("#334155");
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
@@ -67,24 +73,49 @@ public sealed class DoughnutChartDrawable : IDrawable
             startAngle += sweepAngle;
         }
 
-        // Draw legend below chart
-        float legendY = centerY + outerRadius + 20f;
-        float legendX = 16f;
-        float lineHeight = 22f;
-        float swatchSize = 12f;
+        // Centre label: share of gross pay that survives as take-home.
+        float takeHomePct = (float)Result.NetPay / gross * 100f;
 
-        canvas.FontSize = 13f;
+        canvas.FontColor = InkColor;
+        canvas.FontSize = innerRadius * 0.44f;
+        canvas.DrawString($"{takeHomePct:F1}%",
+            centerX - innerRadius, centerY - innerRadius * 0.55f,
+            innerRadius * 2f, innerRadius * 0.8f,
+            HorizontalAlignment.Center, VerticalAlignment.Center);
+
+        canvas.FontColor = MutedColor;
+        canvas.FontSize = 11f;
+        canvas.DrawString("take-home",
+            centerX - innerRadius, centerY + innerRadius * 0.18f,
+            innerRadius * 2f, 16f,
+            HorizontalAlignment.Center, VerticalAlignment.Center);
+
+        // Legend rows below the chart.
+        float legendY = centerY + outerRadius + 22f;
+        float legendX = 16f;
+        float lineHeight = 24f;
+        float swatchSize = 10f;
+        float rowWidth = dirtyRect.Width - legendX * 2f;
 
         foreach (var (name, value, color) in slices)
         {
             float pct = value / gross * 100f;
-            string label = $"{name}  {pct:F2}%";
 
             canvas.FillColor = color;
-            canvas.FillRoundedRectangle(legendX, legendY, swatchSize, swatchSize, 2f);
+            canvas.FillRoundedRectangle(legendX, legendY + 5f, swatchSize, swatchSize, swatchSize / 2f);
 
-            canvas.FontColor = Color.FromArgb("#37474F");
-            canvas.DrawString(label, legendX + swatchSize + 8f, legendY, dirtyRect.Width - legendX - swatchSize - 24f, lineHeight, HorizontalAlignment.Left, VerticalAlignment.Top);
+            canvas.FontSize = 13f;
+            canvas.FontColor = BodyColor;
+            canvas.DrawString(name,
+                legendX + swatchSize + 10f, legendY,
+                rowWidth - swatchSize - 90f, lineHeight,
+                HorizontalAlignment.Left, VerticalAlignment.Center);
+
+            canvas.FontColor = InkColor;
+            canvas.DrawString($"{pct:F1}%",
+                legendX + rowWidth - 70f, legendY,
+                70f, lineHeight,
+                HorizontalAlignment.Right, VerticalAlignment.Center);
 
             legendY += lineHeight;
         }
