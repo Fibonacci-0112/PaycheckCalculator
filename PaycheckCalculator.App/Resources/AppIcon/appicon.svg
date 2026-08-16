@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0" y="0" width="456" height="456" fill="#512BD4" />
+<svg xmlns="http://www.w3.org/2000/svg" width="456" height="456" viewBox="0 0 456 456" version="1.1">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0063E9" />
+      <stop offset="1" stop-color="#014DBD" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="456" height="456" fill="url(#plate)" />
 </svg>
