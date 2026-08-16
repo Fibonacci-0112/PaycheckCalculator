@@ -30,8 +30,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#424242" />
-    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+    <!-- Adaptive launcher icon. The background layer carries the plate gradient and
+         the foreground the artwork, inset so it stays inside Android's 66dp safe zone
+         (see docs/brand/README.md). Color is the flat fallback painted under the
+         background layer, and is what iOS/Mac Catalyst use as the icon background. -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.png" ForegroundScale="0.60" Color="#0158D3" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0158D3" BaseSize="128,128" />
     <MauiImage Include="Resources\Images\*" />
     <MauiFont Include="Resources\Fonts\*" />
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />

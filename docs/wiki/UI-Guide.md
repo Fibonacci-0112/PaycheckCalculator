@@ -28,6 +28,14 @@ Key visual conventions:
 
 The MAUI keyed styles cover only the patterns that actually repeat: `CardBorder`, `RowSeparator`, `EyebrowLabel`, `FieldLabel`.
 
+### App icon and splash
+
+The MAUI launcher icon is a single `<MauiIcon>` in `PaycheckCalculator.App.csproj`, built from two layers under `Resources/AppIcon/`: `appicon.svg` (the plate gradient, `#0063E9` → `#014DBD`) and `appiconfg.png` (the artwork on transparency). Both are derived from the master at `docs/brand/appicon-source.png` — regenerate rather than hand-edit them.
+
+The foreground is deliberately inset via `ForegroundScale="0.60"`: Android lets launchers mask adaptive icons to any shape, and only the central 66dp circle is guaranteed visible, so the artwork is canvased on its minimum enclosing circle to keep the green check badge out of the crop. `Resources/Splash/splash.svg` carries the wordmark on two lines over the same blue. See `docs/brand/README.md` for the full derivation.
+
+Note that the icon's blue is the artwork's own plate colour, which is deeper than the UI's `Primary` `#2563EB` — the launcher icon is not currently token-driven.
+
 ---
 
 ## MAUI Navigation
