@@ -19,6 +19,14 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(Configuration)' == 'Debug'">
+    <!-- Fast Deployment relies on the Android `run-as` feature, which some devices/emulators
+         don't support (or support only partially), causing XA0129 ("Error deploying
+         'files/.__override__'..."). Embedding assemblies into the APK for Debug builds avoids
+         Fast Deployment entirely; debugging still works, just with a slower deploy step. -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)' == 'net11.0-windows10.0.19041.0'">
     <WindowsPackageType>None</WindowsPackageType>
     <!-- The Windows XAML compiler can report design-time WMC1006 warnings for project-reference outputs before Core/Shared have been built. -->
