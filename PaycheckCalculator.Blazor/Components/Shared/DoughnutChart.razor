@@ -6,16 +6,16 @@
 @if (total > 0)
 {
     <div class="chart-container">
-        <div class="chart-title">Pay Breakdown</div>
         <div class="chart-wrap">
-            <svg viewBox="0 0 200 200" class="doughnut-svg" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 200 200" class="doughnut-svg" xmlns="http://www.w3.org/2000/svg" role="img"
+                 aria-label="Gross pay allocation across take-home pay, taxes and deductions">
                 @foreach (var s in slices.Where(s => s.Amount > 0))
                 {
-                    <path d="@s.PathData" fill="@s.Color" stroke="white" stroke-width="1.5" />
+                    <path class="doughnut-slice" d="@s.PathData" fill="@s.Color" />
                 }
-                <circle cx="100" cy="100" r="52" fill="white" />
-                <text x="100" y="96" text-anchor="middle" class="chart-label-sm">Net Pay</text>
-                <text x="100" y="114" text-anchor="middle" class="chart-label-lg">@Result.NetPay.ToString("C")</text>
+                <circle class="doughnut-hole" cx="100" cy="100" r="62" />
+                <text x="100" y="104" text-anchor="middle" class="chart-label-lg">@TakeHomePercent(total)</text>
+                <text x="100" y="122" text-anchor="middle" class="chart-label-sm">take-home</text>
             </svg>
         </div>
         <div class="chart-legend">
@@ -25,7 +25,7 @@
                     <span class="legend-dot" style="background:@s.Color"></span>
                     <span class="legend-name">@s.Label</span>
                     <span class="legend-amt">@s.Amount.ToString("C")</span>
-                    <span class="legend-pct">(@((s.Amount / total * 100m).ToString("F2"))%)</span>
+                    <span class="legend-pct">@((s.Amount / total).ToString("P1"))</span>
                 </div>
             }
         </div>
@@ -37,21 +37,27 @@
 
     private record Slice(string Label, decimal Amount, string Color, string PathData);
 
+    private string TakeHomePercent(decimal total)
+        => total <= 0 ? "0%" : (Result.NetPay / total).ToString("P1");
+
     private List<Slice> BuildSlices()
     {
+        // Colours mirror the design tokens in app.css (--primary, --danger,
+        // --chart-2, --chart-3, --chart-4). Kept as literals because they are
+        // written into the SVG fill attribute.
         var raw = new (string Label, decimal Amount, string Color)[]
         {
-            ("Net Pay",       Result.NetPay,                    "#4caf50"),
-            ("Federal Tax",   Result.FederalWithholding,        "#ef5350"),
-            ("State Tax",     Result.StateWithholding + Result.StateDisabilityInsurance, "#ff9800"),
-            ("FICA",          Result.SocialSecurityWithholding + Result.MedicareWithholding + Result.AdditionalMedicareWithholding, "#2196f3"),
-            ("Deductions",    Result.PreTaxDeductions + Result.PostTaxDeductions, "#9c27b0"),
+            ("Take-Home Pay", Result.NetPay,                    "#2563eb"),
+            ("Federal Tax",   Result.FederalWithholding,        "#ef4444"),
+            ("State Tax",     Result.StateWithholding + Result.StateDisabilityInsurance, "#60a5fa"),
+            ("FICA",          Result.SocialSecurityWithholding + Result.MedicareWithholding + Result.AdditionalMedicareWithholding, "#94a3b8"),
+            ("Deductions",    Result.PreTaxDeductions + Result.PostTaxDeductions, "#475569"),
         };
 
         var total = raw.Sum(r => r.Amount);
         if (total <= 0) return new();
 
-        const double cx = 100, cy = 100, r = 88;
+        const double cx = 100, cy = 100, r = 92;
         double angle = -Math.PI / 2;
         var result = new List<Slice>();
 

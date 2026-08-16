@@ -1,4 +1,5 @@
-@rendermode InteractiveServer
+@* Render mode is set globally on <Routes> in App.razor; declaring it again here
+   would conflict with the ancestor's mode. *@
 @using System.Text
 @using PaycheckCalculator.Blazor.Models
 @using PaycheckCalculator.Blazor.Services.Export
@@ -17,8 +18,23 @@
 @inject PaycheckApiClient Api
 @inject PaycheckSyncService Sync
 
+<div class="calc-page">
+
+@if (_result != null && _projection != null && _grossUpResult == null)
+{
+    <HeroSummary Result="_result"
+                 Projection="_projection"
+                 FrequencyText="@FrequencyLabel(_frequency)"
+                 Subtitle="@HeroSubtitle()" />
+
+    <KpiRow Projection="_projection"
+            State="@_state.ToString()"
+            PayBasisLabel="@PayBasisLabel()" />
+}
+
 <div class="calc-layout">
 
+  <div class="calc-stack">
     <!-- ── INPUTS PANEL ─────────────────────────────────────── -->
     <div class="calc-panel">
         <div class="panel-header">
@@ -132,11 +148,15 @@
                 <!-- Federal W-4 -->
                 <div class="form-group">
                     <label>Filing Status</label>
-                    <select @bind="_fedStatus">
-                        <option value="@FederalFilingStatus.SingleOrMarriedSeparately">Single / Married Filing Separately</option>
-                        <option value="@FederalFilingStatus.MarriedFilingJointly">Married Filing Jointly</option>
-                        <option value="@FederalFilingStatus.HeadOfHousehold">Head of Household</option>
-                    </select>
+                    <div class="segmented">
+                        <button type="button" class="segment @(_fedStatus == FederalFilingStatus.SingleOrMarriedSeparately ? "on" : "")"
+                                @onclick="() => _fedStatus = FederalFilingStatus.SingleOrMarriedSeparately"
+                                title="Single / Married Filing Separately">Single</button>
+                        <button type="button" class="segment @(_fedStatus == FederalFilingStatus.MarriedFilingJointly ? "on" : "")"
+                                @onclick="() => _fedStatus = FederalFilingStatus.MarriedFilingJointly">Married Joint</button>
+                        <button type="button" class="segment @(_fedStatus == FederalFilingStatus.HeadOfHousehold ? "on" : "")"
+                                @onclick="() => _fedStatus = FederalFilingStatus.HeadOfHousehold">Head of HH</button>
+                    </div>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" id="step2" @bind="_step2Checked" />
@@ -300,8 +320,34 @@
 
     </div><!-- /inputs panel -->
 
+    <SetupChecklist HasPayEntered="@HasPayEntered()"
+                    StateComplete="@(_stateErrors.Count == 0)"
+                    HasDeductions="@(_deductions.Count > 0)"
+                    HasResult="@(_result != null || _bonusResult != null || _selfEmpResult != null)"
+                    HasSaved="@(_history.Count > 0)"
+                    StateName="@_state.ToString()" />
+  </div><!-- /left column -->
+
+  <div class="calc-stack">
+    @if (_result != null)
+    {
+        <!-- ── INCOME ALLOCATION ─────────────────────────────── -->
+        <div class="calc-panel no-print">
+            <div class="panel-header">
+                <span class="card-chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" /><path d="M12 3v9l6.4 4" />
+                    </svg>
+                </span>
+                <h2>Income Allocation Breakdown</h2>
+                <a class="card-link" href="#result-detail">View details &rarr;</a>
+            </div>
+            <DoughnutChart Result="_result" />
+        </div>
+    }
+
     <!-- ── RESULTS PANEL ─────────────────────────────────────── -->
-    <div class="calc-panel results-outer">
+    <div class="calc-panel results-outer" id="result-detail">
         <div class="panel-header results-header">
             <h2>Results</h2>
             @if (_result != null || _bonusResult != null || _selfEmpResult != null)
@@ -678,7 +724,6 @@
                         </div>
                     </div>
 
-                    <DoughnutChart Result="_result" />
                 </div>
             }
 
@@ -798,47 +843,20 @@
             }
         }
     </div><!-- /results panel -->
+  </div><!-- /right column -->
 
 </div><!-- /calc-layout -->
 
 <!-- ── SAVED PAYCHECKS & ACCOUNT ─────────────────────────────── -->
-<div class="calc-panel history-panel">
-    <div class="panel-header">
-        <h2>Saved Paychecks &amp; Account</h2>
-    </div>
+<div class="calc-panel history-panel" id="saved-paychecks">
+    <ActivityLog History="_history"
+                 PendingDeleteName="_pendingDeleteName"
+                 OnRequestDelete="RequestDelete"
+                 OnConfirmDelete="ConfirmDeleteAsync"
+                 OnCancelDelete="CancelDelete" />
     <div class="history-body">
 
         <div class="history-list-section">
-            <h3 class="history-subtitle">This Session</h3>
-            @if (_history.Count == 0)
-            {
-                <p class="no-fields-msg">Calculated paychecks are saved here for this browser session. Sign in to sync them with the mobile app.</p>
-            }
-            else
-            {
-                <div class="history-list">
-                    @foreach (var item in _history)
-                    {
-                        <div class="history-row">
-                            <div class="history-main">
-                                <span class="history-name">@item.Name</span>
-                                <span class="history-meta">@item.Input.State &middot; Net @item.Result.NetPay.ToString("C") &middot; Gross @item.Result.GrossPay.ToString("C")</span>
-                            </div>
-                            @if (_pendingDeleteName == item.Name)
-                            {
-                                <span class="delete-confirm-prompt">Delete?</span>
-                                <button class="btn-icon btn-danger" @onclick="() => ConfirmDeleteAsync(item)" title="Confirm delete">Yes</button>
-                                <button class="btn-icon btn-cancel" @onclick="CancelDelete" title="Cancel">No</button>
-                            }
-                            else
-                            {
-                                <button class="btn-icon btn-danger" @onclick="() => RequestDelete(item)" title="Delete">✕</button>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-
             @if (_history.Count >= 2)
             {
                 <div class="compare-block">
@@ -899,7 +917,7 @@
             }
         </div>
 
-        <div class="account-section">
+        <div class="account-section" id="account">
             <h3 class="history-subtitle">Account</h3>
             <div class="account-actions" style="margin-bottom: 10px;">
                 <a class="btn-secondary" href="/privacy">Privacy policy</a>
@@ -963,6 +981,8 @@
 
     </div><!-- /history-body -->
 </div><!-- /history panel -->
+
+</div><!-- /calc-page -->
 
 @if (_showModal && _modalExplanation != null)
 {
@@ -1059,12 +1079,72 @@
     private bool _confirmDeleteAccount;
     private bool IsSignedIn => Account.IsSignedIn;
 
+    // ── App chrome (sidebar badge + top bar), owned by MainLayout ─────────────
+    [CascadingParameter] private ShellState Shell { get; set; } = default!;
+
+    /// <summary>
+    /// Top-bar heading. The state landing pages pass a state-specific title; everything
+    /// else falls back to the generic one.
+    /// </summary>
+    [Parameter] public string? PageTitle { get; set; }
+
+    private bool HasResultForExport => _result != null || _bonusResult != null || _selfEmpResult != null;
+
+    /// <summary>Rendered by MainLayout into the top bar's right-hand action slot.</summary>
+    private RenderFragment TopBarActions => @<button class="btn-dark" @onclick="ExportPdfAsync" disabled="@(!HasResultForExport)"
+                                                     title="Download the full pay stub as PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 16V4" /><polyline points="7 9 12 4 17 9" /><path d="M4 20h16" />
+        </svg>
+        Export Pay Stub
+    </button>;
+
+    /// <summary>Context line under the hero figure, e.g. "Based on a $52,000 gross salary · Single · Texas".</summary>
+    private string HeroSubtitle()
+    {
+        if (_projection is null) return "";
+        var stateName = StateMetadata.GetByState(_state)?.FullName ?? _state.ToString();
+        return $"Based on a {_projection.AnnualizedGrossPay:C0} gross salary · {FilingStatusLabel(_fedStatus)} · {stateName}";
+    }
+
+    private static string FilingStatusLabel(FederalFilingStatus status) => status switch
+    {
+        FederalFilingStatus.SingleOrMarriedSeparately => "Single",
+        FederalFilingStatus.MarriedFilingJointly => "Married Joint",
+        FederalFilingStatus.HeadOfHousehold => "Head of Household",
+        _ => status.ToString(),
+    };
+
+    // The web calculator collects gross as an hourly rate × hours; PaycheckInput.PayType
+    // is left at its Hourly default. Saved paychecks synced from the MAUI app may be salaried.
+    private static string PayBasisLabel() => "Hourly pay";
+
+    private bool HasPayEntered() => _selfEmpMode
+        ? _selfEmpEarnings > 0
+        : _bonusMode
+            ? _bonusAmount > 0
+            : _grossUpMode
+                ? _targetNet > 0
+                : _hourlyRate > 0 && _regularHours > 0;
+
     protected override async Task OnInitializedAsync()
     {
         if (InitialState.HasValue)
             _state = InitialState.Value;
         LoadStateFields();
+        Shell.Set(PageTitle ?? "Paycheck Calculator", TopBarActions);
         await RefreshHistoryAsync();
+    }
+
+    private bool _lastExportAvailable;
+
+    // The top-bar export button lives in MainLayout's render tree, so it only picks up
+    // a newly-available result when the layout is told to re-render.
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_lastExportAvailable == HasResultForExport) return;
+        _lastExportAvailable = HasResultForExport;
+        Shell.Refresh();
     }
 
     private void LoadStateFields()
@@ -1237,6 +1317,10 @@
         var set = await Store.LoadAsync();
         _history = set.Paychecks.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase).ToList();
         EnsureComparisonSelections();
+
+        // Keep the sidebar badge and the top-bar export button in step with the new state.
+        Shell.SetSavedCount(_history.Count);
+        Shell.Refresh();
     }
 
     // ── A/B comparison (session saved paychecks) ─────────────────

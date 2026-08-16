@@ -2,7 +2,7 @@
 
 <PageTitle>Privacy Policy — PaycheckCalculator</PageTitle>
 
-<section class="calc-panel" style="max-width: 980px; margin: 0 auto;">
+<section class="calc-panel legal-panel">
     <div class="panel-header">
         <h2>Privacy Policy</h2>
     </div>
@@ -12,3 +12,9 @@
         <p>You can export account data as JSON, delete local data, or permanently delete your account and synced data from the Account section.</p>
     </div>
 </section>
+
+@code {
+    [CascadingParameter] private ShellState Shell { get; set; } = default!;
+
+    protected override void OnInitialized() => Shell.Set("Privacy Policy");
+}

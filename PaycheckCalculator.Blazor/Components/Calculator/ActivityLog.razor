@@ -1,0 +1,134 @@
+@* Saved-paycheck log with working search and filter chips. Rows come straight
+   from the session's SavedPaycheckDto list; deletion stays owned by the parent. *@
+
+<div class="log-head panel-header">
+    <span class="card-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7" /><polyline points="3 4 3 9 8 9" />
+            <polyline points="12 8 12 12 15 14" />
+        </svg>
+    </span>
+    <h2>Payroll Log &amp; Calculation History</h2>
+    @if (History.Count > 0)
+    {
+        <div class="log-search no-print">
+            <input type="search" placeholder="Search calculations..." aria-label="Search saved calculations"
+                   @bind="_search" @bind:event="oninput" />
+        </div>
+    }
+</div>
+
+@if (History.Count == 0)
+{
+    <p class="no-fields-msg">
+        Calculated paychecks are saved here for this browser session.
+        Sign in to sync them with the mobile app.
+    </p>
+}
+else
+{
+    <div class="log-chips no-print">
+        @foreach (var f in Filters)
+        {
+            <button class="chip @(_filter == f ? "active" : "")" @onclick="() => _filter = f">@f</button>
+        }
+    </div>
+
+    @{
+        var rows = Filtered().ToList();
+    }
+
+    @if (rows.Count == 0)
+    {
+        <div class="log-empty">No saved calculations match that filter.</div>
+    }
+    else
+    {
+        <div class="log-list">
+            @foreach (var item in rows)
+            {
+                <div class="log-row">
+                    <span class="card-chip @(item.Result.IsGrossUp ? "" : "chip-muted")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3v12" /><polyline points="7 11 12 16 17 11" />
+                            <path d="M4 20h16" />
+                        </svg>
+                    </span>
+                    <div class="log-main">
+                        <div class="log-title">@item.Name</div>
+                        <div class="log-sub">
+                            @item.Input.State &middot; @(item.Input.PayType == PayType.Salary ? "Salary" : "Hourly")
+                            &middot; Gross @item.Result.GrossPay.ToString("C")
+                        </div>
+                    </div>
+                    <div class="log-right">
+                        <span class="log-value">@item.Result.NetPay.ToString("C") net</span>
+                        <span class="log-pill @(item.Result.IsGrossUp ? "pill-grossup" : "")">
+                            @(item.Result.IsGrossUp ? "Gross-Up" : item.Input.State.ToString())
+                        </span>
+                        <span class="log-time">@RelativeTime(item.UpdatedAtUtc)</span>
+                        @if (PendingDeleteName == item.Name)
+                        {
+                            <span class="delete-confirm-prompt">Delete?</span>
+                            <button class="btn-icon btn-danger" @onclick="() => OnConfirmDelete.InvokeAsync(item)" title="Confirm delete">Yes</button>
+                            <button class="btn-icon btn-cancel" @onclick="() => OnCancelDelete.InvokeAsync()" title="Cancel">No</button>
+                        }
+                        else
+                        {
+                            <button class="btn-icon btn-danger no-print" @onclick="() => OnRequestDelete.InvokeAsync(item)" title="Delete">&#10005;</button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private static readonly string[] Filters = ["All", "Hourly", "Salary", "Gross-Up"];
+
+    [Parameter, EditorRequired] public IReadOnlyList<SavedPaycheckDto> History { get; set; } = [];
+
+    /// <summary>Name of the row currently awaiting delete confirmation, if any.</summary>
+    [Parameter] public string? PendingDeleteName { get; set; }
+
+    [Parameter] public EventCallback<SavedPaycheckDto> OnRequestDelete { get; set; }
+    [Parameter] public EventCallback<SavedPaycheckDto> OnConfirmDelete { get; set; }
+    [Parameter] public EventCallback OnCancelDelete { get; set; }
+
+    private string _search = "";
+    private string _filter = "All";
+
+    private IEnumerable<SavedPaycheckDto> Filtered()
+    {
+        var items = History.AsEnumerable();
+
+        items = _filter switch
+        {
+            "Hourly" => items.Where(i => i.Input.PayType == PayType.Hourly && !i.Result.IsGrossUp),
+            "Salary" => items.Where(i => i.Input.PayType == PayType.Salary && !i.Result.IsGrossUp),
+            "Gross-Up" => items.Where(i => i.Result.IsGrossUp),
+            _ => items,
+        };
+
+        if (!string.IsNullOrWhiteSpace(_search))
+        {
+            var term = _search.Trim();
+            items = items.Where(i =>
+                i.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                i.Input.State.ToString().Contains(term, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return items.OrderByDescending(i => i.UpdatedAtUtc);
+    }
+
+    private static string RelativeTime(DateTimeOffset stamp)
+    {
+        var delta = DateTimeOffset.UtcNow - stamp;
+        if (delta < TimeSpan.Zero) return "just now";
+        if (delta.TotalMinutes < 1) return "just now";
+        if (delta.TotalHours < 1) return $"{(int)delta.TotalMinutes}m ago";
+        if (delta.TotalDays < 1) return $"{(int)delta.TotalHours}h ago";
+        return $"{(int)delta.TotalDays}d ago";
+    }
+}

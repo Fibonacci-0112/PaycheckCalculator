@@ -1,0 +1,75 @@
+@* Setup progress derived from real calculator state — nothing here is decorative.
+   The first incomplete step is rendered as "in progress"; the rest are pending. *@
+
+<div class="calc-panel">
+    <div class="panel-header">
+        <span class="card-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 11l3 3 5-6" />
+                <rect x="3" y="3" width="18" height="18" rx="3" />
+            </svg>
+        </span>
+        <h2>Tax Filing &amp; Payroll Setup Steps</h2>
+    </div>
+
+    <div class="stepper">
+        @{
+            var steps = BuildSteps();
+            var activeIndex = Array.FindIndex(steps, s => !s.Done);
+        }
+        @for (var i = 0; i < steps.Length; i++)
+        {
+            var step = steps[i];
+            var isActive = i == activeIndex;
+            var isPending = !step.Done && !isActive;
+            <div class="step @(isPending ? "is-pending" : "")">
+                <span class="step-marker @(step.Done ? "done" : isActive ? "active" : "pending")">
+                    @if (step.Done)
+                    {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="4 12 10 18 20 6" />
+                        </svg>
+                    }
+                    else
+                    {
+                        @(i + 1)
+                    }
+                </span>
+                <div class="step-text">
+                    <div class="step-title">@step.Title</div>
+                    <div class="step-status">@(step.Done ? step.DoneText : isActive ? "In progress" : "Pending")</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>True once gross pay has been entered (hourly rate × hours, or a salary).</summary>
+    [Parameter] public bool HasPayEntered { get; set; }
+
+    /// <summary>True when the selected state's schema fields validate cleanly.</summary>
+    [Parameter] public bool StateComplete { get; set; }
+
+    /// <summary>True once at least one deduction row exists.</summary>
+    [Parameter] public bool HasDeductions { get; set; }
+
+    /// <summary>True once a calculation has produced a result.</summary>
+    [Parameter] public bool HasResult { get; set; }
+
+    /// <summary>True once a result has been saved to this session's paycheck list.</summary>
+    [Parameter] public bool HasSaved { get; set; }
+
+    /// <summary>Name of the selected state, used in the state step's completed text.</summary>
+    [Parameter] public string StateName { get; set; } = "";
+
+    private readonly record struct Step(string Title, bool Done, string DoneText);
+
+    private Step[] BuildSteps() =>
+    [
+        new("Enter pay rate and frequency", HasPayEntered, "Gross pay entered"),
+        new("Configure state tax fields", StateComplete, $"{StateName} fields valid"),
+        new("Review pre-tax deductions", HasDeductions, "Deductions configured"),
+        new("Run and save a calculation", HasResult && HasSaved, "Saved to this session"),
+    ];
+}
