@@ -1131,6 +1131,8 @@ html, body {
 }
 
 /* ── Activity log ──────────────────────────────────────────── */
+.log-head { flex-wrap: wrap; }
+
 .log-search {
     margin-left: auto;
     position: relative;
@@ -1375,6 +1377,8 @@ html, body {
     gap: 24px;
     padding: 18px;
 }
+
+.history-list-section { min-width: 0; }
 
 .history-subtitle {
     margin: 0 0 12px;

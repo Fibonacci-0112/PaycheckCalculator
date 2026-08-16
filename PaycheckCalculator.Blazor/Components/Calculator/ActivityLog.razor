@@ -34,18 +34,14 @@ else
         }
     </div>
 
-    @{
-        var rows = Filtered().ToList();
-    }
-
-    @if (rows.Count == 0)
+    @if (Rows.Count == 0)
     {
         <div class="log-empty">No saved calculations match that filter.</div>
     }
     else
     {
         <div class="log-list">
-            @foreach (var item in rows)
+            @foreach (var item in Rows)
             {
                 <div class="log-row">
                     <span class="card-chip @(item.Result.IsGrossUp ? "" : "chip-muted")">
@@ -98,6 +94,9 @@ else
 
     private string _search = "";
     private string _filter = "All";
+
+    /// <summary>Rows surviving the active chip filter and search term, newest first.</summary>
+    private List<SavedPaycheckDto> Rows => Filtered().ToList();
 
     private IEnumerable<SavedPaycheckDto> Filtered()
     {
