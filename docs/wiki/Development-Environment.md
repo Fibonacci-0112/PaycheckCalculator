@@ -201,7 +201,7 @@ doesn't carry the XAML `AutomationId`, so `GoToTab` locates tabs by their visibl
 | `ci.yml` | ubuntu | Unit + integration tests; Blazor publishes, **starts**, and passes browser E2E; the sync API publishes. |
 | `maui-build.yml` | ubuntu + windows + macos | The MAUI app compiles for all four target platforms. |
 | `maui-uitests.yml` | ubuntu + windows + macos | The MAUI app **launches and can be driven** on an Android emulator, an iOS Simulator, a macOS desktop, and a Windows desktop. |
-| `codeql.yml` | ubuntu | CodeQL over C#, JavaScript/TypeScript, and the workflow definitions themselves. |
+| `codeql.yml` | — | **Disabled by GitHub.** The repo uses CodeQL *default setup*, which forces any advanced workflow to `disabled_manually`. See the note below. |
 | `release.yml` | ubuntu + windows + macos | On a `v*` tag: builds every shippable artifact and drafts a GitHub Release. |
 
 `.github/actions/setup-dotnet-maui` is a composite action shared by all of them. It reads the
@@ -224,9 +224,18 @@ paths cannot drift.
   no certificate, and Appium launches it by executable path. The job installs WinAppDriver
   **1.2.1 specifically** — other releases are known not to pair correctly with the Appium
   windows driver — and enables Developer Mode, without which UI Automation won't attach.
-- **CodeQL** uses `build-mode: none` for C#. `autobuild` on a Linux runner can only compile
-  the projects that build without the MAUI workload, which silently left the entire MAUI app
-  out of every scan. Buildless analysis covers all of it.
+- **CodeQL is not currently run by `codeql.yml`.** This repository has GitHub's CodeQL
+  **default setup** enabled. Turning that on puts any advanced CodeQL workflow into the
+  `disabled_manually` state, so `codeql.yml` never runs — and the improvements in it
+  (C# via `build-mode: none`, which is what would let a Linux runner cover the MAUI app that
+  `autobuild` silently skips, plus the `actions` and `javascript-typescript` languages) are
+  **not in effect**. Code scanning does still run, through default setup, with its own
+  configuration.
+
+  The two modes are mutually exclusive. To use the workflow instead, disable default setup
+  under *Settings → Code security → Code scanning*, then re-enable the **CodeQL Advanced**
+  workflow in the Actions tab. That is a deliberate change to the repository's security
+  scanning configuration, so it is left to the repository owner rather than made here.
 - **Release signing is optional.** Artifacts that need no secrets are always produced.
   Android is signed only when `ANDROID_KEYSTORE_BASE64` and friends exist; a distributable
   `.ipa` is produced only when `APPLE_CERTIFICATE_BASE64` and a provisioning profile exist.

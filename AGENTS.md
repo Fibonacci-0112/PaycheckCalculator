@@ -58,7 +58,7 @@ dotnet run --project PaycheckCalculator.App
 | `.github/workflows/ci.yml` | ubuntu | `PaycheckCalculator.Tests`; Blazor publish → **start** → browser end-to-end; API publish. |
 | `.github/workflows/maui-build.yml` | ubuntu + windows + macos | MAUI compiles for all four target platforms. |
 | `.github/workflows/maui-uitests.yml` | ubuntu + windows + macos | MAUI **launches and is driven** on emulator / simulator / desktop. |
-| `.github/workflows/codeql.yml` | ubuntu | CodeQL over C# (`build-mode: none`, so the MAUI app is included), JS/TS, and the workflows. |
+| `.github/workflows/codeql.yml` | — | **Disabled by GitHub**: the repo uses CodeQL *default setup*, which forces any advanced workflow to `disabled_manually`. Its `build-mode: none` config is therefore inert; scanning still happens via default setup. The two are mutually exclusive. |
 | `.github/workflows/release.yml` | ubuntu + windows + macos | On a `v*` tag: builds shippable artifacts, drafts a Release. Signing is optional. |
 
 All of them share the composite action `.github/actions/setup-dotnet-maui`, which reads the SDK version from `global.json`, picks the workload set for the runner OS, and reuses `scripts/install-android-sdk.sh` — the same script local setup runs, so CI and dev cannot drift.

@@ -177,8 +177,17 @@ project per platform (`.Android`, `.iOS`, `.MacCatalyst`, `.Windows`). See
 | `ci.yml` | ubuntu | Unit + integration tests; Blazor publishes, starts, and passes browser end-to-end tests; sync API publishes. |
 | `maui-build.yml` | ubuntu + windows + macos | MAUI compiles for Android, WinUI, iOS, and Mac Catalyst. |
 | `maui-uitests.yml` | ubuntu + windows + macos | MAUI **launches and is driven** on an Android emulator, iOS Simulator, macOS desktop, and Windows desktop. |
-| `codeql.yml` | ubuntu | CodeQL over C#, JavaScript/TypeScript, and the workflows themselves. |
+| `codeql.yml` | — | **Currently disabled by GitHub.** The repo uses CodeQL *default setup*, which automatically disables any advanced workflow. See below. |
 | `release.yml` | ubuntu + windows + macos | On a `v*` tag: builds all shippable artifacts and drafts a GitHub Release. |
+
+> **CodeQL is not run by `codeql.yml`.** This repo has GitHub's CodeQL **default setup**
+> enabled, and turning that on puts any advanced workflow into `disabled_manually` — so the
+> improvements in `codeql.yml` (C# via `build-mode: none` to include the MAUI app, plus the
+> `actions` and `javascript-typescript` languages) are **not in effect**. Code scanning is
+> still running, via default setup, with its own configuration. The two are mutually
+> exclusive: to use `codeql.yml`, disable default setup under
+> *Settings → Code security → Code scanning* and re-enable the workflow. Left as-is here
+> because changing a repository's security scanning configuration is the owner's call.
 
 ### Run the Blazor web app
 
