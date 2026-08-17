@@ -77,7 +77,7 @@ basis, and the state picker.
 ## `CalculatorViewModel` — the shared core of three tabs
 
 At 1,298 lines, `CalculatorViewModel` is shared across Inputs, Results, and Paychecks — one view
-model, three pages. It owns eleven collaborators injected in its constructor:
+model, three pages. It owns twelve collaborators injected in its constructor:
 
 ```csharp
 public CalculatorViewModel(
