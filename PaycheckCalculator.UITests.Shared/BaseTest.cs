@@ -127,11 +127,6 @@ public abstract class BaseTest
                 $"No page landmark registered for tab '{tabTitle}'.", nameof(tabTitle));
         }
 
-        if (IsPresent(landmark))
-        {
-            return;
-        }
-
         var attempted = 0;
         foreach (var by in TextLocators(tabTitle))
         {
