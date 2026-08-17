@@ -204,12 +204,88 @@ public abstract class BaseTest
         return false;
     }
 
-    /// <summary>Replaces the contents of a text field rather than appending to it.</summary>
+    /// <summary>
+    /// Replaces the contents of a text field and verifies the new value actually took.
+    /// </summary>
+    /// <remarks>
+    /// Entering text is not reliably a single operation across backends. WinUI in particular
+    /// can leave <c>Clear()</c> a no-op or drop keystrokes sent to an unfocused field, and
+    /// nothing throws when that happens — the field simply keeps its old contents, the
+    /// calculation runs on the wrong inputs (or refuses to run at all), and the failure
+    /// surfaces much later as a missing result. So this focuses the field first, falls back
+    /// to select-all-and-delete when Clear() leaves text behind, and then reads the value
+    /// back before returning.
+    ///
+    /// The read-back compares numerically rather than by string: DecimalFormatBehavior
+    /// reformats these fields, so "40" legitimately comes back as "40.00" or "$40.00".
+    /// </remarks>
     protected static void SetText(string automationId, string value)
     {
-        var element = WaitForElement(automationId);
-        element.Clear();
-        element.SendKeys(value);
+        for (var attempt = 1; attempt <= 2; attempt++)
+        {
+            var element = WaitForElement(automationId);
+
+            try
+            {
+                // Focus first: an unfocused field can silently swallow SendKeys on WinUI.
+                element.Click();
+            }
+            catch (Exception ex) when (ex is ElementNotInteractableException
+                                          or InvalidElementStateException)
+            {
+                // Some backends don't need (or allow) an explicit click; carry on.
+            }
+
+            element.Clear();
+
+            if (!string.IsNullOrEmpty(element.Text))
+            {
+                element.SendKeys(Keys.Control + "a");
+                element.SendKeys(Keys.Backspace);
+            }
+
+            element.SendKeys(value);
+
+            if (TextMatches(automationId, value, out var actual))
+            {
+                return;
+            }
+
+            if (attempt == 2)
+            {
+                throw new InvalidOperationException(
+                    $"'{automationId}' still reads '{actual}' after entering '{value}' twice. " +
+                    "The field did not accept the input, so anything computed from it would " +
+                    "be meaningless.");
+            }
+        }
+    }
+
+    private static bool TextMatches(string automationId, string expected, out string actual)
+    {
+        try
+        {
+            actual = WaitForElement(automationId).Text ?? string.Empty;
+        }
+        catch (Exception ex) when (ex is NoSuchElementException or TimeoutException)
+        {
+            actual = "<not found>";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(actual))
+        {
+            return false;
+        }
+
+        try
+        {
+            return ParseCurrency(actual) == decimal.Parse(expected, CultureInfo.InvariantCulture);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
