@@ -225,23 +225,34 @@ public abstract class BaseTest
         {
             var element = WaitForElement(automationId);
 
-            try
+            // Focusing and select-all are WinUI-only on purpose. An unfocused WinUI field
+            // silently swallows SendKeys and Clear() can be a no-op there, so both are
+            // needed. On Android the same click raises the soft keyboard, which then covers
+            // the Calculate button below the form and makes it unfindable — the tests were
+            // green there without it. Only pay the cost on the platform that needs it.
+            if (App is WindowsDriver)
             {
-                // Focus first: an unfocused field can silently swallow SendKeys on WinUI.
-                element.Click();
-            }
-            catch (Exception ex) when (ex is ElementNotInteractableException
-                                          or InvalidElementStateException)
-            {
-                // Some backends don't need (or allow) an explicit click; carry on.
-            }
+                try
+                {
+                    element.Click();
+                }
+                catch (Exception ex) when (ex is ElementNotInteractableException
+                                              or InvalidElementStateException)
+                {
+                    // Not fatal — fall through and let the read-back below be the judge.
+                }
 
-            element.Clear();
+                element.Clear();
 
-            if (!string.IsNullOrEmpty(element.Text))
+                if (!string.IsNullOrEmpty(element.Text))
+                {
+                    element.SendKeys(Keys.Control + "a");
+                    element.SendKeys(Keys.Backspace);
+                }
+            }
+            else
             {
-                element.SendKeys(Keys.Control + "a");
-                element.SendKeys(Keys.Backspace);
+                element.Clear();
             }
 
             element.SendKeys(value);
@@ -342,8 +353,36 @@ public abstract class BaseTest
         }
 
         throw new TimeoutException(
-            $"Timed out after {(timeout ?? DefaultTimeout).TotalSeconds:0}s waiting for {description}.",
+            $"Timed out after {(timeout ?? DefaultTimeout).TotalSeconds:0}s waiting for {description}." +
+            Environment.NewLine + DescribeScreen(),
             last);
+    }
+
+    /// <summary>
+    /// Summarises what is actually on screen, for the failure message.
+    /// </summary>
+    /// <remarks>
+    /// A bare "element not found" says nothing about whether the app is on the wrong page,
+    /// showing a validation message, or displaying an error dialog. The screenshot artifact
+    /// answers that, but only if somebody downloads it — putting a bounded text dump in the
+    /// message itself means the CI log alone is usually enough to tell those apart.
+    /// </remarks>
+    private static string DescribeScreen()
+    {
+        const int maxLength = 3000;
+
+        try
+        {
+            var source = App.PageSource ?? string.Empty;
+            return source.Length <= maxLength
+                ? $"Screen contents:{Environment.NewLine}{source}"
+                : $"Screen contents (first {maxLength} of {source.Length} chars):" +
+                  $"{Environment.NewLine}{source[..maxLength]}";
+        }
+        catch (Exception ex)
+        {
+            return $"(could not capture screen contents: {ex.Message})";
+        }
     }
 
     /// <summary>
