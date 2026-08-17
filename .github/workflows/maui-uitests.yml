@@ -113,33 +113,10 @@ jobs:
           # dismiss (animations, the boot wizard, audio).
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
           disable-animations: true
-          script: |
-            # android-emulator-runner executes this with /usr/bin/sh (dash), not bash, so
-            # `set -o pipefail` is not available — it aborts with "Illegal option -o pipefail"
-            # before a single line runs. Keep this block POSIX sh.
-            set -eu
-            adb wait-for-device
-            adb install -r -g "$UITEST_APP_PATH"
-
-            appium --log-timestamp --log-level info > appium.log 2>&1 &
-            appium_ready=0
-            for _ in $(seq 1 60); do
-              if curl -fsS http://127.0.0.1:4723/status > /dev/null; then
-                appium_ready=1
-                break
-              fi
-              sleep 2
-            done
-            if [ "$appium_ready" -ne 1 ]; then
-              echo "::error::Appium did not start within 120s."
-              cat appium.log
-              exit 1
-            fi
-
-            dotnet test PaycheckCalculator.UITests.Android --no-build \
-              --logger "trx;LogFileName=android-uitests.trx" \
-              --logger "console;verbosity=normal" \
-              --results-directory ./TestResults
+          # Must stay a single line: this action runs each line of `script` as its own
+          # `sh -c`, so loops, `set -e`, and anything spanning lines break. The real
+          # sequence lives in the script file.
+          script: bash scripts/ci/run-android-uitests.sh
 
       - name: Upload Android UI test results
         if: always()
@@ -207,12 +184,21 @@ jobs:
           npm install -g appium@3
           appium driver install windows
 
-      - name: Start Appium
+      - name: Start Appium and run UI tests
+        # Appium is started in the *same* step as the tests. On Windows runners a background
+        # process started in one step does not survive into the next — the previous attempt
+        # saw Appium answer /status at the end of its own step and then be gone by the time
+        # `dotnet test` connected, which surfaced as ConnectionRefused on every test. Linux
+        # and macOS keep such processes alive across steps, so only this job needs it.
+        env:
+          UITEST_APP_PATH: ${{ steps.exe.outputs.path }}
+          UITEST_ARTIFACT_DIR: ${{ github.workspace }}\uitest-artifacts
         run: |
-          # npm installs `appium` as a .cmd shim on Windows, which Start-Process cannot
-          # launch directly — go through cmd.exe.
-          Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', 'appium', '--log-timestamp' `
-            -RedirectStandardOutput appium.log -RedirectStandardError appium.err
+          # npm installs `appium` as a .cmd shim, which Start-Process cannot launch directly.
+          $appium = Start-Process -FilePath 'cmd.exe' `
+            -ArgumentList '/c', 'appium', '--log-timestamp' `
+            -RedirectStandardOutput appium.log -RedirectStandardError appium.err -PassThru
+
           $ready = $false
           foreach ($i in 1..60) {
             try {
@@ -225,16 +211,18 @@ jobs:
             Get-Content appium.log, appium.err -ErrorAction SilentlyContinue
             throw 'Appium did not start within 120s.'
           }
+          Write-Host 'Appium is up.'
 
-      - name: Run UI tests
-        env:
-          UITEST_APP_PATH: ${{ steps.exe.outputs.path }}
-          UITEST_ARTIFACT_DIR: ${{ github.workspace }}\uitest-artifacts
-        run: >-
-          dotnet test PaycheckCalculator.UITests.Windows --no-build
-          --logger "trx;LogFileName=windows-uitests.trx"
-          --logger "console;verbosity=normal"
-          --results-directory ./TestResults
+          try {
+            dotnet test PaycheckCalculator.UITests.Windows --no-build `
+              --logger "trx;LogFileName=windows-uitests.trx" `
+              --logger "console;verbosity=normal" `
+              --results-directory ./TestResults
+            if ($LASTEXITCODE -ne 0) { throw "UI tests failed with exit code $LASTEXITCODE." }
+          }
+          finally {
+            Stop-Process -Id $appium.Id -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Upload Windows UI test results
         if: always()
@@ -390,6 +378,18 @@ jobs:
         run: |
           npm install -g appium@3
           appium driver install xcuitest
+
+      - name: Pre-build WebDriverAgent
+        # The XCUITest driver builds WebDriverAgent with Xcode the first time a session is
+        # created. On a cold runner that took over 8 minutes and blew the session timeout,
+        # surfacing as an opaque "POST /session timed out" with no hint that a compile was
+        # the cause. Doing it here puts the cost in a step whose logs say so.
+        #
+        # Tolerated on failure: it is an optimisation, and the driver will still build WDA
+        # itself during session creation (the raised timeouts below cover that). A change to
+        # this CLI subcommand should not take the whole job down.
+        continue-on-error: true
+        run: appium driver run xcuitest build-wda
 
       - name: Start Appium
         run: |

@@ -64,8 +64,10 @@ public class CalculatorFlowTests : BaseTest
         var perPeriodNetPay = ParseCurrency(WaitForElement("Results_NetPay").Text);
         var annualNetPay = ParseCurrency(WaitForElement("Results_AnnualNetPay").Text);
 
-        // Weekly is the default frequency, so the annual figure must be a large multiple of
-        // the per-period one. This catches an annual projection that silently renders zero.
+        // Whatever the default frequency, a year holds many pay periods, so the annualized
+        // figure must be a large multiple of one paycheck. Deliberately a loose bound: the
+        // point is to catch a projection that renders zero or mirrors the per-period value,
+        // not to re-assert the arithmetic the unit suite already pins down exactly.
         Assert.That(annualNetPay, Is.GreaterThan(perPeriodNetPay * 10),
             "The annual projection is not consistent with the per-period net pay.");
     }

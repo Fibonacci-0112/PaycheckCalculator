@@ -56,11 +56,15 @@ public class AppiumSetup
 
         options.AddAdditionalAppiumOption("noReset", true);
         options.AddAdditionalAppiumOption("newCommandTimeout", 300);
-        // First run on a clean image has to build and sign WebDriverAgent, which is slow.
-        options.AddAdditionalAppiumOption("wdaLaunchTimeout", 300_000);
-        options.AddAdditionalAppiumOption("wdaConnectionTimeout", 300_000);
+        // Creating the first session has to build and code-sign WebDriverAgent with Xcode.
+        // On a cold CI runner that alone has been measured at over 8 minutes, so these
+        // ceilings are deliberately generous — the cost is paid once per run, and the
+        // alternative is a timeout that looks like a driver fault rather than a compile.
+        // CI additionally pre-builds WDA in its own step so this path is usually fast.
+        options.AddAdditionalAppiumOption("wdaLaunchTimeout", 600_000);
+        options.AddAdditionalAppiumOption("wdaConnectionTimeout", 600_000);
 
-        _driver = new IOSDriver(TestConfig.ServerUri, options, TimeSpan.FromMinutes(8));
+        _driver = new IOSDriver(TestConfig.ServerUri, options, TimeSpan.FromMinutes(15));
     }
 
     [OneTimeTearDown]

@@ -94,10 +94,17 @@ jobs:
       - name: Start the published Blazor app
         run: |
           set -euo pipefail
+          # Launch from *inside* the publish directory. WebApplication.CreateBuilder defaults
+          # the content root to the current working directory, not the app's own directory,
+          # so starting the apphost from the repo root leaves wwwroot and the static web
+          # asset manifest unresolvable. The page still renders server-side and every
+          # control looks enabled, but /_framework/blazor.web.js 404s and the interactive
+          # circuit never starts — which reads as an inexplicably dead UI in the tests.
+          cd ./artifacts/blazor
           ASPNETCORE_ENVIRONMENT=Development \
           ASPNETCORE_URLS=http://127.0.0.1:5000 \
-            ./artifacts/blazor/PaycheckCalculator.Blazor > blazor-server.log 2>&1 &
-          echo $! > blazor-server.pid
+            ./PaycheckCalculator.Blazor > "$GITHUB_WORKSPACE/blazor-server.log" 2>&1 &
+          echo $! > "$GITHUB_WORKSPACE/blazor-server.pid"
           # Poll rather than sleep: a fixed wait is either flaky or wasteful.
           for _ in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:5000 > /dev/null; then
@@ -107,8 +114,22 @@ jobs:
             sleep 2
           done
           echo "::error::The Blazor app did not start within 120s."
-          cat blazor-server.log
+          cat "$GITHUB_WORKSPACE/blazor-server.log"
           exit 1
+
+      - name: Verify the app serves its interactive assets
+        # A one-second guard for the failure above. Without it, a missing Blazor script
+        # shows up only as four Playwright tests timing out after a minute each, with
+        # nothing in the output pointing at static assets.
+        run: |
+          set -euo pipefail
+          status=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5000/_framework/blazor.web.js)
+          echo "/_framework/blazor.web.js -> $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::blazor.web.js is not being served ($status), so the interactive circuit cannot start."
+            cat "$GITHUB_WORKSPACE/blazor-server.log"
+            exit 1
+          fi
 
       - name: Run end-to-end tests
         env:

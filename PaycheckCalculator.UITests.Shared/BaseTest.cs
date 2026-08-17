@@ -121,16 +121,17 @@ public abstract class BaseTest
     {
         var cleaned = Regex.Replace(displayed, @"[^\d.,\-]", string.Empty);
 
-        // Whichever separator appears last is the decimal point; the other groups thousands.
-        var lastDot = cleaned.LastIndexOf('.');
-        var lastComma = cleaned.LastIndexOf(',');
-        if (lastComma > lastDot)
+        var lastSeparator = cleaned.LastIndexOfAny(['.', ',']);
+        if (lastSeparator >= 0)
         {
-            cleaned = cleaned.Replace(".", string.Empty).Replace(',', '.');
-        }
-        else
-        {
-            cleaned = cleaned.Replace(",", string.Empty);
+            // Decide whether the final separator is a decimal point or a group separator by
+            // how many digits follow it. Currency shows 1-2 decimal places, groups always
+            // show exactly 3 — so "$42,116" (rendered with {0:C0}) is forty-two thousand,
+            // not forty-two-point-one-one-six.
+            var trailingDigits = cleaned.Length - lastSeparator - 1;
+            var whole = cleaned[..lastSeparator].Replace(",", string.Empty).Replace(".", string.Empty);
+            var rest = cleaned[(lastSeparator + 1)..];
+            cleaned = trailingDigits == 3 ? whole + rest : whole + "." + rest;
         }
 
         return decimal.Parse(cleaned, NumberStyles.Number, CultureInfo.InvariantCulture);

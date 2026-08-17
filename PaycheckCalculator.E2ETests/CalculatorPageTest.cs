@@ -84,8 +84,9 @@ public class CalculatorPageTest : IAsyncLifetime
         await Assertions.Expect(annualLocator).ToBeVisibleAsync();
         var annualNetPay = ParseCurrency(await annualLocator.InnerTextAsync());
 
-        // Weekly is the default frequency, so the annualized figure has to be a large
-        // multiple of one paycheck. Catches a projection that silently renders zero.
+        // Whatever the default frequency, a year holds many pay periods, so the annualized
+        // figure has to be a large multiple of one paycheck. Catches a projection that
+        // renders zero or simply mirrors the per-period value.
         Assert.True(annualNetPay > perPeriodNetPay * 10,
             $"Annual net pay {annualNetPay} is not consistent with per-period {perPeriodNetPay}.");
     }
@@ -140,15 +141,15 @@ public class CalculatorPageTest : IAsyncLifetime
     /// </summary>
     /// <remarks>
     /// Blazor Server ships fully-rendered HTML first and only then connects the SignalR
-    /// circuit. In that window the page looks complete and every control is present and
-    /// enabled, but `@onclick` handlers are not yet wired, so clicks are silently dropped
-    /// and `@bind` never receives typed values. Neither `NetworkIdle` nor an
-    /// `ToBeEnabled` assertion detects this — both are satisfied by the pre-rendered
-    /// markup. A fast dev machine hides the gap; a cold CI runner running a Release build
-    /// does not, which is exactly how this first surfaced.
+    /// circuit. Until it does, the page looks complete and every control is present and
+    /// enabled, but `@onclick` handlers are inert, so clicks are silently dropped and
+    /// `@bind` never receives typed values. Neither `NetworkIdle` nor an `ToBeEnabled`
+    /// assertion detects that — both are satisfied by the pre-rendered markup alone.
     ///
-    /// So the wait has to be behavioral: drive a round trip through a control whose only
-    /// effect is client-side tab state, and confirm the server re-rendered it.
+    /// So the wait is behavioral: drive a round trip through a control whose only effect is
+    /// client-side tab state, and confirm the server re-rendered it. That distinguishes
+    /// "still connecting" from "never going to connect", and it fails with a message that
+    /// says so rather than as an unexplained assertion timeout further down the test.
     /// </remarks>
     private async Task WaitForCircuitAsync()
     {
@@ -184,12 +185,18 @@ public class CalculatorPageTest : IAsyncLifetime
     {
         var cleaned = Regex.Replace(displayed, @"[^\d.,\-]", string.Empty);
 
-        // Whichever separator appears last is the decimal point; the other groups thousands.
-        var lastDot = cleaned.LastIndexOf('.');
-        var lastComma = cleaned.LastIndexOf(',');
-        cleaned = lastComma > lastDot
-            ? cleaned.Replace(".", string.Empty).Replace(',', '.')
-            : cleaned.Replace(",", string.Empty);
+        var lastSeparator = cleaned.LastIndexOfAny(['.', ',']);
+        if (lastSeparator >= 0)
+        {
+            // Decide whether the final separator is a decimal point or a group separator by
+            // how many digits follow it. Currency shows 1-2 decimal places, groups always
+            // show exactly 3 — so "$42,116" (rendered with {0:C0}) is forty-two thousand,
+            // not forty-two-point-one-one-six.
+            var trailingDigits = cleaned.Length - lastSeparator - 1;
+            var whole = cleaned[..lastSeparator].Replace(",", string.Empty).Replace(".", string.Empty);
+            var rest = cleaned[(lastSeparator + 1)..];
+            cleaned = trailingDigits == 3 ? whole + rest : whole + "." + rest;
+        }
 
         return decimal.Parse(cleaned, NumberStyles.Number, CultureInfo.InvariantCulture);
     }
