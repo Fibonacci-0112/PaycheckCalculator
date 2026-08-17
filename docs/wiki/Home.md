@@ -13,6 +13,7 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 ### Getting Started
 
 - **[Getting Started](Getting-Started.md)** — Prerequisites, solution layout, build/test/run commands, project dependencies, and tax-data wiring.
+- **[Codebase Reference](../reference/README.md)** — A 15-chapter, file-level deep dive into every project, subsystem, and convention in the repository. Start there for exhaustive detail; use this wiki for task-oriented guides.
 
 ### Architecture & Design
 
