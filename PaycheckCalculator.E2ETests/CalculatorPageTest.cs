@@ -131,6 +131,53 @@ public class CalculatorPageTest : IAsyncLifetime
         {
             WaitUntil = WaitUntilState.NetworkIdle,
         });
+
+        await WaitForCircuitAsync();
+    }
+
+    /// <summary>
+    /// Blocks until the Blazor Server circuit is live and handling events.
+    /// </summary>
+    /// <remarks>
+    /// Blazor Server ships fully-rendered HTML first and only then connects the SignalR
+    /// circuit. In that window the page looks complete and every control is present and
+    /// enabled, but `@onclick` handlers are not yet wired, so clicks are silently dropped
+    /// and `@bind` never receives typed values. Neither `NetworkIdle` nor an
+    /// `ToBeEnabled` assertion detects this — both are satisfied by the pre-rendered
+    /// markup. A fast dev machine hides the gap; a cold CI runner running a Release build
+    /// does not, which is exactly how this first surfaced.
+    ///
+    /// So the wait has to be behavioral: drive a round trip through a control whose only
+    /// effect is client-side tab state, and confirm the server re-rendered it.
+    /// </remarks>
+    private async Task WaitForCircuitAsync()
+    {
+        var federalTab = _page.GetByTestId("input-tab-federal");
+        var payHoursTab = _page.GetByTestId("input-tab-pay-hours");
+        var active = new Regex(@"\bactive\b");
+
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            try
+            {
+                await federalTab.ClickAsync();
+                await Assertions.Expect(federalTab).ToHaveClassAsync(active,
+                    new LocatorAssertionsToHaveClassOptions { Timeout = 2_000 });
+
+                // Leave the form on the tab the tests expect.
+                await payHoursTab.ClickAsync();
+                await Assertions.Expect(payHoursTab).ToHaveClassAsync(active,
+                    new LocatorAssertionsToHaveClassOptions { Timeout = 5_000 });
+                return;
+            }
+            catch (PlaywrightException)
+            {
+                // Circuit still connecting — the click went nowhere. Try again.
+            }
+        }
+
+        throw new TimeoutException(
+            "The Blazor circuit never became interactive: tab clicks produced no server re-render.");
     }
 
     private static decimal ParseCurrency(string displayed)

@@ -42,8 +42,8 @@
         </div>
 
         <div class="tab-bar">
-            <button class="tab-btn @(_inputTab == 0 ? "active" : "")" @onclick="() => _inputTab = 0">Pay &amp; Hours</button>
-            <button class="tab-btn @(_inputTab == 1 ? "active" : "")" @onclick="() => _inputTab = 1">Federal W-4</button>
+            <button class="tab-btn @(_inputTab == 0 ? "active" : "")" data-testid="input-tab-pay-hours" @onclick="() => _inputTab = 0">Pay &amp; Hours</button>
+            <button class="tab-btn @(_inputTab == 1 ? "active" : "")" data-testid="input-tab-federal" @onclick="() => _inputTab = 1">Federal W-4</button>
             <button class="tab-btn @(_inputTab == 2 ? "active" : "")" @onclick="() => _inputTab = 2">State</button>
             <button class="tab-btn @(_inputTab == 3 ? "active" : "")" @onclick="() => _inputTab = 3">Deductions</button>
         </div>

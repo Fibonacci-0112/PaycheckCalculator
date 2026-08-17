@@ -15,7 +15,12 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <!-- 17.0 is the floor the .NET 11 Mac Catalyst SDK (Microsoft.MacCatalyst.Sdk 26.5)
+         enforces; anything lower fails the build outright with "The
+         SupportedOSPlatformVersion value ... is lower than the minimum value '17.0'".
+         Mac Catalyst 17.0 corresponds to macOS 14 Sonoma, so the effective minimum for
+         the Mac build rises from macOS 12 to macOS 14. iOS still accepts 15.0. -->
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">17.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 

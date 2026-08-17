@@ -114,7 +114,10 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
           disable-animations: true
           script: |
-            set -euo pipefail
+            # android-emulator-runner executes this with /usr/bin/sh (dash), not bash, so
+            # `set -o pipefail` is not available — it aborts with "Illegal option -o pipefail"
+            # before a single line runs. Keep this block POSIX sh.
+            set -eu
             adb wait-for-device
             adb install -r -g "$UITEST_APP_PATH"
 
