@@ -373,6 +373,12 @@ jobs:
           ")
           id=$(echo "$udid" | cut -f1)
           name=$(echo "$udid" | cut -f2)
+          # Connect the hardware keyboard before first boot so the software keyboard never
+          # appears — it would otherwise cover the Shell tab bar and half the input form, and
+          # the app's numeric fields raise a number pad that Appium cannot dismiss. The test
+          # session asks for the same thing via capabilities; doing it here too means the
+          # driver finds the setting already correct instead of restarting the simulator.
+          defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool true
           echo "Booting $name ($id)"
           xcrun simctl boot "$id" || true
           xcrun simctl bootstatus "$id" -b

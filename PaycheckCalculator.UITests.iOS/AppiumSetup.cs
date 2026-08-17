@@ -65,6 +65,23 @@ public class AppiumSetup
 
         options.AddAdditionalAppiumOption("noReset", true);
         options.AddAdditionalAppiumOption("newCommandTimeout", 300);
+
+        // Keep the software keyboard off the screen for the whole run.
+        //
+        // Every numeric field in the app is Keyboard="Numeric", which renders as a number pad
+        // — and a number pad has no return or Done key, so Appium's HideKeyboard() has nothing
+        // to press and cannot dismiss it. The keyboard then sits over the bottom third of the
+        // display, which is exactly where the Shell tab bar lives, and iOS scrolls the form up
+        // to keep the focused Entry above it. Both effects remove controls from the XCUITest
+        // element tree, so lookups fail with a bare "not found" that says nothing about a
+        // keyboard: one test could not see the Results tab, the next could not see a field it
+        // had just typed into.
+        //
+        // Connecting the hardware keyboard routes SendKeys through it instead. The pair has to
+        // be set together: forceSimulatorSoftwareKeyboardPresence defaults to true, so raising
+        // connectHardwareKeyboard on its own would leave the on-screen keyboard up anyway.
+        options.AddAdditionalAppiumOption("connectHardwareKeyboard", true);
+        options.AddAdditionalAppiumOption("forceSimulatorSoftwareKeyboardPresence", false);
         // Creating the first session has to build and code-sign WebDriverAgent with Xcode.
         // On a cold CI runner that alone has been measured at over 8 minutes, so these
         // ceilings are deliberately generous — the cost is paid once per run, and the

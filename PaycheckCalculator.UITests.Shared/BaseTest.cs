@@ -127,6 +127,15 @@ public abstract class BaseTest
                 $"No page landmark registered for tab '{tabTitle}'.", nameof(tabTitle));
         }
 
+        // Already there — nothing to click. Worth checking first because the tab bar can be
+        // temporarily unreachable (covered by a keyboard, mid-animation) while the destination
+        // page itself is perfectly visible, and clicking is not what the caller asked for: they
+        // asked to *be* on the page.
+        if (IsPresent(landmark))
+        {
+            return;
+        }
+
         var attempted = 0;
         foreach (var by in TextLocators(tabTitle))
         {
@@ -273,11 +282,18 @@ public abstract class BaseTest
     /// Closes the on-screen keyboard on the mobile backends.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// On Android and iOS the keyboard covers the bottom of the screen — which is exactly
     /// where the Shell tab bar and the lower half of the input form live. Anything under it
     /// simply is not in the element tree, so a later lookup fails with "not found" and gives
-    /// no hint that a keyboard is the reason. Both iOS calculator tests failed this way:
-    /// one could not see the Results tab, the other could not see a field it had just used.
+    /// no hint that a keyboard is the reason.
+    /// </para>
+    /// <para>
+    /// This works on Android. It does not work on iOS: every numeric field in the app raises a
+    /// number pad, which has no return or Done key for the driver to press, so HideKeyboard()
+    /// throws and the keyboard stays up. iOS therefore suppresses the software keyboard for the
+    /// whole session instead — see the capabilities in that project's AppiumSetup.
+    /// </para>
     /// </remarks>
     private static void DismissSoftKeyboard()
     {
