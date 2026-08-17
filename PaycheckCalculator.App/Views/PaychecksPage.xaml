@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PaycheckCalculator.App.Views.PaychecksPage"
              Title="Paychecks"
              BackgroundColor="{StaticResource Canvas}">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*" AutomationId="Page_Paychecks">
 
         <!-- Page Header -->
         <Grid Grid.Row="0" BackgroundColor="{StaticResource Surface}" Padding="16,14,16,10">

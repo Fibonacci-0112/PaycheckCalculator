@@ -44,6 +44,15 @@ public class AppiumSetup
             options.PlatformVersion = version;
         }
 
+        // Attach to the exact simulator the caller booted and installed onto. Without a udid
+        // the driver resolves a device by name and can end up watching a different instance,
+        // where WebDriverAgent waits on a System App that never becomes ready and the whole
+        // session eventually fails.
+        if (TestConfig.DeviceUdid is { } udid)
+        {
+            options.AddAdditionalAppiumOption("udid", udid);
+        }
+
         if (TestConfig.AppPath is { } appBundle)
         {
             options.App = appBundle;

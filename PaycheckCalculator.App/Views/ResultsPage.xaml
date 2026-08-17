@@ -26,7 +26,7 @@
         <helpers:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*" AutomationId="Page_Results">
 
         <!-- Page Header -->
         <!-- Blue summary strip: the two figures that matter at a glance. -->

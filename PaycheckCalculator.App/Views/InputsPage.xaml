@@ -5,7 +5,7 @@
              x:Class="PaycheckCalculator.App.Views.InputsPage"
              Title="Inputs"
              BackgroundColor="{StaticResource Canvas}">
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*" AutomationId="Page_Inputs">
 
         <!-- Sub-tab pills. Selection is applied in code-behind (OnTabClicked),
              which reads the same colour tokens this markup uses. -->

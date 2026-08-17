@@ -28,6 +28,12 @@ public class AppLaunchTests : BaseTest
         // Walking the whole TabBar forces every page's constructor, BindingContext, and
         // initial data load to run — several of which touch the tax-data reader and the
         // on-device paycheck store.
+        //
+        // GoToTab confirms each page is on screen before returning, so this asserts arrival
+        // rather than merely that a click raised no exception. An earlier version checked
+        // only DoesNotThrow and passed on Windows while never actually navigating, which
+        // hid the real failure until a later test looked for a control on a page it had
+        // never reached.
         foreach (var tab in new[] { "Results", "Paychecks", "Budget", "Account", "Inputs" })
         {
             Assert.DoesNotThrow(() => GoToTab(tab), $"Navigating to the '{tab}' tab failed.");

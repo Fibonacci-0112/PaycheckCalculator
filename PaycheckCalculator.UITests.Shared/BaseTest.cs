@@ -92,13 +92,116 @@ public abstract class BaseTest
         yield return MobileBy.XPath($"//*[@name='{text}']");
     }
 
-    /// <summary>Switches to one of the app's five bottom Shell tabs (Inputs, Results, …).</summary>
+    /// <summary>
+    /// AutomationId of the always-present root layout on each Shell tab's page. Used to
+    /// confirm navigation actually landed, rather than trusting that a click did something.
+    /// </summary>
+    private static readonly Dictionary<string, string> PageLandmarks = new(StringComparer.Ordinal)
+    {
+        ["Inputs"] = "Page_Inputs",
+        ["Results"] = "Page_Results",
+        ["Paychecks"] = "Page_Paychecks",
+        ["Budget"] = "Page_Budget",
+        ["Account"] = "Page_Account",
+    };
+
+    /// <summary>
+    /// Switches to one of the app's five bottom Shell tabs (Inputs, Results, …) and waits
+    /// until that page is actually on screen.
+    /// </summary>
+    /// <remarks>
+    /// Shell tab items are built by the platform renderer and don't carry a XAML
+    /// AutomationId, so they have to be located by their visible text — and a title like
+    /// "Results" can match more than one element in the tree. Clicking the wrong match
+    /// throws nothing; it simply doesn't navigate, and the failure then surfaces much later
+    /// as a missing control on a page the test never reached. So each candidate is clicked
+    /// and then checked against the destination page's landmark, moving on to the next
+    /// candidate if the app didn't move.
+    /// </remarks>
     protected static void GoToTab(string tabTitle)
     {
-        WaitForText(tabTitle).Click();
-        // The Shell tab transition is animated; give the destination page a beat to attach
-        // before the caller starts querying it.
-        Thread.Sleep(500);
+        if (!PageLandmarks.TryGetValue(tabTitle, out var landmark))
+        {
+            throw new ArgumentException(
+                $"No page landmark registered for tab '{tabTitle}'.", nameof(tabTitle));
+        }
+
+        if (IsPresent(landmark))
+        {
+            return;
+        }
+
+        var attempted = 0;
+        foreach (var by in TextLocators(tabTitle))
+        {
+            IReadOnlyCollection<IWebElement> candidates;
+            try
+            {
+                candidates = App.FindElements(by);
+            }
+            catch (NoSuchElementException)
+            {
+                continue;
+            }
+
+            foreach (var candidate in candidates)
+            {
+                try
+                {
+                    if (!candidate.Displayed)
+                    {
+                        continue;
+                    }
+
+                    attempted++;
+                    candidate.Click();
+                }
+                catch (Exception ex) when (ex is ElementNotInteractableException
+                                              or StaleElementReferenceException
+                                              or InvalidElementStateException)
+                {
+                    continue;
+                }
+
+                // The tab transition is animated, so poll rather than assert immediately.
+                if (WaitUntil(() => IsPresent(landmark), TimeSpan.FromSeconds(5)))
+                {
+                    return;
+                }
+            }
+        }
+
+        throw new TimeoutException(
+            $"Could not navigate to the '{tabTitle}' tab: clicked {attempted} matching " +
+            $"element(s) but '{landmark}' never appeared.");
+    }
+
+    private static bool IsPresent(string automationId)
+    {
+        try
+        {
+            return FindElement(automationId).Displayed;
+        }
+        catch (Exception ex) when (ex is NoSuchElementException or StaleElementReferenceException)
+        {
+            return false;
+        }
+    }
+
+    private static bool WaitUntil(Func<bool> condition, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            if (condition())
+            {
+                return true;
+            }
+
+            Thread.Sleep(PollInterval);
+        }
+
+        return false;
     }
 
     /// <summary>Replaces the contents of a text field rather than appending to it.</summary>

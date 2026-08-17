@@ -69,6 +69,17 @@ public static class TestConfig
     /// <summary>Target device/simulator name. Platform-specific default applied by the caller.</summary>
     public static string? DeviceName => Get("UITEST_DEVICE_NAME");
 
+    /// <summary>
+    /// Exact device/simulator UDID to attach to.
+    /// </summary>
+    /// <remarks>
+    /// Strongly preferred over <see cref="DeviceName"/> when the caller has already booted a
+    /// specific simulator and installed the app on it: resolving by name lets the driver pick
+    /// a different device — or boot a second one — and WebDriverAgent then sits waiting on a
+    /// System App that will never come up on the instance it is watching.
+    /// </remarks>
+    public static string? DeviceUdid => Get("UITEST_DEVICE_UDID");
+
     /// <summary>Target OS version, e.g. an iOS Simulator runtime version.</summary>
     public static string? PlatformVersion => Get("UITEST_PLATFORM_VERSION");
 

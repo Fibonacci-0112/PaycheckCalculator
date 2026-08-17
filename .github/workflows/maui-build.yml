@@ -169,5 +169,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail if any platform failed
-        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        # Only 'failure'. A job that reports 'cancelled' was superseded by a newer push
+        # (concurrency cancel-in-progress) or stopped by hand — reporting that as a broken
+        # build is misleading, and GitHub already marks the run itself as cancelled.
+        if: contains(needs.*.result, 'failure')
         run: exit 1

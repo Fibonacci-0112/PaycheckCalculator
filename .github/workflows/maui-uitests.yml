@@ -416,6 +416,9 @@ jobs:
         env:
           UITEST_APP_PATH: ${{ steps.bundle.outputs.path }}
           UITEST_DEVICE_NAME: ${{ steps.sim.outputs.name }}
+          # The udid is what actually binds the session to the simulator booted above;
+          # the name alone lets the driver pick a different instance.
+          UITEST_DEVICE_UDID: ${{ steps.sim.outputs.udid }}
           UITEST_ARTIFACT_DIR: ${{ github.workspace }}/uitest-artifacts
         run: >-
           dotnet test PaycheckCalculator.UITests.iOS --no-build
