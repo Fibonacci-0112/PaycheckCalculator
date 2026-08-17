@@ -30,7 +30,12 @@ permissions:
 
 concurrency:
   group: maui-uitests-${{ github.ref }}
-  cancel-in-progress: true
+  # Deliberately NOT cancel-in-progress, unlike the other workflows. These jobs spend 8-14
+  # minutes booting emulators, simulators and building WebDriverAgent before they run a
+  # single test, so a push landing mid-run throws away the only evidence there is about
+  # whether the app works on a device — and the next run pays the whole setup cost again.
+  # Superseded results are easy to ignore; results that never happened are not.
+  cancel-in-progress: false
 
 env:
   DOTNET_NOLOGO: 1
