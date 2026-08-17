@@ -333,7 +333,7 @@ public abstract class BaseTest
     /// </remarks>
     protected static decimal ParseCurrency(string displayed)
     {
-        var cleaned = Regex.Replace(displayed, @"[^\d.,\-]", string.Empty);
+        var cleaned = Regex.Replace(displayed, @"[^\d.,-]", string.Empty);
 
         var lastSeparator = cleaned.LastIndexOfAny(['.', ',']);
         if (lastSeparator >= 0)

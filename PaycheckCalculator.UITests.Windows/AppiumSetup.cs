@@ -49,6 +49,12 @@ public class AppiumSetup
         options.AddAdditionalAppiumOption("createSessionTimeout", 120_000);
 
         _driver = new WindowsDriver(TestConfig.ServerUri, options, TimeSpan.FromMinutes(5));
+
+        // The app opens at 800 × 800 px, which is not tall enough to show the Calculate
+        // button without scrolling. WinAppDriver refuses to interact with off-screen
+        // (IsOffscreen=True) elements, so the click is silently ignored and the test
+        // never gets a result. Maximize to ensure the full form is visible.
+        _driver.Manage().Window.Maximize();
     }
 
     [OneTimeTearDown]
