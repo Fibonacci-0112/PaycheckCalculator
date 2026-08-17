@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Appium.Interfaces;
 using OpenQA.Selenium.Appium.Windows;
 
 namespace PaycheckCalculator.UITests;
@@ -256,6 +257,7 @@ public abstract class BaseTest
             }
 
             element.SendKeys(value);
+            DismissSoftKeyboard();
 
             if (TextMatches(automationId, value, out var actual))
             {
@@ -269,6 +271,33 @@ public abstract class BaseTest
                     "The field did not accept the input, so anything computed from it would " +
                     "be meaningless.");
             }
+        }
+    }
+
+    /// <summary>
+    /// Closes the on-screen keyboard on the mobile backends.
+    /// </summary>
+    /// <remarks>
+    /// On Android and iOS the keyboard covers the bottom of the screen — which is exactly
+    /// where the Shell tab bar and the lower half of the input form live. Anything under it
+    /// simply is not in the element tree, so a later lookup fails with "not found" and gives
+    /// no hint that a keyboard is the reason. Both iOS calculator tests failed this way:
+    /// one could not see the Results tab, the other could not see a field it had just used.
+    /// </remarks>
+    private static void DismissSoftKeyboard()
+    {
+        if (App is not IHidesKeyboard keyboard)
+        {
+            return;
+        }
+
+        try
+        {
+            keyboard.HideKeyboard();
+        }
+        catch (Exception)
+        {
+            // Throws when no keyboard is showing, which is the outcome we wanted anyway.
         }
     }
 
