@@ -1,0 +1,449 @@
+name: MAUI UI tests
+
+# Runs the MAUI app on a real Android emulator, iOS Simulator, macOS desktop and Windows
+# desktop, and drives it through a paycheck calculation with Appium.
+#
+# This is the part a build job cannot give you. `dotnet build` proves the code compiles; it
+# says nothing about whether the app survives launch. The failures these tests catch —
+# a service missing from MauiProgram's container, a StaticResource key that only resolves at
+# run time, a tax JSON renamed without updating the MauiAsset entries in the csproj — all
+# compile perfectly and only surface on device.
+#
+# These jobs are slow (emulator boot, WebDriverAgent build), so they are separate from the
+# fast build gate in maui-build.yml.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: Which platforms to exercise
+        type: choice
+        default: all
+        options: [ all, android, ios, maccatalyst, windows ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maui-uitests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  # CI starts Appium as a background service, so the test fixture must not also start one.
+  APPIUM_EXTERNAL_SERVER: '1'
+
+jobs:
+  android:
+    name: Android emulator
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.platforms == null || github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'android' }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        # An Android SDK + emulator image + a MAUI build together push a standard runner
+        # close to full; reclaiming the preinstalled toolchains avoids a mid-run ENOSPC.
+        run: |
+          sudo rm -rf /usr/share/dotnet/sdk/[0-9]* /usr/local/lib/android/sdk/ndk \
+                      /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY/Ruby" || true
+          df -h /
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          workloads: maui-android
+          android-sdk: 'true'
+          cache-key-suffix: android-uitests
+
+      - name: Build the Android app
+        run: dotnet build PaycheckCalculator.App -f net11.0-android -c Debug
+
+      - name: Locate the APK
+        id: apk
+        run: |
+          set -euo pipefail
+          apk=$(find PaycheckCalculator.App/bin/Debug/net11.0-android -name '*-Signed.apk' | head -1)
+          if [ -z "$apk" ]; then
+            echo "::error::No signed APK was produced."
+            exit 1
+          fi
+          echo "Found $apk"
+          echo "path=$apk" >> "$GITHUB_OUTPUT"
+
+      - name: Build the UI test project
+        run: dotnet build PaycheckCalculator.UITests.Android -c Debug
+
+      - name: Install Appium and the UiAutomator2 driver
+        run: |
+          npm install -g appium@3
+          appium driver install uiautomator2
+
+      - name: Enable KVM
+        # GitHub's Linux runners support nested virtualisation, but the kvm device is only
+        # accessible to the runner user once this udev rule is in place. Without it the
+        # emulator falls back to software rendering and is far too slow to be usable.
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run UI tests on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          UITEST_APP_PATH: ${{ steps.apk.outputs.path }}
+          UITEST_ARTIFACT_DIR: ${{ github.workspace }}/uitest-artifacts
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          # Trim everything that slows a cold boot or injects UI the tests would have to
+          # dismiss (animations, the boot wizard, audio).
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            adb wait-for-device
+            adb install -r -g "$UITEST_APP_PATH"
+
+            appium --log-timestamp --log-level info > appium.log 2>&1 &
+            appium_ready=0
+            for _ in $(seq 1 60); do
+              if curl -fsS http://127.0.0.1:4723/status > /dev/null; then
+                appium_ready=1
+                break
+              fi
+              sleep 2
+            done
+            if [ "$appium_ready" -ne 1 ]; then
+              echo "::error::Appium did not start within 120s."
+              cat appium.log
+              exit 1
+            fi
+
+            dotnet test PaycheckCalculator.UITests.Android --no-build \
+              --logger "trx;LogFileName=android-uitests.trx" \
+              --logger "console;verbosity=normal" \
+              --results-directory ./TestResults
+
+      - name: Upload Android UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-uitest-results
+          path: |
+            ./TestResults
+            ./uitest-artifacts
+            appium.log
+          retention-days: 14
+
+  windows:
+    name: Windows desktop
+    runs-on: windows-latest
+    if: ${{ github.event.inputs.platforms == null || github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'windows' }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          workloads: maui
+          cache-key-suffix: windows-uitests
+
+      - name: Build the WinUI app
+        run: >-
+          dotnet build PaycheckCalculator.App
+          -f net11.0-windows10.0.19041.0 -c Debug -p:RuntimeIdentifier=win-x64
+
+      - name: Locate the executable
+        id: exe
+        shell: bash
+        run: |
+          set -euo pipefail
+          exe=$(find PaycheckCalculator.App/bin/Debug/net11.0-windows10.0.19041.0 \
+                  -name 'PaycheckCalculator.App.exe' | head -1)
+          if [ -z "$exe" ]; then
+            echo "::error::PaycheckCalculator.App.exe was not produced."
+            exit 1
+          fi
+          echo "Found $exe"
+          echo "path=$(cygpath -w "$exe")" >> "$GITHUB_OUTPUT"
+
+      - name: Build the UI test project
+        run: dotnet build PaycheckCalculator.UITests.Windows -c Debug
+
+      - name: Install WinAppDriver
+        # The Appium windows driver automates through WinAppDriver. Version 1.2.1
+        # specifically — other releases are known not to pair correctly with the driver.
+        run: |
+          $url = 'https://github.com/microsoft/WinAppDriver/releases/download/v1.2.1/WindowsApplicationDriver_1.2.1.msi'
+          Invoke-WebRequest -Uri $url -OutFile WinAppDriver.msi -UseBasicParsing
+          Start-Process msiexec.exe -Wait -ArgumentList '/i', 'WinAppDriver.msi', '/quiet', '/norestart'
+
+      - name: Enable Developer Mode
+        # UI Automation refuses to attach to an unpackaged app without it.
+        run: |
+          $key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+          New-Item -Path $key -Force | Out-Null
+          Set-ItemProperty -Path $key -Name AllowDevelopmentWithoutDevLicense -Value 1
+
+      - name: Install Appium and the Windows driver
+        run: |
+          npm install -g appium@3
+          appium driver install windows
+
+      - name: Start Appium
+        run: |
+          # npm installs `appium` as a .cmd shim on Windows, which Start-Process cannot
+          # launch directly — go through cmd.exe.
+          Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', 'appium', '--log-timestamp' `
+            -RedirectStandardOutput appium.log -RedirectStandardError appium.err
+          $ready = $false
+          foreach ($i in 1..60) {
+            try {
+              Invoke-WebRequest http://127.0.0.1:4723/status -UseBasicParsing | Out-Null
+              $ready = $true
+              break
+            } catch { Start-Sleep -Seconds 2 }
+          }
+          if (-not $ready) {
+            Get-Content appium.log, appium.err -ErrorAction SilentlyContinue
+            throw 'Appium did not start within 120s.'
+          }
+
+      - name: Run UI tests
+        env:
+          UITEST_APP_PATH: ${{ steps.exe.outputs.path }}
+          UITEST_ARTIFACT_DIR: ${{ github.workspace }}\uitest-artifacts
+        run: >-
+          dotnet test PaycheckCalculator.UITests.Windows --no-build
+          --logger "trx;LogFileName=windows-uitests.trx"
+          --logger "console;verbosity=normal"
+          --results-directory ./TestResults
+
+      - name: Upload Windows UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-uitest-results
+          path: |
+            ./TestResults
+            ./uitest-artifacts
+            appium.log
+            appium.err
+          retention-days: 14
+
+  maccatalyst:
+    name: Mac Catalyst desktop
+    runs-on: macos-latest
+    if: ${{ github.event.inputs.platforms == null || github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'maccatalyst' }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          workloads: maui
+          cache-key-suffix: maccatalyst-uitests
+
+      - name: Build the Mac Catalyst app
+        run: >-
+          dotnet build PaycheckCalculator.App
+          -f net11.0-maccatalyst -c Debug -p:RuntimeIdentifier=maccatalyst-arm64
+
+      - name: Locate the .app bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          bundle=$(find PaycheckCalculator.App/bin/Debug/net11.0-maccatalyst \
+                     -maxdepth 3 -name '*.app' -type d | head -1)
+          if [ -z "$bundle" ]; then
+            echo "::error::No .app bundle was produced."
+            exit 1
+          fi
+          echo "Found $bundle"
+          echo "path=$(cd "$bundle" && pwd)" >> "$GITHUB_OUTPUT"
+
+      - name: Build the UI test project
+        run: dotnet build PaycheckCalculator.UITests.MacCatalyst -c Debug
+
+      - name: Install Appium and the Mac2 driver
+        run: |
+          npm install -g appium@3
+          appium driver install mac2
+
+      - name: Start Appium
+        run: |
+          set -euo pipefail
+          appium --log-timestamp --log-level info > appium.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4723/status > /dev/null; then
+              echo "Appium is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Appium did not start within 120s."
+          cat appium.log
+          exit 1
+
+      - name: Run UI tests
+        env:
+          UITEST_APP_PATH: ${{ steps.bundle.outputs.path }}
+          UITEST_ARTIFACT_DIR: ${{ github.workspace }}/uitest-artifacts
+        run: >-
+          dotnet test PaycheckCalculator.UITests.MacCatalyst --no-build
+          --logger "trx;LogFileName=maccatalyst-uitests.trx"
+          --logger "console;verbosity=normal"
+          --results-directory ./TestResults
+
+      - name: Upload Mac Catalyst UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maccatalyst-uitest-results
+          path: |
+            ./TestResults
+            ./uitest-artifacts
+            appium.log
+          retention-days: 14
+
+  ios:
+    name: iOS Simulator
+    runs-on: macos-latest
+    if: ${{ github.event.inputs.platforms == null || github.event.inputs.platforms == 'all' || github.event.inputs.platforms == 'ios' }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          workloads: maui
+          cache-key-suffix: ios-uitests
+
+      - name: Build for the Simulator
+        # A simulator build is ad-hoc signed, so no Apple Developer certificate is needed.
+        run: >-
+          dotnet build PaycheckCalculator.App
+          -f net11.0-ios -c Debug -p:RuntimeIdentifier=iossimulator-arm64
+
+      - name: Locate the .app bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          bundle=$(find PaycheckCalculator.App/bin/Debug/net11.0-ios \
+                     -maxdepth 3 -name '*.app' -type d | head -1)
+          if [ -z "$bundle" ]; then
+            echo "::error::No .app bundle was produced."
+            exit 1
+          fi
+          echo "Found $bundle"
+          echo "path=$(cd "$bundle" && pwd)" >> "$GITHUB_OUTPUT"
+
+      - name: Boot a Simulator
+        id: sim
+        run: |
+          set -euo pipefail
+          # Pick whatever iPhone the runner image actually carries rather than pinning a
+          # model: the available simulator set changes with every Xcode bump.
+          udid=$(xcrun simctl list devices available --json \
+                 | python3 -c "
+          import json,sys
+          data = json.load(sys.stdin)['devices']
+          for runtime, devices in sorted(data.items()):
+              for d in devices:
+                  if d['isAvailable'] and d['name'].startswith('iPhone'):
+                      print(d['udid'], d['name'], sep='\t')
+                      raise SystemExit
+          raise SystemExit('no available iPhone simulator')
+          ")
+          id=$(echo "$udid" | cut -f1)
+          name=$(echo "$udid" | cut -f2)
+          echo "Booting $name ($id)"
+          xcrun simctl boot "$id" || true
+          xcrun simctl bootstatus "$id" -b
+          echo "udid=$id" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Install the app on the Simulator
+        run: xcrun simctl install "${{ steps.sim.outputs.udid }}" "${{ steps.bundle.outputs.path }}"
+
+      - name: Build the UI test project
+        run: dotnet build PaycheckCalculator.UITests.iOS -c Debug
+
+      - name: Install Appium and the XCUITest driver
+        run: |
+          npm install -g appium@3
+          appium driver install xcuitest
+
+      - name: Start Appium
+        run: |
+          set -euo pipefail
+          appium --log-timestamp --log-level info > appium.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4723/status > /dev/null; then
+              echo "Appium is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Appium did not start within 120s."
+          cat appium.log
+          exit 1
+
+      - name: Run UI tests
+        env:
+          UITEST_APP_PATH: ${{ steps.bundle.outputs.path }}
+          UITEST_DEVICE_NAME: ${{ steps.sim.outputs.name }}
+          UITEST_ARTIFACT_DIR: ${{ github.workspace }}/uitest-artifacts
+        run: >-
+          dotnet test PaycheckCalculator.UITests.iOS --no-build
+          --logger "trx;LogFileName=ios-uitests.trx"
+          --logger "console;verbosity=normal"
+          --results-directory ./TestResults
+
+      - name: Upload iOS UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-uitest-results
+          path: |
+            ./TestResults
+            ./uitest-artifacts
+            appium.log
+          retention-days: 14
+
+  summary:
+    name: UI test summary
+    runs-on: ubuntu-latest
+    needs: [ android, windows, maccatalyst, ios ]
+    if: always()
+    steps:
+      - name: Report per-platform status
+        run: |
+          {
+            echo "### The app was launched and driven on:"
+            echo ""
+            echo "| Platform | Runner | Result |"
+            echo "| --- | --- | --- |"
+            echo "| Android emulator | ubuntu-latest | ${{ needs.android.result }} |"
+            echo "| Windows desktop | windows-latest | ${{ needs.windows.result }} |"
+            echo "| Mac Catalyst desktop | macos-latest | ${{ needs.maccatalyst.result }} |"
+            echo "| iOS Simulator | macos-latest | ${{ needs.ios.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any platform failed
+        if: contains(needs.*.result, 'failure')
+        run: exit 1

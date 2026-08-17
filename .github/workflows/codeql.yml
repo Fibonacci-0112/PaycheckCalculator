@@ -13,19 +13,43 @@ permissions:
   contents: read
   security-events: write
 
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
+    name: Analyze ${{ matrix.language }}
     # avoid fork-token permission failures on upload
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'csharp' ]
+        include:
+          - language: csharp
+            # `none` analyses the source directly instead of watching a compiler. That is
+            # what lets a Linux runner cover PaycheckCalculator.App: autobuild could only
+            # ever compile the projects that build without the MAUI workload, silently
+            # leaving the entire MAUI app — the largest hand-written surface in the repo —
+            # out of every scan.
+            build-mode: none
+          - language: actions
+            # Scans the workflows themselves for injection and permission problems. Worth
+            # having the moment CI grows beyond a single build job.
+            build-mode: none
+          - language: javascript-typescript
+            # wwwroot/export.js and the Blazor interop scripts.
+            build-mode: none
     steps:
       - uses: actions/checkout@v4
+
       - uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-and-quality
+
       - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

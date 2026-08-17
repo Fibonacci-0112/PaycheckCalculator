@@ -1,0 +1,54 @@
+{
+  "name": "PaycheckCalculator (.NET 11 + MAUI Android)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  // The Android emulator needs /dev/kvm. On a host with nested virtualisation this lets
+  // the container boot an emulator and actually run the MAUI app; without it everything
+  // else here still works, the emulator just isn't available.
+  "runArgs": [
+    "--device=/dev/kvm"
+  ],
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/powershell:1": {}
+  },
+
+  "containerEnv": {
+    "DOTNET_ROOT": "/workspaces/PaycheckCalculator/.dotnet",
+    "DOTNET_NOLOGO": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "ANDROID_HOME": "/opt/android-sdk",
+    "ANDROID_SDK_ROOT": "/opt/android-sdk"
+  },
+
+  "remoteEnv": {
+    "PATH": "/workspaces/PaycheckCalculator/.dotnet:${containerEnv:PATH}:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/opt/android-sdk/cmdline-tools/latest/bin"
+  },
+
+  // Installs the exact SDK from global.json and the maui-android workload. Runs once when
+  // the container is created; `.dotnet/` lives in the workspace so it survives rebuilds of
+  // the container's own layers.
+  "postCreateCommand": "bash scripts/setup-dev.sh",
+
+  "forwardPorts": [ 5000, 5201, 4723 ],
+  "portsAttributes": {
+    "5000": { "label": "Blazor web app" },
+    "5201": { "label": "Sync API" },
+    "4723": { "label": "Appium server" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.dotnet-maui",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

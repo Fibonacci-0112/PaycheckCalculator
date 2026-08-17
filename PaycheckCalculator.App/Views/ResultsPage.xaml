@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:PaycheckCalculator.App.Controls"
@@ -40,6 +40,7 @@
                        FontAttributes="Bold"
                        CharacterSpacing="1" />
                 <Label Text="{Binding ResultCard.NetPay, StringFormat='{0:C}'}"
+                       AutomationId="Results_NetPay"
                        TextColor="{StaticResource OnPrimary}"
                        FontSize="22"
                        FontAttributes="Bold" />
@@ -52,6 +53,7 @@
                        CharacterSpacing="1"
                        HorizontalTextAlignment="End" />
                 <Label Text="{Binding Projection.AnnualizedNetPay, StringFormat='{0:C0}'}"
+                       AutomationId="Results_AnnualNetPay"
                        TextColor="{StaticResource OnPrimary}"
                        FontSize="22"
                        FontAttributes="Bold"
@@ -63,7 +65,7 @@
         <Grid Grid.Row="1" BackgroundColor="{StaticResource Surface}" Padding="12,8" ColumnSpacing="8"
               ColumnDefinitions="*,*" IsVisible="{Binding ShowResultTabs}">
             <Button Grid.Column="0" Text="Per Paycheck"
-                    Command="{Binding ShowPerPeriodTabCommand}"
+                    Command="{Binding ShowPerPeriodTabCommand}" AutomationId="ResultsTab_PerPaycheck"
                     FontSize="13" CornerRadius="8" Padding="0,6" HeightRequest="40"
                     AutomationProperties.Name="Show per-paycheck results">
                 <Button.Triggers>
@@ -78,7 +80,7 @@
                 </Button.Triggers>
             </Button>
             <Button Grid.Column="1" Text="Annual"
-                    Command="{Binding ShowAnnualTabCommand}"
+                    Command="{Binding ShowAnnualTabCommand}" AutomationId="ResultsTab_Annual"
                     FontSize="13" CornerRadius="8" Padding="0,6" HeightRequest="40"
                     AutomationProperties.Name="Show annual projection">
                 <Button.Triggers>

@@ -29,6 +29,7 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 
 ### Development
 
+- **[Development Environment & CI/CD](Development-Environment.md)** — Machine setup scripts, why MAUI needs three host operating systems, the Appium and Playwright suites that run the apps, and what every CI workflow covers.
 - **[Contributing](Contributing.md)** — Development workflow, testing expectations, code organization, tax logic rules, sync rules, and documentation expectations.
 
 ---

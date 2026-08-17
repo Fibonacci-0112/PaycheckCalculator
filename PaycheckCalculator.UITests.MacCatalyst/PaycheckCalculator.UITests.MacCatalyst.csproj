@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\PaycheckCalculator.UITests.Shared\UITests.Common.props" />
+
+  <PropertyGroup>
+    <AssemblyName>PaycheckCalculator.UITests.MacCatalyst</AssemblyName>
+  </PropertyGroup>
+
+</Project>

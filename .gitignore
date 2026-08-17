@@ -430,3 +430,14 @@ PaycheckCalculator.Api/*.db-shm
 PaycheckCalculator.Api/*.db-wal
 .dotnet/
 dotnet-install.sh
+
+# Local development environment (scripts/setup-dev.sh)
+.android-sdk/
+# UI / end-to-end test output
+TestResults/
+uitest-artifacts/
+appium.log
+appium.err
+blazor-server.log
+blazor-server.pid
+artifacts/

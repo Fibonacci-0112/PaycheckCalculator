@@ -95,15 +95,40 @@ The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalc
 
 ## Prerequisites
 
+The fastest route is the setup script, which installs the exact SDK pinned in `global.json`,
+the MAUI workloads your host OS supports, and the Android SDK:
+
+```bash
+scripts/setup-dev.sh --all           # Linux / macOS
+pwsh scripts/setup-dev.ps1 -All      # Windows
+source scripts/dotnet-env.sh         # each new shell (Linux/macOS)
+```
+
+A dev container covering the same ground is in `.devcontainer/`. See
+**[Development Environment & CI/CD](docs/wiki/Development-Environment.md)** for the details.
+
+Installing manually instead:
+
 - [.NET 11 SDK](https://dotnet.microsoft.com/) preview matching `global.json`.
-- .NET MAUI workload only when building or running `PaycheckCalculator.App`:
-  ```bash
-  dotnet workload install maui
-  ```
-- Android SDK, Xcode on macOS (for iOS and Mac Catalyst), or Windows 10+ SDK for the corresponding MAUI target.
+- The MAUI workload, only when building `PaycheckCalculator.App`. The workload id depends on
+  the host: `dotnet workload install maui` on Windows and macOS, `maui-android` on Linux.
+- Android SDK (`platforms;android-37.0`, `build-tools;37.0.0`, `platform-tools`) plus a JDK;
+  Xcode on macOS for iOS and Mac Catalyst; the Windows 10+ SDK for the WinUI target.
 - PostgreSQL only when running `PaycheckCalculator.Api` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
 
 `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
+
+### Which MAUI targets build where
+
+The MAUI target frameworks are not portable across host operating systems, so full coverage
+needs three of them — Linux and Windows alone leave iOS and Mac Catalyst with no host:
+
+| Target | Linux | Windows | macOS |
+|---|:---:|:---:|:---:|
+| `net11.0-android` | ✅ | ✅ | ✅ |
+| `net11.0-windows10.0.19041.0` | — | ✅ | — |
+| `net11.0-ios` | — | — | ✅ |
+| `net11.0-maccatalyst` | — | — | ✅ |
 
 ## Getting Started
 
@@ -132,7 +157,28 @@ dotnet test PaycheckCalculator.Tests
 
 The test project covers the paycheck pipeline, federal withholding, FICA, all state calculators, dynamic schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, reports, snapshot JSON, merge behavior, sync API integration, and export renderers.
 
-CI explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux. Its project references build `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, and `PaycheckCalculator.Blazor` transitively; the MAUI app is not built by that workflow. CodeQL runs in a separate workflow.
+### Run the apps under test
+
+Unit tests prove the code is correct; these prove the apps actually start and work.
+
+```bash
+dotnet test PaycheckCalculator.E2ETests          # Blazor, driven in a real browser (Playwright)
+dotnet test PaycheckCalculator.UITests.Android   # MAUI on a device/emulator (Appium)
+```
+
+The MAUI suites need the app deployed and an Appium server running; there is one runner
+project per platform (`.Android`, `.iOS`, `.MacCatalyst`, `.Windows`). See
+[Development Environment & CI/CD](docs/wiki/Development-Environment.md).
+
+### CI/CD
+
+| Workflow | Runners | Covers |
+|---|---|---|
+| `ci.yml` | ubuntu | Unit + integration tests; Blazor publishes, starts, and passes browser end-to-end tests; sync API publishes. |
+| `maui-build.yml` | ubuntu + windows + macos | MAUI compiles for Android, WinUI, iOS, and Mac Catalyst. |
+| `maui-uitests.yml` | ubuntu + windows + macos | MAUI **launches and is driven** on an Android emulator, iOS Simulator, macOS desktop, and Windows desktop. |
+| `codeql.yml` | ubuntu | CodeQL over C#, JavaScript/TypeScript, and the workflows themselves. |
+| `release.yml` | ubuntu + windows + macos | On a `v*` tag: builds all shippable artifacts and drafts a GitHub Release. |
 
 ### Run the Blazor web app
 

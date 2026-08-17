@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:behaviors="clr-namespace:PaycheckCalculator.App.Behaviors"
@@ -18,24 +18,28 @@
                 Margin="12,12,12,8">
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
                 <Button x:Name="TabPayHours" Text="Pay &amp; Hours"
+                        AutomationId="InputsTab_PayHours"
                         Clicked="OnTabClicked"
                         BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                         FontSize="12" FontAttributes="Bold"
                         CornerRadius="8" BorderWidth="0"
                         Padding="2,8" Grid.Column="0" />
                 <Button x:Name="TabFederal" Text="Federal"
+                        AutomationId="InputsTab_Federal"
                         Clicked="OnTabClicked"
                         BackgroundColor="Transparent" TextColor="{StaticResource Muted}"
                         FontSize="12"
                         CornerRadius="8" BorderWidth="0"
                         Padding="2,8" Grid.Column="1" />
                 <Button x:Name="TabState" Text="State"
+                        AutomationId="InputsTab_State"
                         Clicked="OnTabClicked"
                         BackgroundColor="Transparent" TextColor="{StaticResource Muted}"
                         FontSize="12"
                         CornerRadius="8" BorderWidth="0"
                         Padding="2,8" Grid.Column="2" />
                 <Button x:Name="TabDeductions" Text="Deductions"
+                        AutomationId="InputsTab_Deductions"
                         Clicked="OnTabClicked"
                         BackgroundColor="Transparent" TextColor="{StaticResource Muted}"
                         FontSize="12"
@@ -54,7 +58,7 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <Label Text="Paycheck Name" Grid.Column="0"
                                    Style="{StaticResource FieldLabel}" />
-                            <Entry Text="{Binding PaycheckName}" Placeholder="e.g. Job 1"
+                            <Entry Text="{Binding PaycheckName}" AutomationId="Input_PaycheckName" Placeholder="e.g. Job 1"
                                    Grid.Column="1" TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}" />
                         </Grid>
 
@@ -90,7 +94,7 @@
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Pay Rate" Grid.Column="0"
                                        Style="{StaticResource FieldLabel}" />
-                                <Entry Text="{Binding HourlyRate}" Keyboard="Numeric" Grid.Column="1"
+                                <Entry Text="{Binding HourlyRate}" AutomationId="Input_HourlyRate" Keyboard="Numeric" Grid.Column="1"
                                        TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior IsCurrency="True" />
@@ -100,7 +104,7 @@
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Regular Hours" Grid.Column="0"
                                        Style="{StaticResource FieldLabel}" />
-                                <Entry Text="{Binding RegularHours}" Keyboard="Numeric" Grid.Column="1"
+                                <Entry Text="{Binding RegularHours}" AutomationId="Input_RegularHours" Keyboard="Numeric" Grid.Column="1"
                                        TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior />
@@ -110,7 +114,7 @@
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Label Text="Overtime Hours" Grid.Column="0"
                                        Style="{StaticResource FieldLabel}" />
-                                <Entry Text="{Binding OvertimeHours}" Keyboard="Numeric" Grid.Column="1"
+                                <Entry Text="{Binding OvertimeHours}" AutomationId="Input_OvertimeHours" Keyboard="Numeric" Grid.Column="1"
                                        TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
                                     <Entry.Behaviors>
                                         <behaviors:DecimalFormatBehavior />
@@ -240,6 +244,7 @@
                         </Grid>
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
+                                AutomationId="Button_Calculate_PayHours"
                                 BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
@@ -295,6 +300,7 @@
                             </Entry.Behaviors>
                         </Entry>
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
+                                AutomationId="Button_Calculate_Federal"
                                 Grid.Row="6" Grid.ColumnSpan="2"
                                 BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
@@ -369,6 +375,7 @@
                         </VerticalStackLayout>
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
+                                AutomationId="Button_Calculate_State"
                                 BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />
@@ -455,6 +462,7 @@
                                 FontAttributes="Bold" CornerRadius="8" />
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"
+                                AutomationId="Button_Calculate_Deductions"
                                 BackgroundColor="{StaticResource Primary}" TextColor="{StaticResource OnPrimary}"
                                 FontAttributes="Bold" CornerRadius="8"
                                 Margin="0,6,0,0" />

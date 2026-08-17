@@ -1,0 +1,169 @@
+name: CI
+
+# The fast gate: everything that runs on a Linux runner in a few minutes.
+# MAUI builds live in maui-build.yml and the device runs in maui-uitests.yml, because
+# those need Windows and macOS runners and take considerably longer.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit + integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          # Core, Shared, Api, Blazor and Tests all target plain net11.0 — no workload needed.
+          workloads: none
+          cache-key-suffix: tests
+
+      - name: Restore
+        run: dotnet restore PaycheckCalculator.Tests
+
+      - name: Build
+        run: dotnet build PaycheckCalculator.Tests --no-restore -c Release
+
+      - name: Test
+        run: >-
+          dotnet test PaycheckCalculator.Tests --no-build -c Release
+          --logger "trx;LogFileName=unit-tests.trx"
+          --logger "console;verbosity=normal"
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: ./TestResults
+          retention-days: 14
+
+  blazor:
+    name: Blazor build + end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          workloads: none
+          cache-key-suffix: blazor
+
+      - name: Publish the Blazor app
+        run: dotnet publish PaycheckCalculator.Blazor -c Release -o ./artifacts/blazor
+
+      - name: Verify tax data shipped with the publish output
+        # The Blazor app reads its tax tables from a TaxData/ folder next to the binaries
+        # (FileSystemTaxDataReader). A csproj link that stops matching would leave the app
+        # building fine and failing at run time on the first calculation, so fail loudly here.
+        run: |
+          set -euo pipefail
+          count=$(find ./artifacts/blazor/TaxData -name '*.json' | wc -l)
+          echo "TaxData JSON files in publish output: $count"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No tax data JSON was published. Check the TaxData links in PaycheckCalculator.Blazor.csproj."
+            exit 1
+          fi
+
+      - name: Build the end-to-end test project
+        run: dotnet build PaycheckCalculator.E2ETests -c Release
+
+      - name: Install Playwright browsers
+        # pwsh ships on every GitHub-hosted runner. --with-deps pulls the shared libraries
+        # headless Chromium needs on a bare Ubuntu image.
+        run: |
+          set -euo pipefail
+          script=$(find PaycheckCalculator.E2ETests/bin/Release -name playwright.ps1 | head -1)
+          pwsh "$script" install chromium --with-deps
+
+      - name: Start the published Blazor app
+        run: |
+          set -euo pipefail
+          ASPNETCORE_ENVIRONMENT=Development \
+          ASPNETCORE_URLS=http://127.0.0.1:5000 \
+            ./artifacts/blazor/PaycheckCalculator.Blazor > blazor-server.log 2>&1 &
+          echo $! > blazor-server.pid
+          # Poll rather than sleep: a fixed wait is either flaky or wasteful.
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5000 > /dev/null; then
+              echo "Blazor app is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::The Blazor app did not start within 120s."
+          cat blazor-server.log
+          exit 1
+
+      - name: Run end-to-end tests
+        env:
+          # Point the fixture at the *published* build, so the tests exercise the artifact
+          # that would actually ship rather than a `dotnet run` of the source tree.
+          E2E_BASE_URL: http://127.0.0.1:5000
+        run: >-
+          dotnet test PaycheckCalculator.E2ETests --no-build -c Release
+          --logger "trx;LogFileName=blazor-e2e.trx"
+          --results-directory ./TestResults
+
+      - name: Stop the Blazor app
+        if: always()
+        run: kill "$(cat blazor-server.pid)" 2>/dev/null || true
+
+      - name: Upload server log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blazor-server-log
+          path: blazor-server.log
+          retention-days: 7
+
+      - name: Upload end-to-end results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blazor-e2e-results
+          path: ./TestResults
+          retention-days: 14
+
+      - name: Upload published Blazor app
+        uses: actions/upload-artifact@v4
+        with:
+          name: blazor-app
+          path: ./artifacts/blazor
+          retention-days: 7
+
+  api:
+    name: Sync API build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-dotnet-maui
+        with:
+          workloads: none
+          cache-key-suffix: api
+
+      - name: Publish the sync API
+        run: dotnet publish PaycheckCalculator.Api -c Release -o ./artifacts/api
+
+      - name: Upload published API
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-api
+          path: ./artifacts/api
+          retention-days: 7

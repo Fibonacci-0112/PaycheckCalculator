@@ -1,0 +1,92 @@
+name: Setup .NET and MAUI
+description: >-
+  Installs the .NET SDK pinned in global.json plus the MAUI workloads the current runner OS
+  is capable of building, and optionally the Android SDK packages the app needs.
+
+inputs:
+  workloads:
+    description: >-
+      Space-separated workload ids. Leave empty to install the right set for the runner OS:
+      `maui-android` on Linux (the only MAUI workload that installs there) and the full
+      `maui` workload on Windows and macOS. Pass `none` to skip workload installation
+      entirely — worth doing for jobs that only touch Core/Shared/Api/Blazor/Tests, since a
+      workload install adds several minutes.
+    required: false
+    default: ''
+  android-sdk:
+    description: Install the Android SDK packages required by the net11.0-android target.
+    required: false
+    default: 'false'
+  cache-key-suffix:
+    description: Extra discriminator for the NuGet cache key.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        # Read the version from global.json rather than repeating it here — the repo pins a
+        # preview SDK, and a duplicated version string is one more thing to forget to bump.
+        global-json-file: global.json
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        # The repo has no lock files, so key on the project files: any dependency change
+        # has to touch one of them.
+        key: nuget-${{ runner.os }}-${{ inputs.cache-key-suffix }}-${{ hashFiles('**/*.csproj', '**/*.props', 'global.json') }}
+        restore-keys: |
+          nuget-${{ runner.os }}-${{ inputs.cache-key-suffix }}-
+          nuget-${{ runner.os }}-
+
+    - name: Resolve workloads for this runner
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        requested='${{ inputs.workloads }}'
+        if [ -n "$requested" ]; then
+          echo "workloads=$requested" >> "$GITHUB_OUTPUT"
+        elif [ "$RUNNER_OS" = "Linux" ]; then
+          # Apple and Windows toolchains are not redistributable, so Linux gets Android only.
+          echo "workloads=maui-android" >> "$GITHUB_OUTPUT"
+        else
+          echo "workloads=maui" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Install MAUI workloads
+      if: steps.resolve.outputs.workloads != 'none'
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "Installing workloads: ${{ steps.resolve.outputs.workloads }}"
+        dotnet workload install ${{ steps.resolve.outputs.workloads }} --skip-sign-check
+        dotnet workload list
+
+    - name: Install Android SDK packages
+      if: inputs.android-sdk == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Read ANDROID_HOME from the process environment rather than the `env` expression
+        # context — the latter only sees variables set by the workflow itself, so it would
+        # come back empty and mask the SDK the runner image already provides.
+        # GitHub's Linux and Windows images ship one; the script detects the existing
+        # command-line tools and only adds the missing packages. macOS arm64 images may not,
+        # in which case the script installs into $HOME/android-sdk.
+        export ANDROID_HOME="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/android-sdk}}"
+        bash scripts/install-android-sdk.sh
+        echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+
+    - name: Report toolchain
+      shell: bash
+      run: |
+        echo "runner os : $RUNNER_OS"
+        echo "dotnet    : $(dotnet --version)"
+        echo "java      : $(java -version 2>&1 | head -1 || echo 'not installed')"
+        echo "android   : ${ANDROID_HOME:-<unset>}"

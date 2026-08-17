@@ -7,4 +7,17 @@
   <Project Path="PaycheckCalculator.Core/PaycheckCalculator.Core.csproj" />
   <Project Path="PaycheckCalculator.Shared/PaycheckCalculator.Shared.csproj" />
   <Project Path="PaycheckCalculator.Tests/PaycheckCalculator.Tests.csproj" />
+  <Folder Name="/Tests.EndToEnd/">
+    <!--
+      These need a running app rather than just a compiler, so they are never part of a
+      plain `dotnet test`: the E2E project boots the Blazor server, and the UI test projects
+      drive a device through Appium. They build anywhere; they only pass when a target is
+      actually deployed. See docs/wiki/Development-Environment.md.
+    -->
+    <Project Path="PaycheckCalculator.E2ETests/PaycheckCalculator.E2ETests.csproj" />
+    <Project Path="PaycheckCalculator.UITests.Android/PaycheckCalculator.UITests.Android.csproj" />
+    <Project Path="PaycheckCalculator.UITests.MacCatalyst/PaycheckCalculator.UITests.MacCatalyst.csproj" />
+    <Project Path="PaycheckCalculator.UITests.Windows/PaycheckCalculator.UITests.Windows.csproj" />
+    <Project Path="PaycheckCalculator.UITests.iOS/PaycheckCalculator.UITests.iOS.csproj" />
+  </Folder>
 </Solution>

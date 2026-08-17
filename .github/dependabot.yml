@@ -1,0 +1,38 @@
+version: 2
+
+updates:
+  # NuGet. The repo pins preview .NET 11 packages that move together with the SDK in
+  # global.json, so these are grouped: bumping one Microsoft.Extensions package on its own
+  # tends to produce a version mismatch that only shows up at run time.
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      dotnet-preview:
+        patterns:
+          - "Microsoft.Extensions.*"
+          - "Microsoft.EntityFrameworkCore*"
+          - "Microsoft.AspNetCore.*"
+          - "Microsoft.Maui.*"
+      test-tooling:
+        patterns:
+          - "xunit*"
+          - "NUnit*"
+          - "Microsoft.NET.Test.Sdk"
+          - "Appium.WebDriver"
+          - "Microsoft.Playwright"
+
+  # Action versions. Keeps the CI definitions from silently rotting on a deprecated runner
+  # image or a yanked action release.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: [ "*" ]

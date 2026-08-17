@@ -24,6 +24,14 @@ dotnet build PaycheckCalculator.Core
 # Run all tests (transitively builds Core, Shared, Api, and Blazor)
 dotnet test PaycheckCalculator.Tests
 
+# Set up a machine from scratch: pinned SDK + MAUI workloads for this host + Android SDK
+scripts/setup-dev.sh --all          # Linux/macOS   (Windows: pwsh scripts/setup-dev.ps1 -All)
+source scripts/dotnet-env.sh        # every new shell
+
+# Run the apps under test (needs a running app, not just a compiler)
+dotnet test PaycheckCalculator.E2ETests           # Blazor in a real browser (Playwright)
+dotnet test PaycheckCalculator.UITests.Android    # MAUI on a device/emulator (Appium)
+
 # Run a single test class or single test
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~CaliforniaPercentageCalculatorTest"
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~OklahomaOw2RoundingTest&DisplayName~RoundsToWholeDollar"
@@ -41,7 +49,26 @@ dotnet run --project PaycheckCalculator.App
 
 `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` target `net11.0` and build on Linux without the MAUI workload. The Blazor app calls the API server-side (so no CORS); for end-to-end account/sync testing run `PaycheckCalculator.Api` and `PaycheckCalculator.Blazor` together.
 
-`PaycheckCalculator.App` targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows`; Apple targets are included only on macOS and the Windows target only on Windows. CI (`.github/workflows/dotnet.yml`) explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux, transitively building Core, Shared, API, and Blazor through its project references. MAUI is not built by that workflow; `codeql.yml` runs CodeQL separately.
+`PaycheckCalculator.App` targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows`; Apple targets are included only on macOS and the Windows target only on Windows. **Android does build on Linux** — install the `maui-android` workload (not `maui`, which needs Windows or macOS) plus a JDK and the Android SDK; `scripts/setup-dev.sh` does all of it. iOS/Mac Catalyst need macOS + Xcode and WinUI needs Windows, with no workaround.
+
+### CI/CD and the test suites
+
+| Workflow | Runners | Covers |
+|---|---|---|
+| `.github/workflows/ci.yml` | ubuntu | `PaycheckCalculator.Tests`; Blazor publish → **start** → browser end-to-end; API publish. |
+| `.github/workflows/maui-build.yml` | ubuntu + windows + macos | MAUI compiles for all four target platforms. |
+| `.github/workflows/maui-uitests.yml` | ubuntu + windows + macos | MAUI **launches and is driven** on emulator / simulator / desktop. |
+| `.github/workflows/codeql.yml` | ubuntu | CodeQL over C# (`build-mode: none`, so the MAUI app is included), JS/TS, and the workflows. |
+| `.github/workflows/release.yml` | ubuntu + windows + macos | On a `v*` tag: builds shippable artifacts, drafts a Release. Signing is optional. |
+
+All of them share the composite action `.github/actions/setup-dotnet-maui`, which reads the SDK version from `global.json`, picks the workload set for the runner OS, and reuses `scripts/install-android-sdk.sh` — the same script local setup runs, so CI and dev cannot drift.
+
+Two suites exist beyond the unit tests and are **not** part of `dotnet test PaycheckCalculator.Tests`, because they need a running app rather than a compiler:
+
+- `PaycheckCalculator.E2ETests` — xUnit + Playwright, drives the Blazor app in a real browser.
+- `PaycheckCalculator.UITests.{Android,iOS,MacCatalyst,Windows}` — NUnit + Appium, drives the MAUI app on a device. Shared test code lives in `PaycheckCalculator.UITests.Shared/` and is **linked** into each runner project (not project-referenced): NUnit binds a `[SetUpFixture]` to fixtures by namespace, so every runner assembly must compile them alongside its own `AppiumSetup`. All five share the namespace `PaycheckCalculator.UITests` — do not change it.
+
+These are the only tests that catch a tax JSON renamed without updating the `MauiAsset` / `TaxData` linker entries: that mistake compiles cleanly and fails only at run time on device. If you add a control the tests need to reach, give it an `AutomationId` in XAML (MAUI) or a `data-testid` attribute (Blazor). See `docs/wiki/Development-Environment.md`.
 
 ## Architecture
 

@@ -1,0 +1,43 @@
+<!--
+  Shared configuration for the four platform UI-test projects.
+
+  The test *code* lives in PaycheckCalculator.UITests.Shared/ and is linked into each
+  platform project rather than being a project reference: NUnit's [SetUpFixture] only
+  applies to fixtures in the same namespace and assembly, so every platform assembly has
+  to compile the fixtures alongside its own AppiumSetup. Linking the files also keeps the
+  Shared folder from being buildable or testable on its own, which is what you want — it
+  has no driver and could never run.
+-->
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- One namespace across all platform assemblies: NUnit matches a [SetUpFixture] to
+         the fixtures it initializes by namespace. Diverge here and the driver is never
+         created, and every test fails with a null reference that looks unrelated. -->
+    <RootNamespace>PaycheckCalculator.UITests</RootNamespace>
+    <!-- These drive a real device or window; running them in parallel would have them
+         fighting over the same app instance. -->
+    <TestTfmsInParallel>false</TestTfmsInParallel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Appium.WebDriver" Version="8.3.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="NUnit" Version="4.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)*.cs" LinkBase="Shared" />
+  </ItemGroup>
+
+</Project>
