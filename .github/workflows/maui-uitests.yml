@@ -78,6 +78,11 @@ jobs:
             echo "::error::No signed APK was produced."
             exit 1
           fi
+          # Absolute: the test host resolves UITEST_APP_PATH relative to its own working
+          # directory, which for `dotnet test` is the test assembly's bin folder, not the
+          # repo root. A relative path there produces a nonexistent nested path and Appium
+          # rejects the session with "does not exist or is not accessible".
+          apk=$(realpath "$apk")
           echo "Found $apk"
           echo "path=$apk" >> "$GITHUB_OUTPUT"
 
@@ -158,6 +163,7 @@ jobs:
             echo "::error::PaycheckCalculator.App.exe was not produced."
             exit 1
           fi
+          exe=$(realpath "$exe")
           echo "Found $exe"
           echo "path=$(cygpath -w "$exe")" >> "$GITHUB_OUTPUT"
 

@@ -25,13 +25,45 @@ public static class TestConfig
     /// Path to the built app to install (.apk / .app / .exe). When unset the tests attach to
     /// whatever build is already deployed on the device, which is the usual local workflow.
     /// </summary>
+    /// <remarks>
+    /// A relative value is resolved against the repository root, not the process working
+    /// directory. Under `dotnet test` the working directory is the test assembly's output
+    /// folder, so plain <c>Path.GetFullPath</c> turns a repo-relative path like
+    /// "PaycheckCalculator.App/bin/…/app.apk" into a nonexistent path nested under
+    /// "PaycheckCalculator.UITests.Android/bin/Debug/net11.0/" — and the only symptom is
+    /// Appium refusing the session with "does not exist or is not accessible".
+    /// </remarks>
     public static string? AppPath
     {
         get
         {
             var path = Environment.GetEnvironmentVariable("UITEST_APP_PATH");
-            return string.IsNullOrWhiteSpace(path) ? null : Path.GetFullPath(path);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            if (Path.IsPathRooted(path))
+            {
+                return Path.GetFullPath(path);
+            }
+
+            var root = FindRepositoryRoot();
+            return root is null
+                ? Path.GetFullPath(path)
+                : Path.GetFullPath(Path.Combine(root, path));
         }
+    }
+
+    private static string? FindRepositoryRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "PaycheckCalculator.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        return dir?.FullName;
     }
 
     /// <summary>Target device/simulator name. Platform-specific default applied by the caller.</summary>
