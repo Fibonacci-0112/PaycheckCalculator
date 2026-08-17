@@ -1,31 +1,85 @@
+# CodeQL advanced setup for PaycheckCalculator.
+#
+# Reference:
+#   https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/configure-code-scanning/configuring-advanced-setup-for-code-scanning
+#   https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options
+
 name: "CodeQL Advanced"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
   schedule:
+    # Weekly, Sundays at 03:00 UTC.
     - cron: '0 3 * * 0'
+  workflow_dispatch:
 
-permissions:
-  actions: read
-  contents: read
-  security-events: write
+# Deny by default; the analyze job grants only the scopes CodeQL needs.
+permissions: {}
 
 jobs:
   analyze:
-    # avoid fork-token permission failures on upload
+    name: Analyze (${{ matrix.language }})
+    # Pull requests from forks run with a read-only token, which cannot upload results.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
+    permissions:
+      # Required to upload the analysis results.
+      security-events: write
+      # Required to fetch internal or private CodeQL packs.
+      packages: read
+      # Only required for workflows in private repositories.
+      actions: read
+      contents: read
+
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'csharp' ]
+        include:
+          # `autobuild` cannot build this repository: it walks the whole solution and
+          # PaycheckCalculator.App needs the MAUI workloads, which are not installed on
+          # GitHub's Linux runners (NETSDK1147). The manual build below compiles the
+          # projects that do build on Linux instead.
+          - language: csharp
+            build-mode: manual
+          # PaycheckCalculator.Blazor/wwwroot/export.js
+          - language: javascript-typescript
+            build-mode: none
+          # The workflow files in .github/workflows
+          - language: actions
+            build-mode: none
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # Runs before `init` so the traced build uses an SDK that satisfies global.json.
+      - name: Set up .NET
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
+          build-mode: ${{ matrix.build-mode }}
+          # To run extra queries, add for example: queries: security-extended
+
+      # Mirrors .github/workflows/dotnet.yml: building the test project transitively builds
+      # Core, Shared, Api, and Blazor (including generated Razor code) without the MAUI
+      # workload. PaycheckCalculator.App is therefore not covered by this analysis.
+      - name: Build C# projects
+        if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          dotnet restore PaycheckCalculator.Tests
+          dotnet build PaycheckCalculator.Tests --no-restore
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"

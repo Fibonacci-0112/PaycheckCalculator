@@ -270,12 +270,28 @@ Api, and Blazor through project references — while never requiring the MAUI wo
 
 ### `.github/workflows/codeql.yml`
 
-CodeQL Advanced analysis for `csharp`, on push, pull request, and a weekly Sunday 03:00 UTC
-schedule. It skips PRs from forks (`github.event.pull_request.head.repo.fork == false`) to
-avoid token-permission failures on the results upload, and uses `github/codeql-action/autobuild`.
+CodeQL advanced setup, on push, pull request, a weekly Sunday 03:00 UTC schedule, and
+`workflow_dispatch`. It skips PRs from forks (`github.event.pull_request.head.repo.fork == false`)
+because their read-only token cannot upload results. Permissions are denied at the workflow level
+and granted per job (`security-events: write`, `packages: read`, `actions: read`, `contents: read`).
 
-**MAUI is not built by either workflow.** A change that only compiles under the MAUI workload
-will not be caught by CI — build `PaycheckCalculator.App` locally when you touch it.
+A matrix analyzes one language per job, each with its own build mode:
+
+| Language | Build mode | Covers |
+| --- | --- | --- |
+| `csharp` | `manual` | Core, Shared, Api, Blazor, Tests |
+| `javascript-typescript` | `none` | `PaycheckCalculator.Blazor/wwwroot/export.js` |
+| `actions` | `none` | `.github/workflows/*` |
+
+`autobuild` cannot be used: it walks the whole solution and fails on `PaycheckCalculator.App`
+with `NETSDK1147` because the MAUI workloads are not installed on GitHub's Linux runners. The
+manual build instead runs `actions/setup-dotnet` against `global.json`, then restores and builds
+`PaycheckCalculator.Tests` — the same Linux-buildable set as `dotnet.yml`, including the generated
+Razor code. Each job uploads under `category: "/language:<language>"`.
+
+**MAUI is not built by either workflow**, so `PaycheckCalculator.App` is outside CodeQL's C#
+coverage. A change that only compiles under the MAUI workload will not be caught by CI — build
+`PaycheckCalculator.App` locally when you touch it.
 
 ---
 
