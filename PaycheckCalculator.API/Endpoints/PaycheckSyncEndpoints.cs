@@ -2,12 +2,12 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PaycheckCalculator.Api.Data;
+using PaycheckCalculator.API.Data;
 using PaycheckCalculator.Shared.Json;
 using PaycheckCalculator.Shared.Snapshots;
 using PaycheckCalculator.Shared.Sync;
 
-namespace PaycheckCalculator.Api.Endpoints;
+namespace PaycheckCalculator.API.Endpoints;
 
 /// <summary>
 /// The authorized paycheck sync endpoints. <c>POST /sync</c> merges a client's pushed state with the

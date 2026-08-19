@@ -20,6 +20,6 @@ plugin with:
 The 2026 graduated brackets (1.4%–11.0%) and the per-filing-status
 standard deductions are hard-coded as `decimal` constants in the
 calculator. Registration is centralized in `MauiProgram`,
-`PaycheckCalculator.Blazor/Program.cs`, and `PaycheckCalculator.Api/Program.cs`,
+`PaycheckCalculator.Blazor/Program.cs`, and `PaycheckCalculator.API/Program.cs`,
 alongside the other dedicated state calculators.
 

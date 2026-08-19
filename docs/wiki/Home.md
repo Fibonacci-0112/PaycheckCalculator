@@ -45,7 +45,7 @@ Current major capabilities include standard paycheck calculation, gross-up calcu
 | MAUI App | [`PaycheckCalculator.App/`](../../PaycheckCalculator.App/) |
 | Blazor Web App | [`PaycheckCalculator.Blazor/`](../../PaycheckCalculator.Blazor/) |
 | Shared contracts / sync | [`PaycheckCalculator.Shared/`](../../PaycheckCalculator.Shared/) |
-| Sync API | [`PaycheckCalculator.Api/`](../../PaycheckCalculator.Api/) |
+| Sync API | [`PaycheckCalculator.API/`](../../PaycheckCalculator.API/) |
 | Test Suite | [`PaycheckCalculator.Tests/`](../../PaycheckCalculator.Tests/) |
 | Accuracy incident process | [Accuracy & Source Governance](Accuracy-and-Source-Governance.md) |
 

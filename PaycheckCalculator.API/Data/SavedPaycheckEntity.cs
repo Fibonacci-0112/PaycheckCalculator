@@ -1,4 +1,4 @@
-namespace PaycheckCalculator.Api.Data;
+namespace PaycheckCalculator.API.Data;
 
 /// <summary>
 /// One stored paycheck (or delete tombstone) for a user. The primary key is

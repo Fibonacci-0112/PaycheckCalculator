@@ -2,21 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using PaycheckCalculator.Api.Data;
+using PaycheckCalculator.API.Data;
 
 #nullable disable
 
-namespace PaycheckCalculator.Api.Migrations
+namespace PaycheckCalculator.API.Migrations
 {
     [DbContext(typeof(SyncDbContext))]
-    [Migration("20260615085709_AddRecurringBillsAndSavingsGoals")]
-    partial class _20260615085709_AddRecurringBillsAndSavingsGoals
+    partial class SyncDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -221,7 +218,7 @@ namespace PaycheckCalculator.Api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.BudgetEntity", b =>
+            modelBuilder.Entity("PaycheckCalculator.API.Data.BudgetEntity", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -248,7 +245,7 @@ namespace PaycheckCalculator.Api.Migrations
                     b.ToTable("Budgets");
                 });
 
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.BudgetTransactionEntity", b =>
+            modelBuilder.Entity("PaycheckCalculator.API.Data.BudgetTransactionEntity", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -271,7 +268,7 @@ namespace PaycheckCalculator.Api.Migrations
                     b.ToTable("BudgetTransactions");
                 });
 
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.RecurringBillEntity", b =>
+            modelBuilder.Entity("PaycheckCalculator.API.Data.RecurringBillEntity", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -294,7 +291,7 @@ namespace PaycheckCalculator.Api.Migrations
                     b.ToTable("RecurringBills");
                 });
 
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.SavedPaycheckEntity", b =>
+            modelBuilder.Entity("PaycheckCalculator.API.Data.SavedPaycheckEntity", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -321,7 +318,7 @@ namespace PaycheckCalculator.Api.Migrations
                     b.ToTable("SavedPaychecks");
                 });
 
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.SavingsGoalEntity", b =>
+            modelBuilder.Entity("PaycheckCalculator.API.Data.SavingsGoalEntity", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");

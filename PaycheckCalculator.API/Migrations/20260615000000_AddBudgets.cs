@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PaycheckCalculator.Api.Migrations
+namespace PaycheckCalculator.API.Migrations
 {
     /// <inheritdoc />
     public partial class _20260615000000_AddBudgets : Migration

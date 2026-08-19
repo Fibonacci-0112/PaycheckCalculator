@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="PaycheckCalculator.Api/PaycheckCalculator.Api.csproj" />
+  <Project Path="PaycheckCalculator.API/PaycheckCalculator.API.csproj" />
   <Project Path="PaycheckCalculator.App/PaycheckCalculator.App.csproj">
     <Deploy Solution="Debug|*" />
   </Project>

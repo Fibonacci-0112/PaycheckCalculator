@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PaycheckCalculator.Api.Data;
-using PaycheckCalculator.Api.Endpoints;
+using PaycheckCalculator.API.Data;
+using PaycheckCalculator.API.Endpoints;
 using PaycheckCalculator.Shared.Json;
 
 var builder = WebApplication.CreateBuilder(args);

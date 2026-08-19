@@ -13,7 +13,7 @@ This page covers the development workflow, testing expectations, and project con
    dotnet build PaycheckCalculator.Core
    dotnet build PaycheckCalculator.Shared
    dotnet build PaycheckCalculator.Blazor
-   dotnet build PaycheckCalculator.Api
+   dotnet build PaycheckCalculator.API
    ```
 4. Run tests before changing behavior:
    ```bash
@@ -26,7 +26,7 @@ This page covers the development workflow, testing expectations, and project con
 For manual app checks:
 
 ```bash
-dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.API
 dotnet run --project PaycheckCalculator.Blazor
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
 dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios              # macOS + Xcode
@@ -40,7 +40,7 @@ dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
 
 - `PaycheckCalculator.Core` must stay free of MAUI, Blazor, HTTP, EF Core, and persistence dependencies.
 - `PaycheckCalculator.Shared` owns DTOs, JSON options, merge logic, API client code, store abstractions, sync services, and entitlement abstractions.
-- `PaycheckCalculator.Api` owns HTTP endpoints and EF Core persistence. It references Shared, not the front-ends.
+- `PaycheckCalculator.API` owns HTTP endpoints and EF Core persistence. It references Shared, not the front-ends.
 - `PaycheckCalculator.App` and `PaycheckCalculator.Blazor` own presentation and platform-specific storage/export behavior.
 - `PaycheckCalculator.Tests` should cover domain, sync, API, and export behavior.
 

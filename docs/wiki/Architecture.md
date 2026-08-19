@@ -8,7 +8,7 @@ The current solution has six projects:
 - `PaycheckCalculator.App` — .NET MAUI frontend for Android, iOS, macOS (Mac Catalyst), and Windows.
 - `PaycheckCalculator.Blazor` — Blazor Server web frontend.
 - `PaycheckCalculator.Shared` — sync DTOs, JSON options, deterministic mergers, HTTP client, store abstractions, and entitlement abstractions.
-- `PaycheckCalculator.Api` — ASP.NET Core Web API for optional accounts and sync.
+- `PaycheckCalculator.API` — ASP.NET Core Web API for optional accounts and sync.
 - `PaycheckCalculator.Tests` — xUnit test suite.
 
 ---
@@ -28,7 +28,7 @@ PaycheckCalculator.slnx
 ├── PaycheckCalculator.App/              # MAUI frontend
 ├── PaycheckCalculator.Blazor/           # Blazor Server frontend
 ├── PaycheckCalculator.Shared/           # Shared contracts and client sync infrastructure
-├── PaycheckCalculator.Api/              # ASP.NET Core Identity + sync API
+├── PaycheckCalculator.API/              # ASP.NET Core Identity + sync API
 └── PaycheckCalculator.Tests/            # xUnit suite
 ```
 
@@ -46,7 +46,7 @@ PaycheckCalculator.slnx
 
 5. **Money uses `decimal`.** Monetary values, rates, thresholds, deductions, and tax outputs use `decimal`; calculation paths should not introduce `double` or `float`.
 
-6. **Sync stays outside Core.** Sync DTOs, API client code, JSON options, and merge rules live in `PaycheckCalculator.Shared`. HTTP endpoints and EF Core persistence live in `PaycheckCalculator.Api`.
+6. **Sync stays outside Core.** Sync DTOs, API client code, JSON options, and merge rules live in `PaycheckCalculator.Shared`. HTTP endpoints and EF Core persistence live in `PaycheckCalculator.API`.
 
 7. **Mergers are deterministic.** Saved paychecks, budgets, transactions, recurring bills, and savings goals use last-write-wins merge rules with deletion markers so removals propagate.
 
@@ -59,14 +59,14 @@ PaycheckCalculator.Core
    ↑
 PaycheckCalculator.Shared
    ↑
-PaycheckCalculator.Api
+PaycheckCalculator.API
 
 PaycheckCalculator.App     → PaycheckCalculator.Core + PaycheckCalculator.Shared
 PaycheckCalculator.Blazor  → PaycheckCalculator.Core + PaycheckCalculator.Shared
 PaycheckCalculator.Tests   → Core + Shared + Api + Blazor
 ```
 
-`PaycheckCalculator.App` and `PaycheckCalculator.Blazor` communicate with `PaycheckCalculator.Api` over HTTP through `PaycheckApiClient`; they do not reference the API project directly.
+`PaycheckCalculator.App` and `PaycheckCalculator.Blazor` communicate with `PaycheckCalculator.API` over HTTP through `PaycheckApiClient`; they do not reference the API project directly.
 
 ---
 
@@ -161,7 +161,7 @@ Core models include:
 - `PaycheckApiClient`.
 - Store abstractions used by MAUI, Blazor, and sync orchestration.
 
-`PaycheckCalculator.Api` exposes account endpoints through ASP.NET Core Identity and authorized sync endpoints for paychecks and budgets. The budget sync endpoint merges four independent collections: budgets, transactions, recurring bills, and savings goals.
+`PaycheckCalculator.API` exposes account endpoints through ASP.NET Core Identity and authorized sync endpoints for paychecks and budgets. The budget sync endpoint merges four independent collections: budgets, transactions, recurring bills, and savings goals.
 
 The server persists sync state through `SyncDbContext` using PostgreSQL entities:
 

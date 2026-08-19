@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace PaycheckCalculator.Api.Migrations
+namespace PaycheckCalculator.API.Migrations
 {
     /// <inheritdoc />
     public partial class _20260614051721_InitialCreate : Migration

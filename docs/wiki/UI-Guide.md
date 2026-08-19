@@ -210,7 +210,7 @@ The Account page is optional. It supports:
 - Sign-out.
 - Editable sync server URL.
 
-Without an account, the app still works locally. With an account, saved paychecks and budget-related state sync through `PaycheckCalculator.Api`.
+Without an account, the app still works locally. With an account, saved paychecks and budget-related state sync through `PaycheckCalculator.API`.
 
 ---
 

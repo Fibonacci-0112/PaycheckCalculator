@@ -8,7 +8,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PaycheckCalculator.Core.Budgeting;
-using PaycheckCalculator.Api.Data;
+using PaycheckCalculator.API.Data;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.State;
 using PaycheckCalculator.Shared.Budgeting;

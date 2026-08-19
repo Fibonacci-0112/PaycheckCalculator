@@ -6,7 +6,7 @@ The solution currently ships three runtime surfaces backed by shared libraries:
 
 - **PaycheckCalculator.App** — .NET MAUI app for Android, iOS, macOS (Mac Catalyst), and Windows.
 - **PaycheckCalculator.Blazor** — Blazor Server web app.
-- **PaycheckCalculator.Api** — optional ASP.NET Core Web API for accounts and sync.
+- **PaycheckCalculator.API** — optional ASP.NET Core Web API for accounts and sync.
 
 The tax, gross-up, annual projection, budgeting, and reporting engines live in the UI-agnostic `PaycheckCalculator.Core` project. Sync DTOs, JSON configuration, merge logic, store abstractions, API client code, and entitlement abstractions live in `PaycheckCalculator.Shared`.
 
@@ -68,7 +68,7 @@ PaycheckCalculator.slnx
 │   ├── Entitlements/            # IEntitlementProvider and default free-tier provider
 │   ├── Json/                    # Shared System.Text.Json options and converters
 │   └── Sync/                    # Paycheck sync service and saved paycheck store abstraction
-├── PaycheckCalculator.Api/            # ASP.NET Core Web API for Identity accounts and sync
+├── PaycheckCalculator.API/            # ASP.NET Core Web API for Identity accounts and sync
 │   ├── Data/                    # SyncDbContext and EF Core entities
 │   ├── Endpoints/               # Paycheck and budget sync minimal API endpoints
 │   └── Migrations/              # PostgreSQL EF Core migrations
@@ -78,7 +78,7 @@ PaycheckCalculator.slnx
     └── wiki/                    # Project wiki
 ```
 
-The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalculator.App`, `PaycheckCalculator.Blazor`, `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, and `PaycheckCalculator.Tests`.
+The solution file includes six projects: `PaycheckCalculator.API`, `PaycheckCalculator.App`, `PaycheckCalculator.Blazor`, `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, and `PaycheckCalculator.Tests`.
 
 ## Technology Stack
 
@@ -101,9 +101,9 @@ The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalc
   dotnet workload install maui
   ```
 - Android SDK, Xcode on macOS (for iOS and Mac Catalyst), or Windows 10+ SDK for the corresponding MAUI target.
-- PostgreSQL only when running `PaycheckCalculator.Api` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
+- PostgreSQL only when running `PaycheckCalculator.API` against its default production-style provider. Integration tests use an in-memory SQLite-backed test path.
 
-`PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
+`PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.API`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
 
 ## Getting Started
 
@@ -113,7 +113,7 @@ The solution file includes six projects: `PaycheckCalculator.Api`, `PaycheckCalc
 dotnet build PaycheckCalculator.Core
 dotnet build PaycheckCalculator.Shared
 dotnet build PaycheckCalculator.Blazor
-dotnet build PaycheckCalculator.Api
+dotnet build PaycheckCalculator.API
 ```
 
 ### Build the full solution
@@ -132,7 +132,7 @@ dotnet test PaycheckCalculator.Tests
 
 The test project covers the paycheck pipeline, federal withholding, FICA, all state calculators, dynamic schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, reports, snapshot JSON, merge behavior, sync API integration, and export renderers.
 
-CI explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux. Its project references build `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, and `PaycheckCalculator.Blazor` transitively; the MAUI app is not built by that workflow. CodeQL runs in a separate workflow.
+CI explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux. Its project references build `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.API`, and `PaycheckCalculator.Blazor` transitively; the MAUI app is not built by that workflow. CodeQL runs in a separate workflow.
 
 ### Run the Blazor web app
 
@@ -143,7 +143,7 @@ dotnet run --project PaycheckCalculator.Blazor
 ### Run the sync API
 
 ```bash
-dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.API
 ```
 
 The API defaults to `http://localhost:5201` and uses `ConnectionStrings:Sync` for PostgreSQL. EF Core migrations are applied at startup when the provider is PostgreSQL.

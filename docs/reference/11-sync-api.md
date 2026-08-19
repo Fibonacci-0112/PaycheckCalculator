@@ -1,6 +1,6 @@
 # 11 — The Sync API
 
-`PaycheckCalculator.Api` is a standalone ASP.NET Core minimal-API project: ASP.NET Core Identity
+`PaycheckCalculator.API` is a standalone ASP.NET Core minimal-API project: ASP.NET Core Identity
 email/password accounts plus authorized sync endpoints for paychecks and budgets, backed by EF
 Core over PostgreSQL (SQLite in integration tests). It references `Shared` and **must never
 reference `App` or `Blazor`** — the front-ends talk to it exclusively over HTTP through
@@ -314,7 +314,7 @@ dependency in CI.
 ## Running it
 
 ```bash
-dotnet run --project PaycheckCalculator.Api   # defaults to http://localhost:5201
+dotnet run --project PaycheckCalculator.API   # defaults to http://localhost:5201
 ```
 
 `Properties/launchSettings.json` defines `http` (port 5201) and `https` (7201/5201) profiles,

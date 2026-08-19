@@ -7,7 +7,7 @@ A US paycheck calculator for 2026 withholding rules (federal, FICA, state, disab
 - `PaycheckCalculator.Core` — UI-agnostic tax/pay/budget calculation engines.
 - `PaycheckCalculator.Shared` — sync DTOs, JSON config, API client, entitlement abstractions.
 - `PaycheckCalculator.Blazor` — Blazor Server web front-end (runs in Replit).
-- `PaycheckCalculator.Api` — optional ASP.NET Core Web API for account sync (runs in Replit).
+- `PaycheckCalculator.API` — optional ASP.NET Core Web API for account sync (runs in Replit).
 - `PaycheckCalculator.App` — .NET MAUI app for Android, iOS, macOS (Mac Catalyst), and Windows (cannot run in Replit's preview; build/run it on a compatible machine or CI).
 - `PaycheckCalculator.Tests` — unit + integration tests.
 
@@ -32,7 +32,7 @@ If `global.json` is ever bumped to a newer preview build, re-run `dotnet-install
 
 ### Database
 
-`PaycheckCalculator.Api` uses EF Core migrations against PostgreSQL. It's wired to Replit's built-in Postgres database via the standard `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` environment variables (composed into `ConnectionStrings__Sync` inside `start-api.sh`, not hardcoded). Migrations apply automatically on startup (`db.Database.Migrate()` in `Program.cs`).
+`PaycheckCalculator.API` uses EF Core migrations against PostgreSQL. It's wired to Replit's built-in Postgres database via the standard `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` environment variables (composed into `ConnectionStrings__Sync` inside `start-api.sh`, not hardcoded). Migrations apply automatically on startup (`db.Database.Migrate()` in `Program.cs`).
 
 ### Notes
 

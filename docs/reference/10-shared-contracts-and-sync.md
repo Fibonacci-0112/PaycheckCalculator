@@ -161,7 +161,7 @@ deserializes identically in another. `AddConverters` is exposed separately so th
 the exact same converters to ASP.NET's own JSON pipeline:
 
 ```csharp
-// PaycheckCalculator.Api/Program.cs
+// PaycheckCalculator.API/Program.cs
 builder.Services.ConfigureHttpJsonOptions(options => PaycheckJson.AddConverters(options.SerializerOptions));
 ```
 

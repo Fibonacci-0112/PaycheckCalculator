@@ -116,7 +116,7 @@ PaycheckCalculator turns pay/W-4/state/deduction inputs into a fully itemized pa
         │              Core/Data/*.json  (IRS 15-T, per-state tables,
         │                                 51 UI schemas, source manifest)
         │
-        └──▶ PaycheckCalculator.Shared ──▶ PaycheckCalculator.Api ──▶ PostgreSQL
+        └──▶ PaycheckCalculator.Shared ──▶ PaycheckCalculator.API ──▶ PostgreSQL
              (DTOs, mergers, HTTP client)   (Identity + sync endpoints)
 ```
 

@@ -12,7 +12,7 @@ The solution uses the newer XML **`.slnx`** format rather than the classic `.sln
 ```xml
 <!-- PaycheckCalculator.slnx -->
 <Solution>
-  <Project Path="PaycheckCalculator.Api/PaycheckCalculator.Api.csproj" />
+  <Project Path="PaycheckCalculator.API/PaycheckCalculator.API.csproj" />
   <Project Path="PaycheckCalculator.App/PaycheckCalculator.App.csproj">
     <Deploy Solution="Debug|*" />
   </Project>
@@ -34,7 +34,7 @@ configurations, the analogue of the classic `.sln` deploy flag.
 |---|---|---|---|
 | `PaycheckCalculator.Core` | `Microsoft.NET.Sdk` | `net11.0` | All tax/pay/budget math. No UI, HTTP, or persistence. |
 | `PaycheckCalculator.Shared` | `Microsoft.NET.Sdk` | `net11.0` | Sync DTOs, JSON config, mergers, typed HTTP client, store + entitlement abstractions. |
-| `PaycheckCalculator.Api` | `Microsoft.NET.Sdk.Web` | `net11.0` | ASP.NET Core minimal API: Identity accounts + authorized sync. |
+| `PaycheckCalculator.API` | `Microsoft.NET.Sdk.Web` | `net11.0` | ASP.NET Core minimal API: Identity accounts + authorized sync. |
 | `PaycheckCalculator.Blazor` | `Microsoft.NET.Sdk.Web` | `net11.0` | Blazor Server web front-end. |
 | `PaycheckCalculator.App` | `Microsoft.NET.Sdk` (`UseMaui`) | `net11.0-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0` | .NET MAUI native front-end. |
 | `PaycheckCalculator.Tests` | `Microsoft.NET.Sdk` | `net11.0` | xUnit suite covering Core, Shared, Api, and the Blazor exporters. |
@@ -77,7 +77,7 @@ PaycheckCalculator.Core          (depends on nothing in-repo)
 PaycheckCalculator.Shared        → Core
         ▲
         │
-PaycheckCalculator.Api           → Shared
+PaycheckCalculator.API           → Shared
 
 PaycheckCalculator.App    (MAUI)  → Core + Shared
 PaycheckCalculator.Blazor         → Core + Shared
@@ -119,7 +119,7 @@ hosts generate a top-level `Program` type:
 ```
 
 Without the alias, the Blazor host's `Program` would collide with
-`PaycheckCalculator.Api`'s `Program` — which `SyncApiTest` needs in the global namespace for
+`PaycheckCalculator.API`'s `Program` — which `SyncApiTest` needs in the global namespace for
 `WebApplicationFactory<Program>`.
 
 ---
@@ -191,7 +191,7 @@ dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~OklahomaOw2Rou
 dotnet run --project PaycheckCalculator.Blazor
 
 # Sync API (no MAUI workload needed; http profile defaults to http://localhost:5201)
-dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.API
 
 # MAUI app (requires `dotnet workload install maui` and a target platform)
 dotnet build PaycheckCalculator.App
@@ -323,7 +323,7 @@ PaycheckCalculator/
 │   └── Data/            # Tax JSON + Schemas/*.json
 ├── PaycheckCalculator.Shared/
 │   ├── Snapshots/  Sync/  Budgeting/  Client/  Json/  Entitlements/
-├── PaycheckCalculator.Api/
+├── PaycheckCalculator.API/
 │   ├── Data/  Endpoints/  Migrations/
 ├── PaycheckCalculator.Blazor/
 │   ├── Components/  Services/  Models/  wwwroot/

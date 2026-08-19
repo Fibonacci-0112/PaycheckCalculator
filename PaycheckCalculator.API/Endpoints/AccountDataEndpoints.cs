@@ -2,13 +2,13 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PaycheckCalculator.Api.Data;
+using PaycheckCalculator.API.Data;
 using PaycheckCalculator.Shared.Budgeting;
 using PaycheckCalculator.Shared.Json;
 using PaycheckCalculator.Shared.Snapshots;
 using PaycheckCalculator.Shared.Sync;
 
-namespace PaycheckCalculator.Api.Endpoints;
+namespace PaycheckCalculator.API.Endpoints;
 
 /// <summary>
 /// Authorized account-data endpoints: export the authenticated account's synced data and

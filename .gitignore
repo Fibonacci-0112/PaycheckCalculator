@@ -424,9 +424,9 @@ PaycheckCalculator.Blazor/*.db-shm
 PaycheckCalculator.Blazor/*.db-wal
 
 # SQLite database files created by the sync API at runtime
-PaycheckCalculator.Api/*.db
-PaycheckCalculator.Api/*.db-journal
-PaycheckCalculator.Api/*.db-shm
-PaycheckCalculator.Api/*.db-wal
+PaycheckCalculator.API/*.db
+PaycheckCalculator.API/*.db-journal
+PaycheckCalculator.API/*.db-shm
+PaycheckCalculator.API/*.db-wal
 .dotnet/
 dotnet-install.sh
