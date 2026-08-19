@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The whole EF Core graph stays on preview.6: Npgsql.EntityFrameworkCore.PostgreSQL 11.0.0-preview.6
+         (its newest release) pins Microsoft.EntityFrameworkCore(.Relational) to exactly
+         11.0.0-preview.6.26359.118, so moving these to preview.7 fails restore with NU1107.
+         Bump all of them together once the Npgsql provider ships a matching build. -->
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="11.0.0-preview.6.26359.118" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0-preview.6" />
     <!-- Design-time only (dotnet ef tooling); PrivateAssets=all keeps it out of the test project,
