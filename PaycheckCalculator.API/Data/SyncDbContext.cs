@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace PaycheckCalculator.Api.Data;
+namespace PaycheckCalculator.API.Data;
 
 /// <summary>
 /// EF Core context backing both ASP.NET Core Identity (users, tokens) and the per-user saved

@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using PaycheckCalculator.Api.Data;
+using PaycheckCalculator.API.Data;
 
 #nullable disable
 
-namespace PaycheckCalculator.Api.Migrations
+namespace PaycheckCalculator.API.Migrations
 {
     [DbContext(typeof(SyncDbContext))]
-    partial class SyncDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260614051721_InitialCreate")]
+    partial class _20260614051721_InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -218,80 +221,7 @@ namespace PaycheckCalculator.Api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.BudgetEntity", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("NameKey")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "NameKey");
-
-                    b.ToTable("Budgets");
-                });
-
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.BudgetTransactionEntity", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "Id");
-
-                    b.ToTable("BudgetTransactions");
-                });
-
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.RecurringBillEntity", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "Id");
-
-                    b.ToTable("RecurringBills");
-                });
-
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.SavedPaycheckEntity", b =>
+            modelBuilder.Entity("PaycheckCalculator.API.Data.SavedPaycheckEntity", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -316,29 +246,6 @@ namespace PaycheckCalculator.Api.Migrations
                     b.HasKey("UserId", "NameKey");
 
                     b.ToTable("SavedPaychecks");
-                });
-
-            modelBuilder.Entity("PaycheckCalculator.Api.Data.SavingsGoalEntity", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "Id");
-
-                    b.ToTable("SavingsGoals");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

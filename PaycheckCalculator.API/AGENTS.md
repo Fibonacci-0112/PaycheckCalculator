@@ -1,10 +1,10 @@
-# AGENTS.md - PaycheckCalculator.Api
+# AGENTS.md - PaycheckCalculator.API
 
-Scope: this file applies to everything under `PaycheckCalculator.Api/`.
+Scope: this file applies to everything under `PaycheckCalculator.API/`.
 
 ## Role of this project
 
-`PaycheckCalculator.Api` is the optional sync server. It provides ASP.NET Core Identity email/password accounts and minimal API endpoints for syncing saved paychecks, budgets, transactions, recurring bills, and savings goals. It persists sync state through EF Core and PostgreSQL in normal operation, with tests using a lightweight test configuration.
+`PaycheckCalculator.API` is the optional sync server. It provides ASP.NET Core Identity email/password accounts and minimal API endpoints for syncing saved paychecks, budgets, transactions, recurring bills, and savings goals. It persists sync state through EF Core and PostgreSQL in normal operation, with tests using a lightweight test configuration.
 
 ## Dependency boundaries
 
@@ -34,8 +34,8 @@ Scope: this file applies to everything under `PaycheckCalculator.Api/`.
 ## Useful commands
 
 ```bash
-dotnet build PaycheckCalculator.Api
-dotnet run --project PaycheckCalculator.Api
+dotnet build PaycheckCalculator.API
+dotnet run --project PaycheckCalculator.API
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~SyncApi"
 ```
 

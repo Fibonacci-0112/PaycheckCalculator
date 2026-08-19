@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 
-namespace PaycheckCalculator.Api.Endpoints;
+namespace PaycheckCalculator.API.Endpoints;
 
 internal static class ActiveUserResolver
 {

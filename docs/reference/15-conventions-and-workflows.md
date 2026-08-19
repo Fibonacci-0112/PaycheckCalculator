@@ -208,7 +208,7 @@ reference — see especially the boundary rules quoted in
 
 `.github/copilot-instructions.md` and the seven `applyTo`-scoped files under
 `.github/instructions/*.md` cover the identical ground again for GitHub Copilot, each instruction
-file scoped by glob to exactly the project it governs (`PaycheckCalculator.Api/**/*.cs`,
+file scoped by glob to exactly the project it governs (`PaycheckCalculator.API/**/*.cs`,
 `PaycheckCalculator.Core/Data/**/*.json`, etc.).
 
 The practical takeaway: **this project's conventions are documented redundantly, on purpose**,

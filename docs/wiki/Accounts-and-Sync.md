@@ -15,11 +15,11 @@ Accounts are optional. Both front-ends work without an account:
 | Project | Role |
 |---|---|
 | `PaycheckCalculator.Shared` | DTOs, JSON options, merge rules, typed API client, store abstractions, sync services, and entitlement abstractions. |
-| `PaycheckCalculator.Api` | ASP.NET Core Web API with Identity accounts, EF Core PostgreSQL persistence, and sync endpoints. |
+| `PaycheckCalculator.API` | ASP.NET Core Web API with Identity accounts, EF Core PostgreSQL persistence, and sync endpoints. |
 | `PaycheckCalculator.App` | Local device stores plus account/sync UI. |
 | `PaycheckCalculator.Blazor` | Circuit-scoped stores plus account/sync UI. |
 
-`PaycheckCalculator.Shared` references Core only. `PaycheckCalculator.Api` references Shared and does not reference the front-end projects.
+`PaycheckCalculator.Shared` references Core only. `PaycheckCalculator.API` references Shared and does not reference the front-end projects.
 
 ---
 
@@ -198,7 +198,7 @@ Relevant tests include:
 Manual end-to-end check:
 
 ```bash
-dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.API
 dotnet run --project PaycheckCalculator.Blazor
 ```
 

@@ -7,4 +7,4 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export ASPNETCORE_ENVIRONMENT=Development
 export ASPNETCORE_URLS="http://127.0.0.1:5201"
 export ConnectionStrings__Sync="Host=${PGHOST};Port=${PGPORT};Database=${PGDATABASE};Username=${PGUSER};Password=${PGPASSWORD};SSL Mode=Disable"
-exec dotnet run --project PaycheckCalculator.Api --no-launch-profile
+exec dotnet run --project PaycheckCalculator.API --no-launch-profile

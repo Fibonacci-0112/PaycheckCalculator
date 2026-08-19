@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace PaycheckCalculator.Api.Data;
+namespace PaycheckCalculator.API.Data;
 
 /// <summary>
 /// Design-time factory used only by the <c>dotnet ef</c> tooling. Because it is present, EF builds the

@@ -12,9 +12,9 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
   dotnet workload install maui
   ```
 - **Android SDK**, **Xcode on macOS** (for iOS and Mac Catalyst), or **Windows 10+ SDK** depending on the MAUI target platform.
-- **PostgreSQL** only when running `PaycheckCalculator.Api` with its default provider. The integration tests use a SQLite-backed test path and do not require PostgreSQL.
+- **PostgreSQL** only when running `PaycheckCalculator.API` with its default provider. The integration tests use a SQLite-backed test path and do not require PostgreSQL.
 
-`PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.Api`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
+`PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.API`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
 
 All non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows10.0.19041.0`; Apple targets are included only when MSBuild runs on macOS, and the Windows target is included only on Windows.
 
@@ -29,7 +29,7 @@ PaycheckCalculator.slnx
 ├── PaycheckCalculator.App/             # .NET MAUI frontend for Android, iOS, macOS, and Windows
 ├── PaycheckCalculator.Blazor/          # Blazor Server web frontend
 ├── PaycheckCalculator.Shared/          # Sync contracts, JSON config, mergers, API client, stores, entitlements
-├── PaycheckCalculator.Api/             # ASP.NET Core Web API for Identity accounts and sync
+├── PaycheckCalculator.API/             # ASP.NET Core Web API for Identity accounts and sync
 ├── PaycheckCalculator.Tests/           # xUnit tests for Core, Shared, Api, and Blazor export paths
 └── docs/                         # Wiki and Mermaid class diagrams
 ```
@@ -37,7 +37,7 @@ PaycheckCalculator.slnx
 The solution file includes all six projects:
 
 ```text
-PaycheckCalculator.Api
+PaycheckCalculator.API
 PaycheckCalculator.App
 PaycheckCalculator.Blazor
 PaycheckCalculator.Core
@@ -55,7 +55,7 @@ PaycheckCalculator.Tests
 dotnet build PaycheckCalculator.Core
 dotnet build PaycheckCalculator.Shared
 dotnet build PaycheckCalculator.Blazor
-dotnet build PaycheckCalculator.Api
+dotnet build PaycheckCalculator.API
 dotnet build PaycheckCalculator.Tests
 ```
 
@@ -94,7 +94,7 @@ The Blazor app does not require the MAUI workload. It reads tax data from a `Tax
 ### Sync API
 
 ```bash
-dotnet run --project PaycheckCalculator.Api
+dotnet run --project PaycheckCalculator.API
 ```
 
 The API defaults to `http://localhost:5201` and reads its database connection from `ConnectionStrings:Sync`:
@@ -108,7 +108,7 @@ the standard .NET environment-variable form when starting the API:
 
 ```bash
 ConnectionStrings__Sync='YOUR_POSTGRESQL_CONNECTION_STRING' \
-  dotnet run --project PaycheckCalculator.Api
+  dotnet run --project PaycheckCalculator.API
 ```
 
 Replace the database name, username, and password with the values configured for the container. When
@@ -148,15 +148,15 @@ PaycheckCalculator.Core     →  no project references
 PaycheckCalculator.Shared   →  PaycheckCalculator.Core
 PaycheckCalculator.App      →  PaycheckCalculator.Core, PaycheckCalculator.Shared
 PaycheckCalculator.Blazor   →  PaycheckCalculator.Core, PaycheckCalculator.Shared
-PaycheckCalculator.Api      →  PaycheckCalculator.Shared
-PaycheckCalculator.Tests    →  PaycheckCalculator.Core, PaycheckCalculator.Shared, PaycheckCalculator.Api, PaycheckCalculator.Blazor
+PaycheckCalculator.API      →  PaycheckCalculator.Shared
+PaycheckCalculator.Tests    →  PaycheckCalculator.Core, PaycheckCalculator.Shared, PaycheckCalculator.API, PaycheckCalculator.Blazor
 ```
 
 Layering rules:
 
 - `PaycheckCalculator.Core` has no UI, HTTP, MAUI, database, or persistence dependency.
 - `PaycheckCalculator.Shared` references Core and owns DTOs, JSON serialization, deterministic mergers, API client code, store abstractions, and entitlement abstractions.
-- `PaycheckCalculator.Api` references Shared and persists sync state with EF Core/PostgreSQL.
+- `PaycheckCalculator.API` references Shared and persists sync state with EF Core/PostgreSQL.
 - Front-ends reference Core and Shared, not each other.
 
 ---
