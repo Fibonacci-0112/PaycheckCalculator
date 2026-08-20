@@ -561,7 +561,24 @@
     protected override async Task OnInitializedAsync()
     {
         Shell.Set("Budget");
+        await LoadFromStoreAsync();
+    }
 
+    // Anonymous budget data is mirrored into browser localStorage, which is only reachable once
+    // the circuit is interactive — so hydrate after the first render and reload if anything came back.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        if (await Store.HydrateAsync())
+        {
+            await LoadFromStoreAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadFromStoreAsync()
+    {
         var budgetSet = await Store.LoadBudgetsAsync();
         var txSet     = await Store.LoadTransactionsAsync();
         var billSet   = await Store.LoadRecurringBillsAsync();

@@ -5,7 +5,7 @@ Saved paychecks and budget data can optionally sync between the MAUI app and the
 Accounts are optional. Both front-ends work without an account:
 
 - **MAUI app:** saved paychecks and budgets persist locally on the device.
-- **Blazor app:** anonymous saved paychecks and budgets live in circuit memory for the browser session.
+- **Blazor app:** anonymous saved paychecks and budgets live in circuit memory and are mirrored into the browser's `localStorage`, so they survive closing the tab. They stay on that browser and are never sent to the server without an account.
 - **With an account:** either client can push local state to the API, receive the merged state, and replace its local state.
 
 ---
@@ -145,7 +145,7 @@ Removal records are retained so removals propagate to other devices during later
 | Client | Backing store | Lifetime |
 |---|---|---|
 | MAUI | `JsonFilePaycheckStore` and `JsonFileBudgetStore` in app data | Durable on device |
-| Blazor | `SessionPaycheckStore` and `SessionBudgetStore` | Circuit-scoped |
+| Blazor | `SessionPaycheckStore` and `SessionBudgetStore` | Circuit memory, mirrored to browser `localStorage` via `BrowserLocalStorage` |
 | Server | EF Core rows in PostgreSQL | Persistent |
 
 The MAUI Account page exposes the sync server URL. The default local API URL is `http://localhost:5201`; Android emulator access to the host machine commonly uses `http://10.0.2.2:5201`.

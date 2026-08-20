@@ -1071,7 +1071,7 @@
                     <button class="btn-secondary btn-danger" @onclick="RequestDeleteLocal" disabled="@_busy">Delete local data</button>
                 }
             </div>
-            <p class="form-note">Local delete removes paychecks and budgets from this browser session only.</p>
+            <p class="form-note">Local delete removes paychecks and budgets stored in this browser only. Data synced to your account is unaffected.</p>
             @if (_accountError != null)
             {
                 <div class="calc-error">@_accountError</div>
@@ -1254,9 +1254,21 @@
     private bool _lastExportAvailable;
 
     // The top-bar export button lives in MainLayout's render tree, so it only picks up
-    // a newly-available result when the layout is told to re-render.
-    protected override void OnAfterRender(bool firstRender)
+    // a newly-available result when the layout is told to re-render. First render also
+    // restores anonymous saved paychecks from browser storage — JS interop (and therefore
+    // localStorage) is unavailable until the circuit is interactive.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            var restored = await Store.HydrateAsync();
+            if (restored)
+            {
+                await RefreshHistoryAsync();
+                StateHasChanged();
+            }
+        }
+
         if (_lastExportAvailable == HasResultForExport) return;
         _lastExportAvailable = HasResultForExport;
         Shell.Refresh();
@@ -1560,9 +1572,14 @@
         await BudgetStore.ReplaceAllRecurringBillsAsync(new RecurringBillSet([], []));
         await BudgetStore.ReplaceAllSavingsGoalsAsync(new SavingsGoalSet([], []));
 
+        // "Delete local data" must leave nothing behind in the browser, so drop the persisted
+        // snapshots outright rather than storing empty ones.
+        await Store.ForgetPersistedAsync();
+        await BudgetStore.ForgetPersistedAsync();
+
         await RefreshHistoryAsync();
         if (setStatus)
-            _accountStatus = "Local paycheck and budget data deleted for this browser session.";
+            _accountStatus = "Local paycheck and budget data deleted from this browser.";
         _accountError = null;
     }
 

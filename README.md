@@ -25,7 +25,7 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 - **Show Your Work explanations** — Result lines carry step-by-step explanations through the Core `Explanation/` model and are displayed by both front-ends.
 - **Annual projection** — Projects per-paycheck results across the full year, including annualized totals, projected YTD values, estimated annual liability, and over/under withholding.
 - **Multiple pay frequencies** — Daily, Weekly, Bi-Weekly, Semi-Monthly, Monthly, Quarterly, Semi-Annual, Annual, plus 53-week and 27-biweekly payroll-calendar variants.
-- **Saved paychecks and A/B comparison** — Save calculated paychecks with inputs and compare two saved results side by side. MAUI persists saved paychecks on device; Blazor keeps anonymous saved paychecks in circuit memory until the tab closes.
+- **Saved paychecks and A/B comparison** — Save calculated paychecks with inputs and compare two saved results side by side. MAUI persists saved paychecks on device; Blazor mirrors anonymous saved paychecks into browser local storage so they survive closing the tab.
 - **Export and print** — Both front-ends support paycheck CSV/PDF export and printing. Exports include the per-period result, annual projection, and optional A/B comparison data.
 - **Monthly budget tracker** — Converts paycheck net pay to monthly income, supports Custom, 50/30/20, Zero-Based, and Envelope budgeting methods, tracks categories and transactions, and projects month-end spend.
 - **Recurring bills** — Stores recurring bills with weekly, biweekly, semimonthly, monthly, quarterly, semiannual, or annual cadence and normalizes each bill to a monthly equivalent.

@@ -65,7 +65,7 @@ Planning sizes assume focused development and should be revised after issues are
 
 Documentation has been reconciled with the code and should retain these baselines:
 
-- Core targets .NET 11 only.
+- Core targets .NET 10 only.
 - The API uses Npgsql/PostgreSQL in normal operation; SQLite is limited to integration tests.
 - The main .NET CI workflow explicitly restores, builds, and tests `PaycheckCalculator.Tests`. Core, Shared, API, and Blazor are built transitively through its project references; MAUI is not built by that workflow.
 - SDK version and roll-forward details should match `global.json`.
@@ -113,7 +113,7 @@ The current engine is tightly coupled to 2026: TaxYearSupport exposes one year, 
 
 ### 2.1 Supported runtime and dependency management
 
-- Move from .NET 11 previews to the supported .NET 11 release after it reaches general availability.
+- ✅ Done — the solution runs on the supported .NET 10 release (`global.json` pins SDK 10.0.400; all TFMs are `net10.0*`) with no preview packages remaining.
 - Adopt central package management and dependency lock files.
 - Add automated dependency update PRs with test validation.
 - Treat compiler/analyzer warnings as a managed backlog, then ratchet critical projects toward warnings-as-errors.
@@ -244,9 +244,9 @@ Implement these in order unless user research changes the ranking.
 | Finding | Evidence in the current repository | Planned response |
 |---|---|---|
 | Single-year coupling | TaxYearSupport supports only 2026; DI, filenames, explanations, and due dates embed the year | Milestone 1 tax-data packs |
-| Preview runtime graph | global.json and several packages are pinned to .NET 11 previews | Move to supported GA and central package management |
+| ~~Preview runtime graph~~ (resolved) | Resolved: `global.json` pins SDK 10.0.400 and every TFM is `net10.0*`; no preview packages remain | Remaining work is central package management |
 | CI blind spots | dotnet.yml invokes the test project and has no explicit MAUI/platform matrix | Milestone 2 CI matrix |
-| UI orchestration size | Calculator.razor and CalculatorViewModel are both over 1,200 lines | Capability-based application/presentation refactor |
+| UI orchestration size | Calculator.razor is over 1,700 lines and CalculatorViewModel over 1,200 | Capability-based application/presentation refactor |
 | Repeated asset wiring | Tax JSON is separately declared for MAUI, Blazor, and tests | Manifest-driven MSBuild wiring |
 | Documentation drift | Target-framework and database-provider descriptions disagree with current project files/code | Milestone 0 docs reconciliation |
 | Client-clock conflict resolution | Sync merge uses client DateTimeOffset values for last-write-wins and retains tombstones | Server revisions, delta sync, and compaction policy |
