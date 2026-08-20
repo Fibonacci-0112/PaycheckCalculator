@@ -242,7 +242,7 @@ The calculator page leads with a blue hero (annual net take-home, per-period ins
 
 The setup checklist and the log are driven by real state, not placeholders: the checklist's completed/in-progress/pending steps come from whether pay is entered, the state's schema fields validate, deductions exist, and a calculation has been saved; the log's rows, search and All/Hourly/Salary/Gross-Up filters all read the session's `SavedPaycheckDto` list.
 
-The calculator page displays inputs and results side by side. It includes four calculation modes (standard, gross-up, bonus/supplemental wage, self-employment), YTD Social Security and Medicare wage inputs, exports, printing, saved paycheck comparison, and annual projection.
+The calculator page displays inputs and results side by side. It includes five calculation modes (standard, gross-up, bonus/supplemental wage, self-employment, and the hourly ↔ salary converter), YTD Social Security and Medicare wage inputs, exports, printing, saved paycheck comparison, and annual projection. The converter is a pure rate conversion, so it has no annual projection, explanations, or exports.
 
 The Budget page includes the same budget methods, categories, recurring bills, savings goals, transactions, summaries, and report UI as MAUI.
 

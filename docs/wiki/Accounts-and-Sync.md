@@ -145,7 +145,7 @@ Removal records are retained so removals propagate to other devices during later
 | Client | Backing store | Lifetime |
 |---|---|---|
 | MAUI | `JsonFilePaycheckStore` and `JsonFileBudgetStore` in app data | Durable on device |
-| Blazor | `SessionPaycheckStore` and `SessionBudgetStore` | Circuit-scoped |
+| Blazor | `SessionPaycheckStore` and `SessionBudgetStore` | Circuit-scoped working set, mirrored to browser `localStorage` (survives refresh / tab close) |
 | Server | EF Core rows in PostgreSQL | Persistent |
 
 The MAUI Account page exposes the sync server URL. The default local API URL is `http://localhost:5201`; Android emulator access to the host machine commonly uses `http://10.0.2.2:5201`.

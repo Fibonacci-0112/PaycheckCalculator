@@ -452,6 +452,7 @@ Validation throws rather than returning an error list: `HoursPerWeek` and `Weeks
 | `SelfEmploymentCalculatorTest` | 92.35% base, wage-base cap, Additional Medicare crossing, quarterly split summing exactly |
 | `AnnualProjectionCalculatorTest` | Annualization, YTD projection, paycheck-number clamping, over/under sign |
 | `HourlySalaryCalculatorTest` | Both directions, custom hours/weeks, per-frequency amounts |
+| `HourlySalaryValidationTest` | `PaycheckInputValidator.ValidateHourlySalary` — non-positive hours/weeks, negative rate/salary, the unused direction being ignored |
 | `StateSupplementalCalculatorTest` | Table-driven method resolution, Vermont's federal-percentage rule |
 | `FederalSupplementalCalculatorTest` | The $1M cumulative threshold split |
 

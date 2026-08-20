@@ -91,4 +91,30 @@ public static class PaycheckInputValidator
 
         return errors;
     }
+
+    /// <summary>
+    /// Validates an hourly ↔ salary conversion input. This is a pure rate conversion, so the only
+    /// rules are that the hours worked are positive and the source rate/salary is not negative.
+    /// </summary>
+    public static IReadOnlyList<string> ValidateHourlySalary(Models.HourlySalaryInput input)
+    {
+        var errors = new List<string>();
+
+        if (input.HoursPerWeek <= 0)
+            errors.Add("Hours per week must be greater than zero.");
+        if (input.WeeksPerYear <= 0)
+            errors.Add("Paid weeks per year must be greater than zero.");
+
+        if (input.Mode == Models.PayConversionMode.HourlyToSalary)
+        {
+            if (input.HourlyRate < 0)
+                errors.Add("Hourly rate cannot be negative.");
+        }
+        else if (input.AnnualSalary < 0)
+        {
+            errors.Add("Annual salary cannot be negative.");
+        }
+
+        return errors;
+    }
 }

@@ -221,6 +221,8 @@ future MAUI-specific test target, which does not currently exist).
 | `SelfEmploymentCalculatorTest` | 92.35% base, wage-base cap, Additional Medicare crossing, exact quarterly-sum reconciliation |
 | `AnnualProjectionCalculatorTest` | Annualization, YTD, paycheck-number clamping, over/under sign convention |
 | `HourlySalaryCalculatorTest` | Both conversion directions, custom hours/weeks |
+| `HourlySalaryValidationTest` | Converter input validation surfaced by both front-ends |
+| `BrowserBackedStoreTest` | Blazor `localStorage` persistence: survival across circuits, prerender fallback, corrupt/newer payloads |
 | `PaycheckSnapshotJsonTest` | `SavedPaycheckDto` round-trips through `PaycheckJson.Options` intact |
 | `SavedPaycheckMergerTest`, `BudgetMergerTest` | The three-level last-write-wins tie-break, for both paycheck and budget/transaction/bill/goal merges |
 | `BudgetCalculatorTest`, `BudgetReportCalculatorTest`, `RecurringBillTest`, `SavingsGoalTest` | Budgeting engine — see [08](08-budgeting.md) |

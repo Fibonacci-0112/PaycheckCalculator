@@ -318,7 +318,7 @@ Three implementations, identical contract:
 | Implementation | Host | Persistence |
 |---|---|---|
 | `JsonFilePaycheckStore` | MAUI | `saved-paychecks.json` in `FileSystem.AppDataDirectory`, semaphore-guarded read-modify-write, corrupt file moved aside rather than crashing startup |
-| `SessionPaycheckStore` | Blazor | In-memory `Dictionary`s, scoped to the circuit |
+| `SessionPaycheckStore` | Blazor | In-memory `Dictionary`s scoped to the circuit, mirrored to browser `localStorage` (`paycheckcalc.paychecks.v1`) on every mutation and hydrated on the first interactive render |
 | (server rows) | Api | `SavedPaycheckEntity` via EF Core — see [11 — The Sync API](11-sync-api.md) |
 
 `PaycheckSyncService` is the one-shot orchestration used by both clients:

@@ -32,7 +32,7 @@
         <!-- Blue summary strip: the two figures that matter at a glance. -->
         <Grid Grid.Row="0" BackgroundColor="{StaticResource Primary}" Padding="16,14,16,14"
               ColumnDefinitions="*,*" ColumnSpacing="12"
-              IsVisible="{Binding HasResult}">
+              IsVisible="{Binding HasPaycheckResult}">
             <VerticalStackLayout Grid.Column="0" Spacing="2">
                 <Label Text="NET PAY / PERIOD"
                        TextColor="{StaticResource OnPrimaryMuted}"
@@ -98,11 +98,95 @@
             <VerticalStackLayout>
 
             <!-- Export file name (used by the Print / Export PDF / Export CSV toolbar actions) -->
-            <VerticalStackLayout Padding="16,12,16,0" Spacing="4">
+            <VerticalStackLayout Padding="16,12,16,0" Spacing="4" IsVisible="{Binding HasPaycheckResult}">
                 <Label Text="EXPORT FILE NAME" Style="{StaticResource EyebrowLabel}" />
                 <Entry Text="{Binding ExportFileName}" Placeholder="Paycheck-Summary"
                        AutomationProperties.Name="Export file name" />
             </VerticalStackLayout>
+
+            <!-- ════════ HOURLY ↔ SALARY CONVERSION ════════ -->
+            <!-- A pure rate conversion: gross figures only, no tax breakdown, projection, or export. -->
+            <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding HasConversionResult}">
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="RATE CONVERSION" Style="{StaticResource EyebrowLabel}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Hourly Rate" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.HourlyRate, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" FontAttributes="Bold" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource BorderSubtle}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Annual Salary" TextColor="{StaticResource Ink}" FontSize="14" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.AnnualSalary, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Primary}" FontSize="20" FontAttributes="Bold" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="HOURS WORKED" Style="{StaticResource EyebrowLabel}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Hours per Week" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.HoursPerWeek, StringFormat='{0:0.##}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Paid Weeks per Year" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.WeeksPerYear, StringFormat='{0:0.##}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource BorderSubtle}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Hours per Year" TextColor="{StaticResource Ink}" FontSize="13" FontAttributes="Bold" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.HoursPerYear, StringFormat='{0:0.##}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" FontAttributes="Bold" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="GROSS PAY BY FREQUENCY" Style="{StaticResource EyebrowLabel}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Weekly" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.WeeklyPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Biweekly" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.BiweeklyPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Semimonthly" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.SemimonthlyPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Monthly" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
+                            <Label Text="{Binding ConversionResult.MonthlyPay, StringFormat='{0:C}'}"
+                                   Grid.Column="1" TextColor="{StaticResource Ink}" FontSize="15" />
+                        </Grid>
+                        <Label Text="Each amount comes from the unrounded annual salary, so they need not sum back to it exactly."
+                               TextColor="{StaticResource MutedFaint}" FontSize="11" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="ASSUMPTIONS &amp; EXCLUSIONS" Style="{StaticResource EyebrowLabel}" />
+                        <Label Text="Gross pay only: these are pre-tax figures. No federal or state withholding, FICA, or deductions are applied — switch to Standard Paycheck mode to see take-home pay."
+                               TextColor="{StaticResource Warning}" FontSize="11" />
+                        <Label Text="Even periods: per-frequency amounts divide the annual salary by the standard period count (52 / 26 / 24 / 12); actual paychecks can vary with the payroll calendar."
+                               TextColor="{StaticResource Warning}" FontSize="11" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+            <!-- /HOURLY ↔ SALARY CONVERSION -->
 
             <!-- ════════ PER PAYCHECK ════════ -->
             <VerticalStackLayout Padding="16" Spacing="12" IsVisible="{Binding IsPerPeriodTabVisible}">
