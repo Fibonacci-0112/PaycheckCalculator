@@ -284,7 +284,7 @@ single merged `BudgetSyncResponse` — one round trip syncs the whole budgeting 
 | Host | Class | Backing |
 |---|---|---|
 | MAUI | `JsonFileBudgetStore` | `budgets.json` in `FileSystem.AppDataDirectory`, semaphore-guarded, corrupt file moved aside rather than crashing startup — same pattern as `JsonFilePaycheckStore` |
-| Blazor | `SessionBudgetStore` | In-memory dictionaries, circuit-scoped — dies when the tab closes |
+| Blazor | `SessionBudgetStore` | In-memory dictionaries scoped to the circuit, mirrored to browser `localStorage` (`paycheckcalc.budgets.v1` — one envelope for all four domains) so they survive a refresh or a closed tab |
 
 ---
 

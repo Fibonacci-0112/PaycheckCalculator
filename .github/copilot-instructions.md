@@ -67,7 +67,7 @@ All 50 states plus DC have dedicated modules under `PaycheckCalculator.Core/Tax/
 Saved paychecks and budgets can sync across front-ends via an optional account:
 - `PaycheckCalculator.Shared` owns all DTOs (`SavedPaycheckDto`, `BudgetDto`, etc.), JSON converters, deterministic last-write-wins merge (`SavedPaycheckMerger`, `BudgetMerger`), the typed `PaycheckApiClient`, and the `ISavedPaycheckStore`/`IBudgetStore` abstractions.
 - `PaycheckCalculator.API` provides `/api/account` (ASP.NET Core Identity), `/api/paychecks`, and `/api/budgets` endpoints backed by EF Core + PostgreSQL. Tests use SQLite via `EnsureCreated`.
-- Local persistence: MAUI uses `JsonFilePaycheckStore`/`JsonFileBudgetStore`; Blazor uses circuit-scoped `SessionPaycheckStore`/`SessionBudgetStore`.
+- Local persistence: MAUI uses `JsonFilePaycheckStore`/`JsonFileBudgetStore`; Blazor uses `SessionPaycheckStore`/`SessionBudgetStore` — a circuit-scoped working set mirrored to browser `localStorage` via `BrowserLocalStorage`.
 - Merge logic lives once in Shared and is reused by the API and both clients. Do not duplicate or move it.
 - `StateInputValues` must round-trip as real CLR primitives; `StateInputValuesJsonConverter` enforces this — never allow `JsonElement` to leak into consumers.
 
@@ -87,7 +87,7 @@ Saved paychecks and budgets can sync across front-ends via an optional account:
 
 - Keep Razor components focused on rendering and binding. Tax, budget, projection, and merge logic belong in Core/Shared services.
 - State input fields must be schema-driven; do not hardcode per-state controls.
-- Anonymous saved-paycheck and budget state is circuit-scoped (`SessionPaycheckStore`, `SessionBudgetStore`).
+- Anonymous saved-paycheck and budget state is circuit-scoped (`SessionPaycheckStore`, `SessionBudgetStore`) and persisted to browser `localStorage`; hydration happens on the first interactive render, never during prerender.
 - `wwwroot/export.js` is browser download/print glue only; no business logic.
 - Exports live in `Services/Export/` and render from domain results; they do not recalculate.
 

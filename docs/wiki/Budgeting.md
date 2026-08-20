@@ -150,7 +150,7 @@ MAUI persists budget data through `JsonFileBudgetStore`.
 - Expense entry and current-month expense list.
 - Budget reports with CSV/PDF export when available.
 
-Anonymous Blazor budget state lives in `SessionBudgetStore` for the lifetime of the circuit.
+Anonymous Blazor budget state lives in `SessionBudgetStore` for the lifetime of the circuit, and is mirrored to the browser's `localStorage` (one envelope covering budgets, transactions, recurring bills, and savings goals) so it survives a refresh or a closed tab.
 
 ---
 

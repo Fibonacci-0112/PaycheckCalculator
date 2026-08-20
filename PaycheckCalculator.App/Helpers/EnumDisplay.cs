@@ -36,6 +36,14 @@ public static class EnumDisplay
         "GrossUp" => "Gross-Up (net → gross)",
         "Bonus" => "Bonus / Supplemental Wage",
         "SelfEmployment" => "Self-Employment / 1099",
+        "HourlySalary" => "Hourly ↔ Salary Converter",
+        _ => SplitPascalCase(name)
+    };
+
+    public static string PayConversionMode(string name) => name switch
+    {
+        "HourlyToSalary" => "Hourly Rate → Salary",
+        "SalaryToHourly" => "Salary → Real Hourly Rate",
         _ => SplitPascalCase(name)
     };
 

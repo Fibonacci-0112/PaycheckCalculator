@@ -421,6 +421,7 @@ classDiagram
         +CalculationMode CalculationMode
         +ResultCardModel ResultCard
         +AnnualProjectionModel Projection
+        +HourlySalaryResult ConversionResult
     }
     class BudgetViewModel {
         +BudgetMethod Method
@@ -482,6 +483,7 @@ classDiagram
     class ExplanationModal
     class SessionPaycheckStore
     class SessionBudgetStore
+    class BrowserLocalStorage
     class StateMetadata
     class FileSystemTaxDataReader
     class PaycheckCsvRenderer
@@ -497,6 +499,7 @@ classDiagram
     CalculatorPage --> GrossUpCalculator
     CalculatorPage --> BonusCalculator
     CalculatorPage --> SelfEmploymentCalculator
+    CalculatorPage --> HourlySalaryCalculator
     CalculatorPage --> AnnualProjectionCalculator
     CalculatorPage --> SessionPaycheckStore
     CalculatorPage --> DoughnutChart
@@ -508,6 +511,8 @@ classDiagram
     BudgetPageRazor --> SessionBudgetStore
     BudgetPageRazor --> BudgetReportCsvRenderer
     BudgetPageRazor --> BudgetReportPdfRenderer
+    SessionPaycheckStore --> BrowserLocalStorage
+    SessionBudgetStore --> BrowserLocalStorage
     StateLandingPage --> StateMetadata
     FileSystemTaxDataReader ..> Core : TaxData files
     CircuitAccountSession ..> PaycheckApiClient

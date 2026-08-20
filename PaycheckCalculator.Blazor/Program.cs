@@ -15,15 +15,20 @@ builder.Services.AddRazorComponents()
 var taxDataPath = Path.Combine(AppContext.BaseDirectory, "TaxData");
 builder.Services.AddPaycheckCalculatorCore(new FileSystemTaxDataReader(taxDataPath));
 
-// Budget store — circuit-scoped so anonymous data persists only until the tab closes.
+// Browser localStorage bridge, backing the two stores below so anonymous data survives a
+// refresh or a closed tab. Best-effort: unavailable during prerender and on a dead circuit.
+builder.Services.AddScoped<BrowserLocalStorage>();
+
+// Budget store — circuit-scoped working set, mirrored to browser localStorage.
 builder.Services.AddScoped<SessionBudgetStore>();
 builder.Services.AddScoped<IBudgetStore>(sp => sp.GetRequiredService<SessionBudgetStore>());
 
 // Entitlement provider — defaults to free tier until E2 billing is wired.
 builder.Services.AddScoped<IEntitlementProvider, FreeEntitlementProvider>();
 
-// Account + paycheck sync. The session store and account session are scoped to the Blazor circuit, so
-// anonymous data lives only until the browser tab closes; signing in syncs it to the API server-side.
+// Account + paycheck sync. The store and account session are scoped to the Blazor circuit; the store
+// mirrors anonymous data to browser localStorage so it outlives the tab, and signing in syncs it to
+// the API server-side. The account session itself stays circuit-only — tokens are never persisted.
 builder.Services.AddScoped<CircuitAccountSession>();
 builder.Services.AddScoped<ITokenStore>(sp => sp.GetRequiredService<CircuitAccountSession>());
 builder.Services.AddSingleton<IApiBaseAddressProvider, ConfigApiBaseAddressProvider>();

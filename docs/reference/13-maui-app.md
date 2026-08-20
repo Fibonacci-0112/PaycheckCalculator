@@ -350,7 +350,7 @@ from the budget-report upsell card).
 | Explanation UI | Native `DisplayAlert`, plain text | `ExplanationModal.razor`, HTML |
 | Chart | `DoughnutChartDrawable` (`IDrawable`) | `DoughnutChart.razor` (inline SVG) |
 | PDF | `PdfDocument` + `PaycheckPdfRenderer` (on-device) | `PdfDocument` + `PaycheckPdfRenderer` (server-side, separate implementation) |
-| Persistence | `JsonFilePaycheckStore` (always-on, on-device) | `SessionPaycheckStore` (circuit memory only) |
+| Persistence | `JsonFilePaycheckStore` (always-on, on-device) | `SessionPaycheckStore` (circuit memory, mirrored to browser `localStorage`) |
 
 Both front-ends deliberately **duplicate presentation-layer code** (mappers, chart renderers, PDF
 writers) while sharing **100% of the calculation logic** through Core — the layering boundary

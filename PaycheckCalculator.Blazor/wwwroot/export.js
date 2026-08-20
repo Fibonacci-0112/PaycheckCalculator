@@ -26,3 +26,33 @@ window.paycheckExport = {
         window.print();
     }
 };
+
+// localStorage helpers backing SessionPaycheckStore / SessionBudgetStore, so anonymous
+// saved paychecks and budgets survive a refresh or a closed tab. Every call is guarded:
+// localStorage throws in some private-browsing modes and when the origin quota is full,
+// and losing persistence must never break the calculator.
+window.paycheckStorage = {
+    get: function (key) {
+        try {
+            return window.localStorage.getItem(key);
+        } catch (e) {
+            return null;
+        }
+    },
+
+    set: function (key, value) {
+        try {
+            window.localStorage.setItem(key, value);
+        } catch (e) {
+            // Quota exceeded or storage blocked — the in-memory store still works.
+        }
+    },
+
+    remove: function (key) {
+        try {
+            window.localStorage.removeItem(key);
+        } catch (e) {
+            // Ignore; see set().
+        }
+    }
+};

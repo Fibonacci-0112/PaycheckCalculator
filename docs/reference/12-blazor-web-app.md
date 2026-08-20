@@ -35,12 +35,19 @@ That single fact explains several other design choices in this project:
 - **Scoped DI services are circuit-scoped, not request-scoped.** A service registered
   `AddScoped` lives for as long as the browser tab's circuit is open, not for a single HTTP
   request — which is exactly what makes `SessionPaycheckStore` and `CircuitAccountSession`
-  (both `AddScoped`) behave as "lives until the tab closes" stores without any custom lifetime
-  management.
-- **State genuinely disappears when the tab closes.** The circuit closing is what triggers the
-  scoped services' disposal — there's no polling, no explicit cleanup hook needed for the
-  "anonymous data survives only until the browser tab closes" requirement; it falls out of the
-  render-mode choice for free.
+  (both `AddScoped`) behave as per-tab stores without any custom lifetime management.
+- **In-memory state disappears when the tab closes.** The circuit closing is what triggers the
+  scoped services' disposal — no polling, no explicit cleanup hook. `CircuitAccountSession`
+  relies on this: auth tokens are deliberately never persisted, so signing in does not outlive
+  the tab.
+- **The two stores opt back out of that.** `SessionPaycheckStore` and `SessionBudgetStore` mirror
+  every mutation to browser `localStorage` and hydrate from it on the first interactive render, so
+  anonymous saved paychecks and budgets *do* survive a refresh, a closed tab, and a new circuit.
+  Because JS interop is unavailable during prerendering, hydration cannot happen in
+  `OnInitializedAsync` — the prerender pass sees an empty store, and
+  `OnAfterRenderAsync(firstRender)` calls `EnsureHydratedAsync()` and re-reads it. Persistence is
+  best-effort throughout (see `Services/BrowserLocalStorage.cs`): a dead circuit, a blocked
+  `localStorage`, or an exhausted quota silently degrades to the old in-memory-only behaviour.
 
 ---
 
@@ -50,6 +57,8 @@ That single fact explains several other design choices in this project:
 // Program.cs
 var taxDataPath = Path.Combine(AppContext.BaseDirectory, "TaxData");
 builder.Services.AddPaycheckCalculatorCore(new FileSystemTaxDataReader(taxDataPath));
+
+builder.Services.AddScoped<BrowserLocalStorage>();
 
 builder.Services.AddScoped<SessionBudgetStore>();
 builder.Services.AddScoped<IBudgetStore>(sp => sp.GetRequiredService<SessionBudgetStore>());

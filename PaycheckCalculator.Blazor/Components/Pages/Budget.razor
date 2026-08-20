@@ -561,7 +561,26 @@
     protected override async Task OnInitializedAsync()
     {
         Shell.Set("Budget");
+        await LoadFromStoreAsync();
+    }
 
+    /// <summary>
+    /// First interactive render is the earliest point JS interop — and therefore browser
+    /// localStorage — is reachable, so this is where a persisted budget is pulled in.
+    /// <see cref="OnInitializedAsync"/> runs during prerender, where the store can only report
+    /// empty sets.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Store.EnsureHydratedAsync();
+        await LoadFromStoreAsync();
+        StateHasChanged();
+    }
+
+    /// <summary>Replaces the page's working state with whatever the store currently holds.</summary>
+    private async Task LoadFromStoreAsync()
+    {
         var budgetSet = await Store.LoadBudgetsAsync();
         var txSet     = await Store.LoadTransactionsAsync();
         var billSet   = await Store.LoadRecurringBillsAsync();

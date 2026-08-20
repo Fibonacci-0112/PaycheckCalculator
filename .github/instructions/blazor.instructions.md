@@ -14,7 +14,8 @@ applyTo: "PaycheckCalculator.Blazor/**/*.cs,PaycheckCalculator.Blazor/**/*.razor
 
 ## Session scope and persistence
 
-- Anonymous saved-paycheck state is circuit/session-scoped (`SessionPaycheckStore`). Anonymous budget state uses `SessionBudgetStore`. Neither persists across browser tabs or new circuits (e.g., refresh/tab close) by design.
+- Anonymous saved-paycheck state uses `SessionPaycheckStore`; anonymous budget state uses `SessionBudgetStore`. Both keep a circuit-scoped working set and mirror it to browser `localStorage` through `BrowserLocalStorage`, so data survives a refresh, a closed tab, and a new circuit.
+- JS interop is unavailable during prerender, so the stores hydrate lazily: call `EnsureHydratedAsync()` from `OnAfterRenderAsync(firstRender)` and re-read the store there. Persistence is best-effort — a blocked or full `localStorage` must never break the page.
 - Server-side calls to the sync API (`PaycheckApiClient`) must remain server-side. Do not introduce CORS-dependent browser fetch calls unless an explicit requirement forces it.
 
 ## Exports and print
