@@ -168,17 +168,17 @@ Keep sync optional. Do not market it as production-ready until this milestone is
 
 ### 3.1 API and identity hardening
 
-- Remove the fallback PostgreSQL username/password; validate required production configuration at startup.
+- ✅ Done — the fallback PostgreSQL username/password is removed; `ConnectionStrings:Sync` is required and startup fails without it.
 - Add production exception handling, HTTPS/forwarded-header policy, HSTS where appropriate, request-size limits, and secure response headers.
-- Rate-limit registration, login, token refresh, and sync endpoints separately.
+- ✅ Done — fixed-window rate limits apply separately to `/api/account` (per client IP) and the sync groups (per authenticated user), returning `429` with `Retry-After`. Revisit the IP partition once a trusted-proxy forwarded-header policy lands.
 - Add email verification, password reset, lockout/abuse protections, token/session revocation, and device/session visibility.
 - Enforce server-side validation for every synced field, not only collection counts and names.
 - Version the API and define backward-compatibility rules before mobile releases depend on it.
 
 ### 3.2 Operability and data protection
 
-- Add liveness/readiness endpoints, structured logs, tracing, metrics, and privacy-safe correlation IDs.
-- Run database migrations as a controlled deployment step instead of unconditionally during application startup.
+- Add structured logs, tracing, metrics, and privacy-safe correlation IDs. ✅ Liveness (`/health/live`) and readiness (`/health/ready`) endpoints are in place.
+- ✅ Partly done — startup migrations can now be disabled with `Database:MigrateOnStartup=false`; running them as a controlled deployment step is still to be defined.
 - Define backup, restore, retention, and disaster-recovery procedures; test restoration.
 - Add user data export and account/data deletion.
 - Create a threat model and review against an appropriate OWASP ASVS baseline.
@@ -216,7 +216,7 @@ Implement these in order unless user research changes the ranking.
 | P2 | Benefits modeling | Guided 401(k)/403(b), Roth, HSA/FSA, Section 125, garnishment, and employer-match scenarios | Deduction taxonomy |
 | P2 | Payroll calendar | Use actual pay dates, remaining checks, 27/53-period years, bonuses, and mid-year changes | Tax-year/calendar services |
 | P2 | Household/multiple jobs | Compare combined withholding for spouses and multiple employers | Annual liability engine |
-| P2 | Offline-capable web | Persist anonymous Blazor data in the browser and support an installable PWA where feasible | Snapshot versioning |
+| P2 | Offline-capable web | ✅ Anonymous Blazor paychecks and budgets now persist in browser `localStorage` behind the store abstractions; an installable PWA (manifest + service worker) is still outstanding | Snapshot versioning |
 | P3 | Budget cash-flow calendar | Connect pay dates, recurring bills, sinking funds, and goals to forecast account needs | Payroll calendar |
 | P3 | Tax-change alerts | Notify users when a selected jurisdiction/year changes and explain the impact | Tax-pack release metadata |
 
@@ -248,9 +248,9 @@ Implement these in order unless user research changes the ranking.
 | CI blind spots | dotnet.yml invokes the test project and has no explicit MAUI/platform matrix | Milestone 2 CI matrix |
 | UI orchestration size | Calculator.razor is over 1,700 lines and CalculatorViewModel over 1,200 | Capability-based application/presentation refactor |
 | Repeated asset wiring | Tax JSON is separately declared for MAUI, Blazor, and tests | Manifest-driven MSBuild wiring |
-| Documentation drift | Target-framework and database-provider descriptions disagree with current project files/code | Milestone 0 docs reconciliation |
+| Documentation drift | Reduced: target-framework descriptions now match (`net10.0`, SDK 10.0.400) across README, AGENTS/CLAUDE, wiki, and reference docs. Database-provider and feature descriptions still need a sweep | Milestone 0 docs reconciliation |
 | Client-clock conflict resolution | Sync merge uses client DateTimeOffset values for last-write-wins and retains tombstones | Server revisions, delta sync, and compaction policy |
-| API production gaps | Fallback database credentials, startup migrations, and no visible rate-limit/health pipeline | Milestone 3 hardening |
+| API production gaps | Reduced: fallback credentials removed, rate limiting and health probes added, startup migrations made opt-out. Remaining: email sender, forwarded headers/HSTS, request-size limits, API versioning | Milestone 3 hardening |
 | Manual release identity | MAUI version fields are hard-coded and no release workflow is present | Versioned release pipeline and SBOM |
 
 ## Shared definition of done

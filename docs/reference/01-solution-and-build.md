@@ -32,12 +32,12 @@ configurations, the analogue of the classic `.sln` deploy flag.
 
 | Project | SDK | Target framework(s) | Role |
 |---|---|---|---|
-| `PaycheckCalculator.Core` | `Microsoft.NET.Sdk` | `net11.0` | All tax/pay/budget math. No UI, HTTP, or persistence. |
-| `PaycheckCalculator.Shared` | `Microsoft.NET.Sdk` | `net11.0` | Sync DTOs, JSON config, mergers, typed HTTP client, store + entitlement abstractions. |
-| `PaycheckCalculator.API` | `Microsoft.NET.Sdk.Web` | `net11.0` | ASP.NET Core minimal API: Identity accounts + authorized sync. |
-| `PaycheckCalculator.Blazor` | `Microsoft.NET.Sdk.Web` | `net11.0` | Blazor Server web front-end. |
-| `PaycheckCalculator.App` | `Microsoft.NET.Sdk` (`UseMaui`) | `net11.0-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0` | .NET MAUI native front-end. |
-| `PaycheckCalculator.Tests` | `Microsoft.NET.Sdk` | `net11.0` | xUnit suite covering Core, Shared, Api, and the Blazor exporters. |
+| `PaycheckCalculator.Core` | `Microsoft.NET.Sdk` | `net10.0` | All tax/pay/budget math. No UI, HTTP, or persistence. |
+| `PaycheckCalculator.Shared` | `Microsoft.NET.Sdk` | `net10.0` | Sync DTOs, JSON config, mergers, typed HTTP client, store + entitlement abstractions. |
+| `PaycheckCalculator.API` | `Microsoft.NET.Sdk.Web` | `net10.0` | ASP.NET Core minimal API: Identity accounts + authorized sync. |
+| `PaycheckCalculator.Blazor` | `Microsoft.NET.Sdk.Web` | `net10.0` | Blazor Server web front-end. |
+| `PaycheckCalculator.App` | `Microsoft.NET.Sdk` (`UseMaui`) | `net10.0-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0` | .NET MAUI native front-end. |
+| `PaycheckCalculator.Tests` | `Microsoft.NET.Sdk` | `net10.0` | xUnit suite covering Core, Shared, Api, and the Blazor exporters. |
 
 Every project sets `ImplicitUsings=enable` and `Nullable=enable`.
 
@@ -47,9 +47,9 @@ Every project sets `ImplicitUsings=enable` and `Nullable=enable`.
 produce:
 
 ```xml
-<TargetFrameworks>net11.0-android</TargetFrameworks>
-<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
-<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
+<TargetFrameworks>net10.0-android</TargetFrameworks>
+<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 ```
 
 So Android builds everywhere, Apple targets only on macOS, and Windows only on Windows. Minimum
@@ -130,16 +130,15 @@ Without the alias, the Blazor host's `Program` would collide with
 // global.json
 {
   "sdk": {
-    "version": "11.0.100-preview.7.26381.103",
-    "rollForward": "latestFeature",
-    "allowPrerelease": true
+    "version": "10.0.400",
+    "rollForward": "latestFeature"
   }
 }
 ```
 
-The repo runs on a **.NET 11 preview SDK**. `latestFeature` roll-forward lets a newer patch of
+The repo runs on the **.NET 10 release SDK**. `latestFeature` roll-forward lets a newer patch of
 the same feature band satisfy the requirement. Package versions across the graph are pinned to
-matching preview builds (`11.0.0-preview.6.26359.118` and friends).
+matching stable builds; no preview packages remain.
 
 The MAUI project additionally sets `<LangVersion>preview</LangVersion>`, which is required for
 the `[ObservableProperty]`-on-partial-property syntax used throughout the view models (see
@@ -199,7 +198,7 @@ dotnet run --project PaycheckCalculator.App
 ```
 
 **Linux/CI reality check:** `Core`, `Shared`, `Api`, `Blazor`, and `Tests` all target plain
-`net11.0` and build on Linux with no MAUI workload installed. Only `PaycheckCalculator.App`
+`net10.0` and build on Linux with no MAUI workload installed. Only `PaycheckCalculator.App`
 needs the workload. That is why CI can validate the entire engine and both server-side
 projects without ever touching MAUI.
 
@@ -259,7 +258,7 @@ See also [`replit.md`](../../replit.md) and [`replit.nix`](../../replit.nix).
 
 Runs on push and pull request against `main`, on `ubuntu-latest`:
 
-1. `actions/setup-dotnet@v4` with the exact pinned SDK `11.0.100-preview.7.26381.103`
+1. `actions/setup-dotnet@v4` with the exact pinned SDK `10.0.400`
 2. `dotnet restore PaycheckCalculator.Tests`
 3. `dotnet build PaycheckCalculator.Tests --no-restore`
 4. `dotnet test PaycheckCalculator.Tests --no-build --verbosity normal`

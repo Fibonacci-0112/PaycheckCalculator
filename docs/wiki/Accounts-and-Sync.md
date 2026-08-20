@@ -166,21 +166,47 @@ Current sync entity sets:
 - `RecurringBillEntity`
 - `SavingsGoalEntity`
 
-Production-style runs use PostgreSQL through Npgsql. The connection string is `ConnectionStrings:Sync`, with environment-variable override support through standard .NET configuration.
+Production-style runs use PostgreSQL through Npgsql. The connection string is `ConnectionStrings:Sync`, with environment-variable override support through standard .NET configuration. It is **required** — there is no fallback connection string, so a misconfigured deployment fails at startup instead of quietly starting against a local database.
 
 At startup:
 
-- PostgreSQL uses EF Core migrations via `Database.Migrate()`.
+- PostgreSQL uses EF Core migrations via `Database.Migrate()`, unless `Database:MigrateOnStartup` is `false` (for deployments that migrate as a separate release step).
 - Non-PostgreSQL test paths use `EnsureCreated()`.
 
 `SyncDbContextDesignTimeFactory` supports EF CLI migration creation.
+
+### Configuration keys
+
+| Key | Default | Purpose |
+|---|---|---|
+| `ConnectionStrings:Sync` | *(required)* | PostgreSQL connection string. Startup fails if missing. |
+| `Database:MigrateOnStartup` | `true` | Applies EF Core migrations on the Npgsql path. |
+| `RateLimiting:WindowSeconds` | `60` | Length of the fixed rate-limit window. |
+| `RateLimiting:AccountPermitPerWindow` | `100` | Requests per window for `/api/account`, partitioned by client IP. |
+| `RateLimiting:SyncPermitPerWindow` | `300` | Requests per window for the sync endpoints, partitioned by authenticated user. |
+
+### Rate limiting
+
+`/api/account` (register / login / refresh) and the authorized sync groups are throttled with fixed windows and return `429 Too Many Requests` with a `Retry-After` header once a window is exhausted. Account traffic is unauthenticated, so it can only be partitioned by client IP; sync traffic is partitioned by user id so one noisy account cannot starve another.
+
+The defaults are deliberately generous because a front-end may call this API **server-side** — the Blazor app proxies every user through one outbound address, so all of its users share a single IP partition. Tighten `RateLimiting:AccountPermitPerWindow` only when clients reach the API directly, or once a trusted-proxy `X-Forwarded-For` configuration lets the limiter see real client addresses.
+
+### Health probes
+
+| Endpoint | Checks |
+|---|---|
+| `GET /health/live` | Process is running. No dependencies consulted. |
+| `GET /health/ready` | Process is running **and** the sync database is reachable. |
+
+Both are anonymous and exempt from rate limiting so probes keep answering while the API sheds load.
 
 ---
 
 ## Known Limitations
 
 - Last-write-wins uses client-provided timestamps, so device clock skew can affect conflict resolution.
-- Server-side rate limiting is not currently implemented.
+- Email confirmation and password reset routes exist through `MapIdentityApi`, but no email sender is wired, so neither flow completes.
+- Rate limiting partitions account traffic by client IP, which is not meaningful behind an untrusted proxy or when a front-end calls the API server-side.
 - Development defaults use plain local HTTP; production deployment should use HTTPS.
 - Budget reports are wired in Core/UI/export paths but gated by the entitlement provider until a paid entitlement implementation is added.
 
@@ -193,6 +219,8 @@ Relevant tests include:
 - Saved paycheck merge and JSON round-trip tests.
 - Budget merger tests across budgets, transactions, recurring bills, and savings goals.
 - Sync API integration tests using `WebApplicationFactory`.
+- API hardening tests covering the health probes, rate-limit rejection and partitioning, and the required connection string (`ApiHardeningTest`).
+- Browser local-storage persistence tests for the Blazor session stores (`BrowserPersistenceTest`).
 - Budget calculator and report calculator tests.
 
 Manual end-to-end check:

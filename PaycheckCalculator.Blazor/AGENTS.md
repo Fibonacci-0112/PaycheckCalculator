@@ -34,4 +34,4 @@ dotnet run --project PaycheckCalculator.Blazor
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~Export"
 ```
 
-This project targets `net11.0` and should build on Linux/CI without the MAUI workload.
+This project targets `net10.0` and should build on Linux/CI without the MAUI workload.

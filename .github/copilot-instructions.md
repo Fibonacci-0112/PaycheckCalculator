@@ -100,7 +100,7 @@ Saved paychecks and budgets can sync across front-ends via an optional account:
 
 ## Change safety
 
-- Do not change target frameworks, preview package versions, tax data file names, or asset wiring unless the task explicitly calls for it.
+- Do not change target frameworks, package versions, tax data file names, or asset wiring unless the task explicitly calls for it.
 - If you touch JSON schemas, asset file names, or DTO field names, update all loaders, project linkers, and tests that depend on them.
 - Prefer focused edits over broad refactors in tax code.
 - If docs and implementation disagree, trust the implementation and tests; repair docs separately.

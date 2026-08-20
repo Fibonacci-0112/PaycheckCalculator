@@ -19,10 +19,17 @@ Scope: this file applies to everything under `PaycheckCalculator.API/`.
 - Require authenticated access for user sync data unless a task explicitly introduces a public endpoint.
 - Do not log passwords, bearer tokens, serialized paycheck details, or other sensitive account data.
 - Keep request/response contracts compatible with MAUI and Blazor clients.
+- Opt new endpoint groups into a rate-limit policy with `RequireRateLimiting` (see `RateLimiting/RateLimitPolicies.cs`). The `/health/*` probes stay anonymous and unthrottled.
+
+## Configuration
+
+- `ConnectionStrings:Sync` is **required**; startup fails without it. Do not add a fallback connection string.
+- `Database:MigrateOnStartup` (default `true`) gates `db.Database.Migrate()` on the Npgsql path.
+- `RateLimiting:AccountPermitPerWindow` / `SyncPermitPerWindow` / `WindowSeconds` tune the fixed-window limits.
 
 ## EF Core rules
 
-- Keep EF Core package versions consistent with the pinned Npgsql-compatible preview line in the project file.
+- Keep EF Core package versions consistent with the pinned Npgsql-compatible line in the project file.
 - When entity shape changes, add a migration and update `SyncDbContextModelSnapshot` through normal EF tooling rather than hand-editing snapshots except for obvious generated-code repairs.
 - Preserve PostgreSQL compatibility. Do not introduce SQLite-only behavior outside tests.
 
@@ -37,6 +44,7 @@ Scope: this file applies to everything under `PaycheckCalculator.API/`.
 dotnet build PaycheckCalculator.API
 dotnet run --project PaycheckCalculator.API
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~SyncApi"
+dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~ApiHardening"
 ```
 
-The API targets `net11.0` and should build without the MAUI workload.
+The API targets `net10.0` and should build without the MAUI workload.

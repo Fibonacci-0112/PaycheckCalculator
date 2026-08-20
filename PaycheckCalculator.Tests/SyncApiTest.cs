@@ -285,6 +285,12 @@ public sealed class SyncApiTest : IClassFixture<SyncApiTest.ApiFactory>
             _keepAlive = new SqliteConnection(_connectionString);
             _keepAlive.Open();
 
+            // The test host has no remote IP, so every request lands in one rate-limit partition.
+            // Pin the windows high so this suite exercises sync behavior, not throttling; the 429
+            // paths get their own deliberately tiny limits in ApiHardeningTest.
+            builder.UseSetting("RateLimiting:AccountPermitPerWindow", "100000");
+            builder.UseSetting("RateLimiting:SyncPermitPerWindow", "100000");
+
             // Production wires PostgreSQL; drop every EF registration bound to SyncDbContext (the
             // options and any provider configuration) so only the in-memory SQLite override remains.
             builder.ConfigureServices(services =>

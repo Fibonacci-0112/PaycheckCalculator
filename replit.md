@@ -22,17 +22,21 @@ Both scripts export `ASPNETCORE_URLS`/`DOTNET_ROOT`/`PATH` and start the process
 
 ### .NET SDK
 
-This project pins `global.json` to a **.NET 11 preview SDK** (`11.0.100-preview.7.26381.103`), which isn't available as a Replit Nix module (the highest module is .NET 10). It's installed locally instead:
+This project pins `global.json` to the **.NET 10 SDK** (`10.0.400`). Replit's Nix modules may not
+carry that exact patch, so the SDK is installed locally instead:
 
-- Downloaded via `dotnet-install.sh` into `.dotnet/` (git-ignored) — matches the exact preview version pinned in `global.json`.
-- `icu` was added as a system dependency (required by the preview SDK's globalization support).
-- The two `start-*.sh` scripts prepend `.dotnet/` to `PATH` and set `DOTNET_ROOT` so `dotnet` resolves to the preview SDK instead of the system-wide .NET 7.
+- Downloaded via `dotnet-install.sh` into `.dotnet/` (git-ignored) — matches the exact version pinned in `global.json`.
+- `icu` was added as a system dependency (required by the SDK's globalization support).
+- The two `start-*.sh` scripts prepend `.dotnet/` to `PATH` and set `DOTNET_ROOT` so `dotnet` resolves to the pinned SDK instead of any older system-wide install.
 
-If `global.json` is ever bumped to a newer preview build, re-run `dotnet-install.sh --version <new-version> --install-dir .dotnet` to refresh it.
+If `global.json` is ever bumped, re-run `dotnet-install.sh --version <new-version> --install-dir .dotnet` to refresh it.
 
 ### Database
 
-`PaycheckCalculator.API` uses EF Core migrations against PostgreSQL. It's wired to Replit's built-in Postgres database via the standard `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` environment variables (composed into `ConnectionStrings__Sync` inside `start-api.sh`, not hardcoded). Migrations apply automatically on startup (`db.Database.Migrate()` in `Program.cs`).
+`PaycheckCalculator.API` uses EF Core migrations against PostgreSQL. It's wired to Replit's built-in Postgres database via the standard `PGHOST`/`PGPORT`/`PGDATABASE`/`PGUSER`/`PGPASSWORD` environment variables (composed into `ConnectionStrings__Sync` inside `start-api.sh`, not hardcoded). Migrations apply automatically on startup (`db.Database.Migrate()` in `Program.cs`), which can be
+turned off with `Database__MigrateOnStartup=false` when migrations run as a separate release step.
+`ConnectionStrings__Sync` is **required** — the API refuses to start without it rather than falling
+back to a default local database.
 
 ### Notes
 

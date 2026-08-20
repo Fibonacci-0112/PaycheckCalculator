@@ -6,7 +6,7 @@ This page covers the development workflow, testing expectations, and project con
 
 ## Development Workflow
 
-1. Install the .NET 11 preview SDK pinned in `global.json`.
+1. Install the .NET 10 SDK pinned in `global.json`.
 2. Install the MAUI workload only if working on `PaycheckCalculator.App`.
 3. Build a non-MAUI baseline:
    ```bash
@@ -28,10 +28,10 @@ For manual app checks:
 ```bash
 dotnet run --project PaycheckCalculator.API
 dotnet run --project PaycheckCalculator.Blazor
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios              # macOS + Xcode
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-maccatalyst      # macOS + Xcode
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-android
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-ios              # macOS + Xcode
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-maccatalyst      # macOS + Xcode
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-windows10.0.19041.0
 ```
 
 ---

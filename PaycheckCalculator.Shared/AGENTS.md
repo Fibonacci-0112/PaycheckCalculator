@@ -38,4 +38,4 @@ dotnet build PaycheckCalculator.Shared
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~Json|FullyQualifiedName~Merger|FullyQualifiedName~Sync"
 ```
 
-This project targets `net11.0` and should build without MAUI or the API runtime.
+This project targets `net10.0` and should build without MAUI or the API runtime.

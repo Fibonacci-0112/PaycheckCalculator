@@ -31,10 +31,10 @@ Scope: this file applies to everything under `PaycheckCalculator.App/`.
 
 ```bash
 dotnet build PaycheckCalculator.App
-dotnet build PaycheckCalculator.App -f net11.0-android
-dotnet build PaycheckCalculator.App -f net11.0-ios
-dotnet build PaycheckCalculator.App -f net11.0-maccatalyst
-dotnet build PaycheckCalculator.App -f net11.0-windows10.0.19041.0
+dotnet build PaycheckCalculator.App -f net10.0-android
+dotnet build PaycheckCalculator.App -f net10.0-ios
+dotnet build PaycheckCalculator.App -f net10.0-maccatalyst
+dotnet build PaycheckCalculator.App -f net10.0-windows10.0.19041.0
 ```
 
 Building this project requires the MAUI workload; non-MAUI projects and tests should still build without it.

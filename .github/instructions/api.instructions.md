@@ -20,8 +20,14 @@ applyTo: "PaycheckCalculator.API/**/*.cs"
 
 - Production targets PostgreSQL via Npgsql. Test paths use SQLite + `EnsureCreated` — do not introduce SQLite-only behavior in production code paths.
 - When entity shape changes, generate a migration through EF tooling rather than hand-editing migration files or the snapshot, except for obvious generated-code repairs.
-- Keep EF Core and Npgsql package versions consistent with the pinned preview line already in the project file.
-- Apply migrations at startup via `db.Database.Migrate()` only on the Npgsql path; tests use `EnsureCreated`.
+- Keep EF Core and Npgsql package versions consistent with the pinned line already in the project file.
+- Apply migrations at startup via `db.Database.Migrate()` only on the Npgsql path; tests use `EnsureCreated`. Startup migration can be disabled with `Database:MigrateOnStartup=false`.
+- `ConnectionStrings:Sync` is required. Do not reintroduce a hardcoded fallback connection string — a missing value must fail startup.
+
+## Operational hardening
+
+- Account and sync endpoint groups are rate limited via `RateLimitPolicies` (`RateLimiting:AccountPermitPerWindow`, `RateLimiting:SyncPermitPerWindow`, `RateLimiting:WindowSeconds`). New endpoint groups should opt into a policy with `RequireRateLimiting`.
+- `/health/live` and `/health/ready` are anonymous and unthrottled; keep them that way so probes answer while the API sheds load.
 
 ## Testing
 
