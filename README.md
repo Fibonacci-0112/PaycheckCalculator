@@ -37,7 +37,7 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 
 ```text
 PaycheckCalculator.slnx
-├── global.json                  # .NET 11 preview SDK pin and roll-forward settings
+├── global.json                  # .NET 10 SDK pin and roll-forward settings
 ├── PaycheckCalculator.Core/           # UI-agnostic domain, tax, pay, projection, gross-up, budget, and report engines
 │   ├── Models/                  # PaycheckInput/Result, enums, UsState, Deduction, AnnualProjection, GrossUpResult, BonusInput/Result, HourlySalaryInput/Result, SelfEmploymentInput/Result
 │   ├── Pay/                     # PayCalculator, PayPeriods, AnnualProjectionCalculator, GrossUpCalculator, BonusCalculator, HourlySalaryCalculator, SelfEmploymentCalculator
@@ -84,10 +84,10 @@ The solution file includes six projects: `PaycheckCalculator.API`, `PaycheckCalc
 
 | Component | Technology |
 |---|---|
-| Primary SDK | .NET 11 preview pinned in `global.json` |
-| Core library | UI-agnostic `net11.0` library |
-| MAUI app | .NET MAUI, `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, `net11.0-windows10.0.19041.0`, CommunityToolkit.Mvvm |
-| Web app | ASP.NET Core Blazor Server, `net11.0` |
+| Primary SDK | .NET 10 pinned in `global.json` |
+| Core library | UI-agnostic `net10.0` library |
+| MAUI app | .NET MAUI, `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst`, `net10.0-windows10.0.19041.0`, CommunityToolkit.Mvvm |
+| Web app | ASP.NET Core Blazor Server, `net10.0` |
 | Sync API | ASP.NET Core minimal APIs, ASP.NET Core Identity, EF Core, Npgsql/PostgreSQL |
 | Shared contracts | `System.Text.Json` with enum, `DateOnly`, and `StateInputValues` converters |
 | Tests | xUnit |
@@ -95,7 +95,7 @@ The solution file includes six projects: `PaycheckCalculator.API`, `PaycheckCalc
 
 ## Prerequisites
 
-- [.NET 11 SDK](https://dotnet.microsoft.com/) preview matching `global.json`.
+- [.NET 10 SDK](https://dotnet.microsoft.com/) matching `global.json`.
 - .NET MAUI workload only when building or running `PaycheckCalculator.App`:
   ```bash
   dotnet workload install maui
@@ -158,16 +158,16 @@ Target-specific examples:
 
 ```bash
 # Android
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-android
 
 # iOS (requires macOS and Xcode)
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-ios
 
 # macOS via Mac Catalyst (requires macOS and Xcode)
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-maccatalyst
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-maccatalyst
 
 # Windows
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-windows10.0.19041.0
 ```
 
 ## How the Paycheck Engine Works
