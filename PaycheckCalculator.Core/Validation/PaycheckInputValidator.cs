@@ -21,6 +21,15 @@ public static class PaycheckInputValidator
     public const int MaxPaycheckNumber = 366;
 
     /// <summary>
+    /// Maximum plausible hours worked in a single week for the hourly ↔ salary converter:
+    /// 7 days × 24 hours.
+    /// </summary>
+    public const decimal MaxHoursPerWeek = 168m;
+
+    /// <summary>Maximum plausible paid weeks per year for the hourly ↔ salary converter.</summary>
+    public const decimal MaxWeeksPerYear = 53m;
+
+    /// <summary>
     /// Validates a standard paycheck (or gross-up) input. Pass <paramref name="targetNetPay"/>
     /// when validating a gross-up calculation so the desired net pay is checked too.
     /// </summary>
@@ -88,6 +97,37 @@ public static class PaycheckInputValidator
             errors.Add("YTD Social Security wages cannot be negative.");
         if (input.YtdMedicareWages < 0)
             errors.Add("YTD Medicare wages cannot be negative.");
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Validates an hourly ↔ salary conversion input. Only the amount for the selected
+    /// direction is checked — the other one is ignored by the converter.
+    /// </summary>
+    public static IReadOnlyList<string> ValidateHourlySalary(Models.HourlySalaryInput input)
+    {
+        var errors = new List<string>();
+
+        if (input.HoursPerWeek <= 0)
+            errors.Add("Hours per week must be greater than zero.");
+        else if (input.HoursPerWeek > MaxHoursPerWeek)
+            errors.Add($"Hours per week cannot exceed {MaxHoursPerWeek}.");
+
+        if (input.WeeksPerYear <= 0)
+            errors.Add("Paid weeks per year must be greater than zero.");
+        else if (input.WeeksPerYear > MaxWeeksPerYear)
+            errors.Add($"Paid weeks per year cannot exceed {MaxWeeksPerYear}.");
+
+        if (input.Mode == Models.PayConversionMode.HourlyToSalary)
+        {
+            if (input.HourlyRate <= 0)
+                errors.Add("Hourly rate must be greater than zero.");
+        }
+        else if (input.AnnualSalary <= 0)
+        {
+            errors.Add("Annual salary must be greater than zero.");
+        }
 
         return errors;
     }

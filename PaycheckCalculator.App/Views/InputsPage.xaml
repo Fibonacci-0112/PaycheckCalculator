@@ -209,8 +209,60 @@
                                    TextColor="{StaticResource MutedFaint}" FontSize="11" />
                         </VerticalStackLayout>
 
+                        <!-- Hourly ↔ salary converter inputs (shown when Mode = Hourly ↔ Salary) -->
+                        <VerticalStackLayout Spacing="14" IsVisible="{Binding IsHourlySalaryMode}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Convert" Grid.Column="0"
+                                       Style="{StaticResource FieldLabel}" />
+                                <Picker ItemsSource="{Binding ConversionDirections}" SelectedItem="{Binding SelectedConversionDirectionPickerItem}"
+                                        Grid.Column="1" TextColor="{StaticResource Ink}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding IsHourlyToSalary}">
+                                <Label Text="Hourly Rate" Grid.Column="0"
+                                       Style="{StaticResource FieldLabel}" />
+                                <Entry Text="{Binding ConversionHourlyRate}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding IsSalaryToHourly}">
+                                <Label Text="Annual Salary" Grid.Column="0"
+                                       Style="{StaticResource FieldLabel}" />
+                                <Entry Text="{Binding ConversionAnnualSalary}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Hours Per Week" Grid.Column="0"
+                                       Style="{StaticResource FieldLabel}" />
+                                <Entry Text="{Binding ConversionHoursPerWeek}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Label Text="Paid Weeks Per Year" Grid.Column="0"
+                                       Style="{StaticResource FieldLabel}" />
+                                <Entry Text="{Binding ConversionWeeksPerYear}" Keyboard="Numeric" Grid.Column="1"
+                                       TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
+                                    <Entry.Behaviors>
+                                        <behaviors:DecimalFormatBehavior />
+                                    </Entry.Behaviors>
+                                </Entry>
+                            </Grid>
+                            <Label Text="A pure rate conversion — gross pay only, with no taxes, W-4, or deductions applied. Enter the hours you actually work to see the real hourly rate behind a salary, and lower the paid weeks to account for unpaid time off."
+                                   TextColor="{StaticResource MutedFaint}" FontSize="11" />
+                        </VerticalStackLayout>
+
                         <!-- Paycheck number (for annual projection) -->
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding IsPaycheckMode}">
                             <Label Text="Paycheck # (this year)" Grid.Column="0"
                                    Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding PaycheckNumber}" Keyboard="Numeric" Grid.Column="1"
@@ -218,7 +270,7 @@
                         </Grid>
 
                         <!-- YTD FICA wages (for wage-base cap accuracy) -->
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding IsPaycheckMode}">
                             <Label Text="Prior Social Security Wages (this year)" Grid.Column="0"
                                    Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding YtdSocialSecurityWages}" Keyboard="Numeric" Grid.Column="1"
@@ -228,7 +280,7 @@
                                 </Entry.Behaviors>
                             </Entry>
                         </Grid>
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="{Binding IsPaycheckMode}">
                             <Label Text="Prior Medicare Wages (this year)" Grid.Column="0"
                                    Style="{StaticResource FieldLabel}" />
                             <Entry Text="{Binding YtdMedicareWages}" Keyboard="Numeric" Grid.Column="1"

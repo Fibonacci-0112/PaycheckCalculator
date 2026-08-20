@@ -29,9 +29,10 @@ public record PickerItem<T>(T Value, string Text)
 
 /// <summary>
 /// How the calculator turns inputs into a result: a standard paycheck (gross → net),
-/// a gross-up (target net → required gross), or a bonus / supplemental-wage calculation.
+/// a gross-up (target net → required gross), a bonus / supplemental-wage calculation,
+/// a self-employment / 1099 estimate, or a pure hourly ↔ salary rate conversion.
 /// </summary>
-public enum CalculationMode { Standard, GrossUp, Bonus, SelfEmployment }
+public enum CalculationMode { Standard, GrossUp, Bonus, SelfEmployment, HourlySalary }
 
 public partial class CalculatorViewModel : ObservableObject
 {
@@ -39,6 +40,7 @@ public partial class CalculatorViewModel : ObservableObject
     private readonly GrossUpCalculator _grossUp;
     private readonly BonusCalculator _bonus;
     private readonly SelfEmploymentCalculator _selfEmployment;
+    private readonly HourlySalaryCalculator _hourlySalary;
     private readonly AnnualProjectionCalculator _annual;
     private readonly StateCalculatorRegistry _stateRegistry;
     private readonly IStateSchemaProvider _schemaProvider;
@@ -50,12 +52,13 @@ public partial class CalculatorViewModel : ObservableObject
     private UsState _previousState;
     private bool _initialized;
 
-    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, BonusCalculator bonus, SelfEmploymentCalculator selfEmployment, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
+    public CalculatorViewModel(PayCalculator calc, GrossUpCalculator grossUp, BonusCalculator bonus, SelfEmploymentCalculator selfEmployment, HourlySalaryCalculator hourlySalary, AnnualProjectionCalculator annual, StateCalculatorRegistry stateRegistry, IStateSchemaProvider schemaProvider, IPdfExportService pdfExport, ICsvExportService csvExport, IPrintService printService, ISavedPaycheckStore store, ISyncCoordinator sync)
     {
         _calc = calc;
         _grossUp = grossUp;
         _bonus = bonus;
         _selfEmployment = selfEmployment;
+        _hourlySalary = hourlySalary;
         _annual = annual;
         _stateRegistry = stateRegistry;
         _schemaProvider = schemaProvider;
@@ -70,6 +73,7 @@ public partial class CalculatorViewModel : ObservableObject
         OvertimeMultiplier = 1.5m;
         SelectedPayTypePickerItem = PayTypes[0];                 // Hourly
         SelectedCalculationModePickerItem = CalculationModes[0]; // Standard
+        SelectedConversionDirectionPickerItem = ConversionDirections[0]; // Hourly → Salary
         TargetNetPay = 1000m;
         SelectedGrossPayMethodPickerItem = GrossPayMethods[0];   // Per Year
         SelectedState = UsState.OK;
@@ -133,6 +137,8 @@ public partial class CalculatorViewModel : ObservableObject
         OnPropertyChanged(nameof(IsGrossUpMode));
         OnPropertyChanged(nameof(IsBonusMode));
         OnPropertyChanged(nameof(IsSelfEmploymentMode));
+        OnPropertyChanged(nameof(IsHourlySalaryMode));
+        OnPropertyChanged(nameof(IsPaycheckMode));
     }
 
     /// <summary>True when standard paycheck inputs (pay type, hours/salary) should be shown.</summary>
@@ -147,6 +153,15 @@ public partial class CalculatorViewModel : ObservableObject
     /// <summary>True when the self-employment / 1099 input should be shown.</summary>
     public bool IsSelfEmploymentMode => CalculationMode == CalculationMode.SelfEmployment;
 
+    /// <summary>True when the hourly ↔ salary converter inputs should be shown.</summary>
+    public bool IsHourlySalaryMode => CalculationMode == CalculationMode.HourlySalary;
+
+    /// <summary>
+    /// True for every mode that produces a paycheck-shaped result. The hourly ↔ salary converter
+    /// is a pure rate conversion, so the paycheck-number and year-to-date FICA inputs don't apply.
+    /// </summary>
+    public bool IsPaycheckMode => CalculationMode != CalculationMode.HourlySalary;
+
     /// <summary>Desired net (take-home) pay for the gross-up calculation.</summary>
     [ObservableProperty] public partial decimal TargetNetPay { get; set; }
 
@@ -160,6 +175,48 @@ public partial class CalculatorViewModel : ObservableObject
 
     /// <summary>Annual net self-employment earnings (Schedule C net profit) for the 1099 calculation.</summary>
     [ObservableProperty] public partial decimal SelfEmploymentEarnings { get; set; } = 80000m;
+
+    // ── Hourly ↔ salary converter (pure rate conversion; no taxes or deductions) ──
+    public IReadOnlyList<PickerItem<PayConversionMode>> ConversionDirections { get; } =
+        [
+            new(PayConversionMode.HourlyToSalary, "Hourly Rate → Salary"),
+            new(PayConversionMode.SalaryToHourly, "Salary → Real Hourly Rate")
+        ];
+
+    [ObservableProperty] public partial PickerItem<PayConversionMode>? SelectedConversionDirectionPickerItem { get; set; }
+
+    partial void OnSelectedConversionDirectionPickerItemChanged(PickerItem<PayConversionMode>? value)
+    {
+        if (value != null)
+            ConversionDirection = value.Value;
+    }
+
+    /// <summary>Which way the converter runs: hourly → salary, or salary → real hourly rate.</summary>
+    [ObservableProperty] public partial PayConversionMode ConversionDirection { get; set; } = PayConversionMode.HourlyToSalary;
+
+    partial void OnConversionDirectionChanged(PayConversionMode value)
+    {
+        OnPropertyChanged(nameof(IsHourlyToSalary));
+        OnPropertyChanged(nameof(IsSalaryToHourly));
+    }
+
+    /// <summary>True when the converter takes an hourly rate as its input.</summary>
+    public bool IsHourlyToSalary => ConversionDirection == PayConversionMode.HourlyToSalary;
+
+    /// <summary>True when the converter takes an annual salary as its input.</summary>
+    public bool IsSalaryToHourly => ConversionDirection == PayConversionMode.SalaryToHourly;
+
+    /// <summary>Hourly rate to convert from (hourly → salary direction).</summary>
+    [ObservableProperty] public partial decimal ConversionHourlyRate { get; set; } = 20m;
+
+    /// <summary>Annual salary to convert from (salary → hourly direction).</summary>
+    [ObservableProperty] public partial decimal ConversionAnnualSalary { get; set; } = 60000m;
+
+    /// <summary>Hours actually worked per week, driving both directions of the conversion.</summary>
+    [ObservableProperty] public partial decimal ConversionHoursPerWeek { get; set; } = 40m;
+
+    /// <summary>Paid weeks per year; lower it to account for unpaid time off.</summary>
+    [ObservableProperty] public partial decimal ConversionWeeksPerYear { get; set; } = 52m;
 
     // ── Pay type (Hourly vs Salary) ─────────────────────────────
     public IReadOnlyList<PickerItem<PayType>> PayTypes { get; } =
@@ -440,6 +497,23 @@ public partial class CalculatorViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowDeductions));
         OnPropertyChanged(nameof(ShowBothDeductions));
         OnPropertyChanged(nameof(ShowResultTabs));
+        OnPropertyChanged(nameof(ShowPaycheckResult));
+        OnPropertyChanged(nameof(IsPaycheckPerPeriodVisible));
+    }
+
+    /// <summary>
+    /// Presentation-ready result card for the hourly ↔ salary converter. Mutually exclusive with
+    /// <see cref="ResultCard"/>: a rate conversion has no taxes, deductions, or net pay, so it is
+    /// rendered by its own card rather than through the paycheck result layout.
+    /// </summary>
+    [ObservableProperty] public partial HourlySalaryCardModel? HourlySalaryCard { get; set; }
+
+    partial void OnHourlySalaryCardChanged(HourlySalaryCardModel? value)
+    {
+        OnPropertyChanged(nameof(HasResult));
+        OnPropertyChanged(nameof(ShowEmptyState));
+        OnPropertyChanged(nameof(ShowResultTabs));
+        OnPropertyChanged(nameof(ShowHourlySalaryResult));
     }
 
     /// <summary>
@@ -454,6 +528,7 @@ public partial class CalculatorViewModel : ObservableObject
         OnPropertyChanged(nameof(HasAnnual));
         OnPropertyChanged(nameof(ShowResultTabs));
         OnPropertyChanged(nameof(IsPerPeriodTabVisible));
+        OnPropertyChanged(nameof(IsPaycheckPerPeriodVisible));
         OnPropertyChanged(nameof(IsAnnualTabVisible));
     }
 
@@ -469,6 +544,7 @@ public partial class CalculatorViewModel : ObservableObject
     partial void OnSelectedResultTabChanged(int value)
     {
         OnPropertyChanged(nameof(IsPerPeriodTabVisible));
+        OnPropertyChanged(nameof(IsPaycheckPerPeriodVisible));
         OnPropertyChanged(nameof(IsAnnualTabVisible));
         OnPropertyChanged(nameof(IsPerPeriodTabActive));
         OnPropertyChanged(nameof(IsAnnualTabActive));
@@ -476,6 +552,12 @@ public partial class CalculatorViewModel : ObservableObject
 
     /// <summary>True when the per-period results should be shown (default, or whenever there is no annual tab).</summary>
     public bool IsPerPeriodTabVisible => SelectedResultTab == 0 || !HasAnnual;
+
+    /// <summary>
+    /// True when the paycheck-shaped per-period cards should be shown. The hourly ↔ salary
+    /// converter shares the Per Paycheck slot but renders its own card instead.
+    /// </summary>
+    public bool IsPaycheckPerPeriodVisible => IsPerPeriodTabVisible && ShowPaycheckResult;
 
     /// <summary>True when the annual projection should be shown.</summary>
     public bool IsAnnualTabVisible => SelectedResultTab == 1 && HasAnnual;
@@ -492,11 +574,17 @@ public partial class CalculatorViewModel : ObservableObject
     [RelayCommand]
     private void ShowAnnualTab() => SelectedResultTab = 1;
 
-    /// <summary>True once a paycheck has been calculated, so the results can be shown.</summary>
-    public bool HasResult => ResultCard is not null;
+    /// <summary>True once any result — paycheck or rate conversion — is available for display.</summary>
+    public bool HasResult => ResultCard is not null || HourlySalaryCard is not null;
+
+    /// <summary>True when a paycheck-shaped result (standard, gross-up, bonus, or 1099) is displayed.</summary>
+    public bool ShowPaycheckResult => ResultCard is not null;
+
+    /// <summary>True when an hourly ↔ salary conversion is displayed.</summary>
+    public bool ShowHourlySalaryResult => HourlySalaryCard is not null;
 
     /// <summary>True before any calculation has run; drives the Results-page placeholder.</summary>
-    public bool ShowEmptyState => ResultCard is null;
+    public bool ShowEmptyState => !HasResult;
 
     /// <summary>True when the result has any pre-tax or post-tax deductions to display.</summary>
     public bool ShowDeductions =>
@@ -988,6 +1076,14 @@ public partial class CalculatorViewModel : ObservableObject
     [RelayCommand]
     private void Calculate()
     {
+        // The hourly ↔ salary converter is a pure rate conversion: no W-4, state, deduction, or
+        // FICA inputs apply, so it skips every paycheck-specific validation below.
+        if (IsHourlySalaryMode)
+        {
+            CalculateHourlySalary();
+            return;
+        }
+
         // Bonus mode is self-contained: flat supplemental withholding + FICA + state
         // supplemental rate. It ignores hours/salary, W-4, and deductions, so it skips the
         // paycheck-specific validation and state-schema fields below.
@@ -1051,6 +1147,7 @@ public partial class CalculatorViewModel : ObservableObject
             return;
 
         // Run the calculation for the selected mode and map to the presentation model.
+        HourlySalaryCard = null;
         if (IsGrossUpMode)
         {
             var grossUpResult = _grossUp.Calculate(input, TargetNetPay);
@@ -1102,6 +1199,7 @@ public partial class CalculatorViewModel : ObservableObject
 
         var bonusResult = _bonus.Calculate(bonusInput);
 
+        HourlySalaryCard = null;
         ResultCard = ResultCardMapper.MapBonus(bonusResult);
         Projection = null;
         SelectedResultTab = 0;
@@ -1138,12 +1236,46 @@ public partial class CalculatorViewModel : ObservableObject
 
         var seResult = _selfEmployment.Calculate(seInput);
 
+        HourlySalaryCard = null;
         ResultCard = ResultCardMapper.MapSelfEmployment(seResult);
         Projection = null;
         SelectedResultTab = 0;
 
         // Prefill the export file name from the paycheck name (the user can edit it).
         ExportFileName = string.IsNullOrWhiteSpace(PaycheckName) ? "Self-Employment-Summary" : PaycheckName.Trim();
+
+        ExportPdfCommand.NotifyCanExecuteChanged();
+        ExportCsvCommand.NotifyCanExecuteChanged();
+        PrintCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Runs the hourly ↔ salary rate conversion. It produces no paycheck, projection, or saved
+    /// snapshot — only the converter card — so it clears <see cref="ResultCard"/> and the export
+    /// commands stay disabled (there is nothing tax-related to export).
+    /// </summary>
+    private void CalculateHourlySalary()
+    {
+        var conversionInput = new HourlySalaryInput
+        {
+            Mode = ConversionDirection,
+            HourlyRate = ConversionHourlyRate,
+            AnnualSalary = ConversionAnnualSalary,
+            HoursPerWeek = ConversionHoursPerWeek,
+            WeeksPerYear = ConversionWeeksPerYear,
+            Frequency = Frequency
+        };
+
+        var calcErrors = PaycheckInputValidator.ValidateHourlySalary(conversionInput);
+        CalculationErrors = new ObservableCollection<string>(calcErrors);
+        StateValidationErrors = new ObservableCollection<string>();
+        if (calcErrors.Count > 0)
+            return;
+
+        HourlySalaryCard = HourlySalaryCardMapper.Map(_hourlySalary.Convert(conversionInput));
+        ResultCard = null;
+        Projection = null;
+        SelectedResultTab = 0;
 
         ExportPdfCommand.NotifyCanExecuteChanged();
         ExportCsvCommand.NotifyCanExecuteChanged();

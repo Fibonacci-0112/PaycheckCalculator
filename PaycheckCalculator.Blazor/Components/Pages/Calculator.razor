@@ -4,12 +4,14 @@
 @using PaycheckCalculator.Blazor.Models
 @using PaycheckCalculator.Blazor.Services.Export
 @using PaycheckCalculator.Shared.Budgeting
+@using PaycheckCalculator.Core.Validation
 @inject IJSRuntime JS
 @inject PayCalculator Calc
 @inject AnnualProjectionCalculator ProjectionCalc
 @inject GrossUpCalculator GrossUpCalc
 @inject BonusCalculator BonusCalc
 @inject SelfEmploymentCalculator SelfEmpCalc
+@inject HourlySalaryCalculator HourlySalaryCalc
 @inject StateCalculatorRegistry StateRegistry
 @inject IStateSchemaProvider SchemaProvider
 @inject SessionPaycheckStore Store
@@ -69,6 +71,7 @@
                         <option value="grossup">Gross-up (net &rarr; required gross)</option>
                         <option value="bonus">Bonus / supplemental wage</option>
                         <option value="selfemployment">Self-employment / 1099</option>
+                        <option value="hourlysalary">Hourly &harr; salary converter</option>
                     </select>
                 </div>
 
@@ -111,6 +114,41 @@
                     </div>
                     <p class="form-note">Enter your annual net profit (Schedule C: gross receipts minus business expenses). Self-employment tax is 15.3% &mdash; 12.4% Social Security (to the $184,500 cap) + 2.9% Medicare &mdash; on 92.35% of it. Pick your state on the State tab for an income-tax estimate. There is no separate state self-employment tax; the W-4 and deductions don't apply.</p>
                 }
+                else if (_hourlySalaryMode)
+                {
+                    <div class="form-group">
+                        <label>Convert</label>
+                        <select @bind="_conversionDirection">
+                            <option value="@PayConversionMode.HourlyToSalary">Hourly rate &rarr; salary</option>
+                            <option value="@PayConversionMode.SalaryToHourly">Salary &rarr; real hourly rate</option>
+                        </select>
+                    </div>
+                    @if (_conversionDirection == PayConversionMode.HourlyToSalary)
+                    {
+                        <div class="form-group">
+                            <label>Hourly Rate ($)</label>
+                            <input type="number" @bind="_conversionHourlyRate" min="0" step="0.01" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group">
+                            <label>Annual Salary ($)</label>
+                            <input type="number" @bind="_conversionAnnualSalary" min="0" step="0.01" />
+                        </div>
+                    }
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hours Per Week</label>
+                            <input type="number" @bind="_conversionHoursPerWeek" min="0.01" step="0.5" />
+                        </div>
+                        <div class="form-group">
+                            <label>Paid Weeks Per Year</label>
+                            <input type="number" @bind="_conversionWeeksPerYear" min="0.01" step="1" />
+                        </div>
+                    </div>
+                    <p class="form-note">A pure rate conversion &mdash; gross pay only, with no taxes, W-4, or deductions applied. Enter the hours you actually work (e.g. 50) to see the real hourly rate behind a salary, and lower the paid weeks (e.g. 50) to account for unpaid time off.</p>
+                }
                 else
                 {
                     <div class="form-group">
@@ -123,24 +161,27 @@
                     </div>
                     <p class="form-note">Bonuses are withheld at the federal flat supplemental rate &mdash; 22% (37% on cumulative supplemental wages over $1,000,000) &mdash; plus FICA and your state's supplemental rate. Pick your work state on the State tab. Federal W-4 and deductions don't apply.</p>
                 }
-                @if (!_bonusMode && !_selfEmpMode)
+                @if (!_bonusMode && !_selfEmpMode && !_hourlySalaryMode)
                 {
                     <div class="form-group">
                         <label>Paycheck # This Year</label>
                         <input type="number" @bind="_paycheckNumber" min="1" max="365" />
                     </div>
                 }
-                <div class="form-section-title">Year-to-Date Wages (for FICA caps)</div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>YTD Social Security Wages ($)</label>
-                        <input type="number" @bind="_ytdSsWages" min="0" step="0.01" />
+                @if (!_hourlySalaryMode)
+                {
+                    <div class="form-section-title">Year-to-Date Wages (for FICA caps)</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>YTD Social Security Wages ($)</label>
+                            <input type="number" @bind="_ytdSsWages" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>YTD Medicare Wages ($)</label>
+                            <input type="number" @bind="_ytdMedWages" min="0" step="0.01" />
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>YTD Medicare Wages ($)</label>
-                        <input type="number" @bind="_ytdMedWages" min="0" step="0.01" />
-                    </div>
-                </div>
+                }
             }
 
             @if (_inputTab == 1)
@@ -323,7 +364,7 @@
     <SetupChecklist HasPayEntered="@HasPayEntered()"
                     StateComplete="@(_stateErrors.Count == 0)"
                     HasDeductions="@(_deductions.Count > 0)"
-                    HasResult="@(_result != null || _bonusResult != null || _selfEmpResult != null)"
+                    HasResult="@(_result != null || _bonusResult != null || _selfEmpResult != null || _hourlySalaryResult != null)"
                     HasSaved="@(_history.Count > 0)"
                     StateName="@_state.ToString()" />
   </div><!-- /left column -->
@@ -363,7 +404,7 @@
             }
         </div>
 
-        @if (_result == null && _bonusResult == null && _selfEmpResult == null)
+        @if (_result == null && _bonusResult == null && _selfEmpResult == null && _hourlySalaryResult == null)
         {
             <div class="results-placeholder">
                 <svg class="placeholder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -373,6 +414,68 @@
                     <path d="M18.5 18a6 6 0 0 1 11 0c0 3.5-3 5-5.5 6.5-2.5 1.5-5.5 3-5.5 6.5a6 6 0 0 0 11 0"/>
                 </svg>
                 <p>Enter your paycheck information and click <strong>Calculate</strong> to see your results.</p>
+            </div>
+        }
+        else if (_hourlySalaryResult != null)
+        {
+            <div class="results-scroll">
+                <div class="result-card card-refund">
+                    <div class="result-card-title">Hourly &harr; Salary Conversion</div>
+                    <div class="result-row">
+                        <span>Hourly rate</span>
+                        <div class="result-right">
+                            <span class="result-value @(_hourlySalaryResult.Mode == PayConversionMode.SalaryToHourly ? "net-value" : "")">@_hourlySalaryResult.HourlyRate.ToString("C")</span>
+                        </div>
+                    </div>
+                    <div class="result-row">
+                        <span>Annual salary</span>
+                        <div class="result-right">
+                            <span class="result-value @(_hourlySalaryResult.Mode == PayConversionMode.HourlyToSalary ? "net-value" : "")">@_hourlySalaryResult.AnnualSalary.ToString("C")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Hours Worked</div>
+                    <div class="result-row">
+                        <span>Hours per week</span>
+                        <span class="result-value">@_hourlySalaryResult.HoursPerWeek.ToString("0.##")</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Paid weeks per year</span>
+                        <span class="result-value">@_hourlySalaryResult.WeeksPerYear.ToString("0.##")</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Hours per year</span>
+                        <span class="result-value">@_hourlySalaryResult.HoursPerYear.ToString("0.##")</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Equivalent Gross Pay by Frequency</div>
+                    <div class="result-row">
+                        <span>Weekly (52x/year)</span>
+                        <span class="result-value">@_hourlySalaryResult.WeeklyPay.ToString("C")</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Bi-weekly (26x/year)</span>
+                        <span class="result-value">@_hourlySalaryResult.BiweeklyPay.ToString("C")</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Semi-monthly (24x/year)</span>
+                        <span class="result-value">@_hourlySalaryResult.SemimonthlyPay.ToString("C")</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Monthly (12x/year)</span>
+                        <span class="result-value">@_hourlySalaryResult.MonthlyPay.ToString("C")</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-card-title">Assumptions &amp; Exclusions</div>
+                    <p class="form-note"><strong>Gross pay only:</strong> this is a rate conversion. No federal, state, FICA, or deduction amounts are applied &mdash; switch to Standard paycheck mode for take-home pay.</p>
+                    <p class="form-note"><strong>Even periods:</strong> each per-frequency amount divides the unrounded annual salary by that frequency's periods per year, so the rounded amounts need not sum back to the annual figure exactly.</p>
+                </div>
             </div>
         }
         else if (_bonusResult != null)
@@ -1008,11 +1111,13 @@
     private decimal _ytdSsWages = 0m;
     private decimal _ytdMedWages = 0m;
 
-    // Calculation mode (standard paycheck vs. gross-up vs. bonus / supplemental wage)
+    // Calculation mode (standard paycheck vs. gross-up vs. bonus / supplemental wage vs.
+    // self-employment vs. the hourly <-> salary rate converter)
     private string _mode = "standard";
     private bool _grossUpMode => _mode == "grossup";
     private bool _bonusMode => _mode == "bonus";
     private bool _selfEmpMode => _mode == "selfemployment";
+    private bool _hourlySalaryMode => _mode == "hourlysalary";
     private decimal _targetNet = 1000m;
 
     // Bonus / supplemental wage
@@ -1021,6 +1126,13 @@
 
     // Self-employment / 1099 (annual net profit)
     private decimal _selfEmpEarnings = 80000m;
+
+    // Hourly <-> salary conversion (pure rate conversion; no taxes or deductions)
+    private PayConversionMode _conversionDirection = PayConversionMode.HourlyToSalary;
+    private decimal _conversionHourlyRate = 20m;
+    private decimal _conversionAnnualSalary = 60000m;
+    private decimal _conversionHoursPerWeek = 40m;
+    private decimal _conversionWeeksPerYear = 52m;
 
     // Federal W-4
     private FederalFilingStatus _fedStatus = FederalFilingStatus.SingleOrMarriedSeparately;
@@ -1044,6 +1156,7 @@
     private GrossUpResult? _grossUpResult;
     private BonusResult? _bonusResult;
     private SelfEmploymentResult? _selfEmpResult;
+    private HourlySalaryResult? _hourlySalaryResult;
     private string? _calcError;
 
     // Explanation modal
@@ -1119,13 +1232,15 @@
     // is left at its Hourly default. Saved paychecks synced from the MAUI app may be salaried.
     private static string PayBasisLabel() => "Hourly pay";
 
-    private bool HasPayEntered() => _selfEmpMode
-        ? _selfEmpEarnings > 0
-        : _bonusMode
-            ? _bonusAmount > 0
-            : _grossUpMode
-                ? _targetNet > 0
-                : _hourlyRate > 0 && _regularHours > 0;
+    private bool HasPayEntered() => _hourlySalaryMode
+        ? (_conversionDirection == PayConversionMode.HourlyToSalary ? _conversionHourlyRate > 0 : _conversionAnnualSalary > 0)
+        : _selfEmpMode
+            ? _selfEmpEarnings > 0
+            : _bonusMode
+                ? _bonusAmount > 0
+                : _grossUpMode
+                    ? _targetNet > 0
+                    : _hourlyRate > 0 && _regularHours > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1173,6 +1288,14 @@
     {
         _calcError = null;
         _stateErrors.Clear();
+
+        // The hourly <-> salary converter is a pure rate conversion: no W-4, state, deduction,
+        // or FICA inputs apply, so it skips every paycheck-specific validation below.
+        if (_hourlySalaryMode)
+        {
+            CalculateHourlySalary();
+            return;
+        }
 
         // Bonus mode is self-contained: flat supplemental withholding + FICA + state
         // supplemental rate. It ignores hourly/salary, W-4, and deductions, so it skips
@@ -1511,6 +1634,7 @@
         _result = null;
         _projection = null;
         _grossUpResult = null;
+        _hourlySalaryResult = null;
         try
         {
             _bonusResult = BonusCalc.Calculate(new BonusInput
@@ -1535,6 +1659,7 @@
         _projection = null;
         _grossUpResult = null;
         _bonusResult = null;
+        _hourlySalaryResult = null;
         try
         {
             _selfEmpResult = SelfEmpCalc.Calculate(new SelfEmploymentInput
@@ -1553,6 +1678,39 @@
         }
     }
 
+    /// <summary>
+    /// Runs the hourly &lt;-&gt; salary rate conversion. It has no taxes, deductions, W-4, or state
+    /// inputs, so it clears every other result and produces no annual projection or saved snapshot.
+    /// </summary>
+    private void CalculateHourlySalary()
+    {
+        _result = null;
+        _projection = null;
+        _grossUpResult = null;
+        _bonusResult = null;
+        _selfEmpResult = null;
+
+        var conversionInput = new HourlySalaryInput
+        {
+            Mode = _conversionDirection,
+            HourlyRate = _conversionHourlyRate,
+            AnnualSalary = _conversionAnnualSalary,
+            HoursPerWeek = _conversionHoursPerWeek,
+            WeeksPerYear = _conversionWeeksPerYear,
+            Frequency = _frequency
+        };
+
+        var errors = PaycheckInputValidator.ValidateHourlySalary(conversionInput);
+        if (errors.Count > 0)
+        {
+            _calcError = string.Join(" ", errors);
+            _hourlySalaryResult = null;
+            return;
+        }
+
+        _hourlySalaryResult = HourlySalaryCalc.Convert(conversionInput);
+    }
+
     private void OnModeChanged()
     {
         // Switching modes clears stale results so the panel doesn't mix views.
@@ -1561,6 +1719,7 @@
         _grossUpResult = null;
         _bonusResult = null;
         _selfEmpResult = null;
+        _hourlySalaryResult = null;
         _calcError = null;
     }
 
