@@ -1,20 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The whole EF Core graph stays on preview.6: Npgsql.EntityFrameworkCore.PostgreSQL 11.0.0-preview.6
-         (its newest release) pins Microsoft.EntityFrameworkCore(.Relational) to exactly
-         11.0.0-preview.6.26359.118, so moving these to preview.7 fails restore with NU1107.
-         Bump all of them together once the Npgsql provider ships a matching build. -->
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="11.0.0-preview.6.26359.118" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0-preview.6" />
+    <!-- The whole EF Core graph stays aligned: Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3
+         requires Microsoft.EntityFrameworkCore(.Relational) >= 10.0.4. Using 10.0.11 satisfies
+         that constraint. Bump all of them together when a newer Npgsql provider ships. -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <!-- Design-time only (dotnet ef tooling); PrivateAssets=all keeps it out of the test project,
-         which references this project. Same pinned EF version as the rest of the graph. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0-preview.6.26359.118">
+         which references this project. Same EF version as the rest of the graph. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
