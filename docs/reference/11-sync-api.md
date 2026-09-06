@@ -304,7 +304,7 @@ same `ConnectionStrings__Sync` environment variable used at runtime.
 | Provider | `Npgsql.EntityFrameworkCore.PostgreSQL` | `Microsoft.EntityFrameworkCore.Sqlite` |
 | Schema creation | `db.Database.Migrate()` | `db.Database.EnsureCreated()` |
 | Connection | `ConnectionStrings:Sync` config, or the hardcoded local default | Shared in-memory-ish SQLite connection kept open for the fixture's lifetime |
-| Local dev | [`compose.yml`](../../compose.yml) — `postgres:18` on port `5432`, seeded `paycheckcalculator_dev` DB (user `admin`) | — |
+| Local dev | [`compose.yml`](../../compose.yml) — `postgres:18`, bound to `127.0.0.1:5432`, seeded `paycheckcalculator_dev` DB (user `admin`) | — |
 
 `SyncApiTest` uses `WebApplicationFactory<Program>` with a custom `ApiFactory : WebApplicationFactory<Program>`
 that swaps `SyncDbContext`'s registration to point at a shared SQLite connection instead of

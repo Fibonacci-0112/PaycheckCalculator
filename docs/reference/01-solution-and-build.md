@@ -220,8 +220,11 @@ no `ConnectionStrings:Sync` is configured — the same credentials
 docker compose up -d postgres
 ```
 
-It publishes port `5432`, seeds the `paycheckcalculator_dev` database for user `admin`, includes a
-`pg_isready` health check, and persists data in the `pgdata` volume. The image is `postgres:18`.
+It runs `postgres:18`, binds to `127.0.0.1:5432` only, seeds the `paycheckcalculator_dev` database
+for user `admin`, includes a `pg_isready` health check, and persists data in the `pgdata` volume.
+The loopback-only binding is deliberate: the seeded credentials are public, so the database must not
+be reachable from the local network. Note that Docker's published ports bypass `ufw`/`firewalld` on
+Linux, so a host firewall would not otherwise contain it.
 
 `appsettings.Development.json` carries the same connection string under `ConnectionStrings:Sync`,
 so a `dotnet run` in Development uses it without any environment variables. If the database is
