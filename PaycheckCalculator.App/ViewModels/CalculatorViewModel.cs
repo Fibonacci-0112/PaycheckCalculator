@@ -830,8 +830,11 @@ public partial class CalculatorViewModel : ObservableObject
 
     private IReadOnlyList<ComparisonRow> BuildComparisonRows()
     {
-        var a = SelectedComparisonA?.Result;
-        var b = SelectedComparisonB?.Result;
+        // Compare the stored snapshot numbers, not the presentation cards: the
+        // itemized state-line pairing is defined once in Shared over the DTO, so
+        // both front-ends' comparisons stay identical.
+        var a = SelectedComparisonA?.Snapshot.Result;
+        var b = SelectedComparisonB?.Snapshot.Result;
         if (a is null || b is null)
             return Array.Empty<ComparisonRow>();
 
