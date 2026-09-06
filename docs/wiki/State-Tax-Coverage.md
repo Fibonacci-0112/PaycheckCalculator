@@ -45,7 +45,7 @@ Every income-tax jurisdiction has a dedicated calculator under `PaycheckCalculat
 | KY | `KentuckyWithholdingCalculator` | Flat rate with standard deduction / allowance credit behavior. |
 | LA | `LouisianaWithholdingCalculator` | L-4 exemptions/dependents and brackets. |
 | MA | `MassachusettsWithholdingCalculator` | M-4 exemptions, surtax handling, PFML. |
-| MD | `MarylandWithholdingCalculator` | MW507 exemptions, bracket formula, and county income tax. |
+| MD | `MarylandWithholdingCalculator` | MW507 exemptions and the guide's per-payroll-period percentage method (flat $3,400 standard deduction, 4.75% minimum rate), plus county income tax. |
 | ME | `MaineWithholdingCalculator` | W-4ME allowances and brackets. |
 | MI | `MichiganWithholdingCalculator` | Flat rate with MI-W4 exemptions. |
 | MN | `MinnesotaWithholdingCalculator` | W-4MN allowances and brackets. |

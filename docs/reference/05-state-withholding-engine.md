@@ -281,7 +281,7 @@ textbook annualized percentage method:
 dictionary — every entry has been migrated to a dedicated calculator, and the file now holds a
 long block of comments recording, state by state, which calculator took over and with what
 constants. That commentary is genuinely useful as a quick reference (Georgia's flat 5.19% with
-G-4 statuses; Maryland's variable 15%-of-wages standard deduction; Montana's 20% standard
+G-4 statuses; Maryland's flat $3,400 standard deduction prorated per payroll period; Montana's 20% standard
 deduction with min/max bounds; and so on).
 
 The class is retained because `PercentageMethodStateTaxCalculatorTest` exercises the generic

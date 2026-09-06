@@ -1076,13 +1076,12 @@
       "implementationType": "CodedFormula",
       "calculatorClass": "MarylandWithholdingCalculator",
       "approximations": [
-        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy.",
-        "The 2026 guide's percentage method uses a flat $3,400 standard deduction and folds the lowest brackets into a single rate; this calculator applies the variable 15% standard deduction and the full graduated schedule, so results can differ modestly from the published tables."
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy, so it carries the 4.75% withholding minimum rather than the 2%/3%/4% brackets a Form 502 return would use on the first $3,000."
       ],
       "exclusions": [
         "Maryland resident employees who work in Delaware use a separate combined table that is not implemented."
       ],
-      "applicabilityNotes": "State graduated brackets (2% to 6.5%) on annualized MW507 taxable wages. The county rate is applied as a separate line; see state-md-county-2026."
+      "applicabilityNotes": "Percentage method of the 2026 Employer Withholding Guide, computed per payroll period: the period's share of the flat $3,400 standard deduction and of each MW507 exemption is subtracted, then the state rate schedule is applied at its 4.75% statutory minimum rate. The county rate is applied to the same taxable income as a separate line; see state-md-county-2026."
     },
     {
       "id": "state-md-supplemental-2026",
@@ -2700,8 +2699,8 @@
         "Standard",
         "GrossUp"
       ],
-      "publicationTitle": "2026 Maryland State and Local Income Tax Withholding Information, Attachment 1 — Local Income Tax Withholding Rates for 2026",
-      "officialUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/md/state-payroll/memos/2026/2026-maryland-state-and-local-withholding-information.pdf",
+      "publicationTitle": "Maryland Withholding Tax Facts, January 2026 – December 2026 (COM RAD 098, revised 12/25)",
+      "officialUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
       "effectiveDate": "2026-01-01",
       "lastVerificationDate": "2026-09-06",
       "implementationType": "JsonTable",
@@ -2710,7 +2709,7 @@
       "exclusions": [
         "Not applied in bonus or self-employment mode."
       ],
-      "applicabilityNotes": "County income tax on Maryland taxable wages, set by the county of residence reported on Form MW507. Anne Arundel and Frederick apply graduated marginal rates. Employees who report no county are withheld at the highest local rate, 3.30%, as the Comptroller directs."
+      "applicabilityNotes": "County income tax for all 24 jurisdictions, on the same taxable income the state schedule uses, set by the county of residence reported on Form MW507. Each county's actual rate is applied rather than the rounded-up rate group the Comptroller's ten printed tables bucket it into, so results can be a few cents below a manual table lookup. Anne Arundel and Frederick apply graduated marginal rates. Employees who report no county are withheld at the highest local rate, 3.30%, as the Comptroller directs."
     }
   ]
 }

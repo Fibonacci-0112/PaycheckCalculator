@@ -15,6 +15,17 @@ namespace PaycheckCalculator.Tests;
 /// </summary>
 public static class PayCalculatorTestHarness
 {
+    /// <summary>
+    /// Calculates a fully specified paycheck. Use this when the scenario needs
+    /// inputs the convenience overload does not expose — hourly pay, a W-4, or
+    /// deductions.
+    /// </summary>
+    public static PaycheckResult Calculate(PaycheckInput input)
+    {
+        using var provider = CreateServices();
+        return provider.GetRequiredService<PayCalculator>().Calculate(input);
+    }
+
     /// <summary>Calculates a full paycheck for <paramref name="state"/>.</summary>
     public static PaycheckResult Calculate(
         UsState state,
