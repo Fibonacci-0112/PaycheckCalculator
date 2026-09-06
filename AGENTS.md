@@ -36,6 +36,10 @@ dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~OklahomaOw2Rou
 dotnet run --project PaycheckCalculator.Blazor
 
 # Run the sync API (no MAUI workload needed; defaults to http://localhost:5201)
+# Needs PostgreSQL: `docker compose up -d postgres` seeds the credentials the API falls back to
+# (and that appsettings.Development.json sets under ConnectionStrings:Sync), so the two line up
+# with no configuration. Override with the ConnectionStrings__Sync environment variable.
+docker compose up -d postgres
 dotnet run --project PaycheckCalculator.API
 
 # Build / run the MAUI app (requires `dotnet workload install maui` and a target platform)

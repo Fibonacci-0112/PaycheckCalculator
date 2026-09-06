@@ -212,17 +212,21 @@ about.
 ## Running a local PostgreSQL
 
 The API defaults to
-`Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres` when no
-`ConnectionStrings:Sync` is configured. [`compose.yml`](../../compose.yml) brings up a matching
-container:
+`Host=localhost;Port=5432;Database=paycheckcalculator_dev;Username=admin;Password=password` when
+no `ConnectionStrings:Sync` is configured — the same credentials
+[`compose.yml`](../../compose.yml) seeds, so the two line up with no configuration:
 
 ```bash
 docker compose up -d postgres
 ```
 
-It binds to `127.0.0.1:5432` only, seeds the `paycheckcalc` database, includes a `pg_isready`
-health check, and persists data in the `paycheckcalc-postgres-data` volume. The image tag is
-overridable via `POSTGRES_VERSION` (default `16`).
+It publishes port `5432`, seeds the `paycheckcalculator_dev` database for user `admin`, includes a
+`pg_isready` health check, and persists data in the `pgdata` volume. The image is `postgres:18`.
+
+`appsettings.Development.json` carries the same connection string under `ConnectionStrings:Sync`,
+so a `dotnet run` in Development uses it without any environment variables. If the database is
+unreachable, startup fails with a single `crit:` line naming the host, port, database, and user it
+tried, and the process exits with code 1.
 
 ---
 

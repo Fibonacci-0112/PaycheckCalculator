@@ -13,9 +13,12 @@ reference `App` or `Blazor`** — the front-ends talk to it exclusively over HTT
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<SyncDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Sync")
-        ?? "Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres"));
+const string DefaultSyncConnectionString =
+    "Host=localhost;Port=5432;Database=paycheckcalculator_dev;Username=admin;Password=password";
+
+var syncConnectionString = builder.Configuration.GetConnectionString("Sync") ?? DefaultSyncConnectionString;
+
+builder.Services.AddDbContext<SyncDbContext>(options => options.UseNpgsql(syncConnectionString));
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
@@ -279,7 +282,7 @@ public sealed class SyncDbContextDesignTimeFactory : IDesignTimeDbContextFactory
     public SyncDbContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Sync")
-            ?? "Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5432;Database=paycheckcalculator_dev;Username=admin;Password=password";
         return new SyncDbContext(new DbContextOptionsBuilder<SyncDbContext>().UseNpgsql(connectionString).Options);
     }
 }
@@ -301,7 +304,7 @@ same `ConnectionStrings__Sync` environment variable used at runtime.
 | Provider | `Npgsql.EntityFrameworkCore.PostgreSQL` | `Microsoft.EntityFrameworkCore.Sqlite` |
 | Schema creation | `db.Database.Migrate()` | `db.Database.EnsureCreated()` |
 | Connection | `ConnectionStrings:Sync` config, or the hardcoded local default | Shared in-memory-ish SQLite connection kept open for the fixture's lifetime |
-| Local dev | [`compose.yml`](../../compose.yml) — `postgres:16`, bound to `127.0.0.1:5432`, seeded `paycheckcalc` DB | — |
+| Local dev | [`compose.yml`](../../compose.yml) — `postgres:18` on port `5432`, seeded `paycheckcalculator_dev` DB (user `admin`) | — |
 
 `SyncApiTest` uses `WebApplicationFactory<Program>` with a custom `ApiFactory : WebApplicationFactory<Program>`
 that swaps `SyncDbContext`'s registration to point at a shared SQLite connection instead of

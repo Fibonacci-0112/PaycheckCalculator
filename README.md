@@ -146,7 +146,9 @@ dotnet run --project PaycheckCalculator.Blazor
 dotnet run --project PaycheckCalculator.API
 ```
 
-The API defaults to `http://localhost:5201` and uses `ConnectionStrings:Sync` for PostgreSQL. EF Core migrations are applied at startup when the provider is PostgreSQL.
+It needs a PostgreSQL database — `docker compose up -d postgres` brings one up with the credentials the API falls back to, so the two work together with no configuration.
+
+The API defaults to `http://localhost:5201` and uses `ConnectionStrings:Sync` for PostgreSQL (also set in `appsettings.Development.json`, and overridable via the `ConnectionStrings__Sync` environment variable). EF Core migrations are applied at startup when the provider is PostgreSQL; if the database is unreachable the API logs which server it tried and exits with code 1.
 
 ### Run the MAUI app
 

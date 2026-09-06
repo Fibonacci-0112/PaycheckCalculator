@@ -97,14 +97,22 @@ The Blazor app does not require the MAUI workload. It reads tax data from a `Tax
 dotnet run --project PaycheckCalculator.API
 ```
 
-The API defaults to `http://localhost:5201` and reads its database connection from `ConnectionStrings:Sync`:
+The API defaults to `http://localhost:5201` and reads its database connection from `ConnectionStrings:Sync`,
+falling back to the credentials [`compose.yml`](../../compose.yml) seeds:
 
 ```text
-Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres
+Host=localhost;Port=5432;Database=paycheckcalculator_dev;Username=admin;Password=password
 ```
 
-For a PostgreSQL container that publishes port `5432` to the host, pass the connection string through
-the standard .NET environment-variable form when starting the API:
+So the quickest path is to bring that container up first — no further configuration needed:
+
+```bash
+docker compose up -d postgres
+dotnet run --project PaycheckCalculator.API
+```
+
+To point the API at a different PostgreSQL server, pass the connection string through the standard
+.NET environment-variable form when starting it:
 
 ```bash
 ConnectionStrings__Sync='YOUR_POSTGRESQL_CONNECTION_STRING' \
