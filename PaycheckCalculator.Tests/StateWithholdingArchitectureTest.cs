@@ -794,7 +794,7 @@ public class FullRegistryIntegrationTest
 
         registry.Register(new MaineWithholdingCalculator(TestSchemas.Provider));
 
-        registry.Register(new MarylandWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table));
 
         registry.Register(new MassachusettsWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 

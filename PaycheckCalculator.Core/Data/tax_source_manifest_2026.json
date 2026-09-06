@@ -1069,16 +1069,17 @@
       "publicationTitle": "2026 Maryland Employer Withholding Guide",
       "officialUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/instructions/withholding/2026/withholding-guide.pdf",
       "effectiveDate": "2026-01-01",
-      "lastVerificationDate": "2026-07-18",
+      "lastVerificationDate": "2026-09-06",
       "implementationType": "CodedFormula",
       "calculatorClass": "MarylandWithholdingCalculator",
       "approximations": [
-        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy.",
+        "The 2026 guide's percentage method uses a flat $3,400 standard deduction and folds the lowest brackets into a single rate; this calculator applies the variable 15% standard deduction and the full graduated schedule, so results can differ modestly from the published tables."
       ],
       "exclusions": [
-        "County/local income-tax rates are built into Maryland withholding methods."
+        "Maryland resident employees who work in Delaware use a separate combined table that is not implemented."
       ],
-      "applicabilityNotes": "Use the employee's county or nonresident rate as directed by the guide."
+      "applicabilityNotes": "State graduated brackets (2% to 6.5%) on annualized MW507 taxable wages. The county rate is applied as a separate line; see state-md-county-2026."
     },
     {
       "id": "state-md-supplemental-2026",
@@ -1098,7 +1099,8 @@
         "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
       ],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "Local taxes and employee payroll assessments are not included in bonus mode.",
+        "Maryland county income tax is withheld on supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "MD supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
     },
@@ -2685,6 +2687,27 @@
         "Not applied in bonus or self-employment mode."
       ],
       "applicabilityNotes": "Temporary Disability Insurance employee share, capped at 0.5% of weekly wages and a $7.50 maximum weekly deduction; suppressed when the employer carries the full premium."
+    },
+    {
+      "id": "state-md-county-2026",
+      "jurisdiction": "MD",
+      "taxYear": 2026,
+      "scope": "LocalWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "2026 Maryland State and Local Income Tax Withholding Information, Attachment 1 — Local Income Tax Withholding Rates for 2026",
+      "officialUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/md/state-payroll/memos/2026/2026-maryland-state-and-local-withholding-information.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "MarylandWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode."
+      ],
+      "applicabilityNotes": "County income tax on Maryland taxable wages, set by the county of residence reported on Form MW507. Anne Arundel and Frederick apply graduated marginal rates. Employees who report no county are withheld at the highest local rate, 3.30%, as the Comptroller directs."
     }
   ]
 }

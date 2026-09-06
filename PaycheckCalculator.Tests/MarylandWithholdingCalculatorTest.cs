@@ -41,20 +41,21 @@ public class MarylandWithholdingCalculatorTest
     [Fact]
     public void State_ReturnsMaryland()
     {
-        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
         Assert.Equal(UsState.MD, calc.State);
     }
 
     // ── Schema ───────────────────────────────────────────────────────
 
     [Fact]
-    public void Schema_ContainsFilingStatus_Exemptions_AdditionalWithholding()
+    public void Schema_ContainsFilingStatus_County_Exemptions_AdditionalWithholding()
     {
-        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
         var schema = calc.GetInputSchema();
 
-        Assert.Equal(3, schema.Count);
+        Assert.Equal(4, schema.Count);
         Assert.Single(schema, f => f.Key == "FilingStatus");
+        Assert.Single(schema, f => f.Key == "County");
         Assert.Single(schema, f => f.Key == "Exemptions");
         Assert.Single(schema, f => f.Key == "AdditionalWithholding");
     }
@@ -62,7 +63,7 @@ public class MarylandWithholdingCalculatorTest
     [Fact]
     public void Schema_FilingStatus_DefaultsSingle_OptionsSingleMarriedHoH()
     {
-        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
         var field = Assert.Single(calc.GetInputSchema(), f => f.Key == "FilingStatus");
 
         Assert.Equal("Single", field.DefaultValue);
@@ -90,7 +91,7 @@ public class MarylandWithholdingCalculatorTest
         var result = Calculate(GrossWages: 3_000m, PayFrequency.Biweekly, "Single");
 
         Assert.Equal(3_000m, result.TaxableWages);
-        Assert.Equal(135.82m, result.Withholding);
+        Assert.Equal(135.82m, StateIncome(result));
     }
 
     // ── Single filer — standard deduction in variable range ──────────
@@ -110,7 +111,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $472.375 / 26 = $18.1682… → $18.17
         var result = Calculate(GrossWages: 500m, PayFrequency.Biweekly, "Single");
 
-        Assert.Equal(18.17m, result.Withholding);
+        Assert.Equal(18.17m, StateIncome(result));
     }
 
     // ── Single filer — standard deduction at minimum ($1,600) ────────
@@ -130,7 +131,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $118.50 / 26 = $4.5577… → $4.56
         var result = Calculate(GrossWages: 200m, PayFrequency.Biweekly, "Single");
 
-        Assert.Equal(4.56m, result.Withholding);
+        Assert.Equal(4.56m, StateIncome(result));
     }
 
     // ── Single filer — upper bracket (5th bracket) ───────────────────
@@ -153,7 +154,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $15,488.375 / 12 = $1,290.6979… → $1,290.70
         var result = Calculate(GrossWages: 25_000m, PayFrequency.Monthly, "Single");
 
-        Assert.Equal(1_290.70m, result.Withholding);
+        Assert.Equal(1_290.70m, StateIncome(result));
     }
 
     // ── Married filer — standard deduction at maximum ($5,100) ───────
@@ -172,7 +173,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $3,410.25 / 26 = $131.1634… → $131.16
         var result = Calculate(GrossWages: 3_000m, PayFrequency.Biweekly, "Married");
 
-        Assert.Equal(131.16m, result.Withholding);
+        Assert.Equal(131.16m, StateIncome(result));
     }
 
     // ── Married filer — standard deduction at minimum ($3,200) ───────
@@ -192,7 +193,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $137.50 / 12 = $11.4583… → $11.46
         var result = Calculate(GrossWages: 600m, PayFrequency.Monthly, "Married");
 
-        Assert.Equal(11.46m, result.Withholding);
+        Assert.Equal(11.46m, StateIncome(result));
     }
 
     // ── Married filer — high income, all brackets ─────────────────────
@@ -214,7 +215,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $14,792.00 / 12 = $1,232.6667… → $1,232.67
         var result = Calculate(GrossWages: 25_000m, PayFrequency.Monthly, "Married");
 
-        Assert.Equal(1_232.67m, result.Withholding);
+        Assert.Equal(1_232.67m, StateIncome(result));
     }
 
     // ── Head of Household — uses married limits and brackets ──────────
@@ -234,7 +235,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $2,555.25 / 12 = $212.9375 → $212.94
         var result = Calculate(GrossWages: 5_000m, PayFrequency.Monthly, "Head of Household");
 
-        Assert.Equal(212.94m, result.Withholding);
+        Assert.Equal(212.94m, StateIncome(result));
     }
 
     // ── Exemptions ───────────────────────────────────────────────────
@@ -254,7 +255,7 @@ public class MarylandWithholdingCalculatorTest
         // per period = $3,227.375 / 26 = $124.1298… → $124.13
         var result = Calculate(GrossWages: 3_000m, PayFrequency.Biweekly, "Single", exemptions: 2);
 
-        Assert.Equal(124.13m, result.Withholding);
+        Assert.Equal(124.13m, StateIncome(result));
     }
 
     // ── Additional withholding ────────────────────────────────────────
@@ -274,7 +275,7 @@ public class MarylandWithholdingCalculatorTest
         var result = Calculate(GrossWages: 1_500m, PayFrequency.Biweekly, "Single",
             additionalWithholding: 30m);
 
-        Assert.Equal(94.57m, result.Withholding);
+        Assert.Equal(94.57m, StateIncome(result));
     }
 
     // ── Pre-tax deductions ────────────────────────────────────────────
@@ -296,7 +297,7 @@ public class MarylandWithholdingCalculatorTest
             preTaxDeductions: 500m);
 
         Assert.Equal(2_500m, result.TaxableWages);
-        Assert.Equal(112.07m, result.Withholding);
+        Assert.Equal(112.07m, StateIncome(result));
     }
 
     // ── Low income — annual wages below standard deduction minimum ────
@@ -311,7 +312,7 @@ public class MarylandWithholdingCalculatorTest
         // withholding = $0
         var result = Calculate(GrossWages: 50m, PayFrequency.Biweekly, "Single");
 
-        Assert.Equal(0m, result.Withholding);
+        Assert.Equal(0m, StateIncome(result));
     }
 
     [Fact]
@@ -320,10 +321,203 @@ public class MarylandWithholdingCalculatorTest
         var result = Calculate(GrossWages: 0m, PayFrequency.Biweekly, "Single");
 
         Assert.Equal(0m, result.TaxableWages);
-        Assert.Equal(0m, result.Withholding);
+        Assert.Equal(0m, StateIncome(result));
+    }
+
+    // ── County income tax ────────────────────────────────────────────
+    //
+    // Every Maryland employee pays a county rate on the same taxable wages the
+    // state brackets use. Rates are Attachment 1 of the Comptroller's 2026
+    // Maryland State and Local Income Tax Withholding Information (Feb 4, 2026).
+    //
+    // Single, $3,000 biweekly, no exemptions:
+    //   annual wages       = 3,000 × 26 = 78,000
+    //   standard deduction = min(78,000 × 15%, 2,550) = 2,550
+    //   annual taxable     = 78,000 − 2,550 = 75,450
+
+    [Fact]
+    public void County_FlatRate_AppliesToAnnualTaxableIncome()
+    {
+        // Montgomery 3.20%: 75,450 × 3.20% = 2,414.40 / 26 = 92.86
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Montgomery County");
+
+        Assert.Equal(92.86m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_LowestRate_Worcester()
+    {
+        // Worcester 2.25%: 75,450 × 2.25% = 1,697.625 → 1,697.63 / 26 = 65.29
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Worcester County");
+
+        Assert.Equal(65.29m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_HighestRate_Kent()
+    {
+        // Kent 3.30%: 75,450 × 3.30% = 2,489.85 / 26 = 95.76
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Kent County");
+
+        Assert.Equal(95.76m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_NotSupplied_DefaultsToTheHighestLocalRate()
+    {
+        // The Comptroller directs employers to withhold at the highest local rate
+        // (3.30% for 2026) when the employee has not reported a county.
+        var withCounty = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Unknown Maryland County");
+        var withoutCounty = Calculate(3000m, PayFrequency.Biweekly, "Single");
+
+        Assert.Equal(95.76m, CountyIncome(withoutCounty));
+        Assert.Equal(CountyIncome(withCounty), CountyIncome(withoutCounty));
+    }
+
+    [Fact]
+    public void County_Nonresident_UsesSpecialTwoPointTwoFiveRate()
+    {
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Nonresident / Out of State");
+
+        Assert.Equal(65.29m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_AnneArundel_AppliesGraduatedBracketsMarginally()
+    {
+        // Single brackets: 2.70% to 50,000, then 2.94% to 400,000, then 3.20%.
+        //   50,000 × 2.70%          = 1,350.00
+        //   (75,450 − 50,000) × 2.94% =   748.23
+        //   total 2,098.23 / 26     =    80.70
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Anne Arundel County");
+
+        Assert.Equal(80.70m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_AnneArundel_UsesJointBracketsForMarriedAndHeadOfHousehold()
+    {
+        // Married annual taxable = 78,000 − 5,100 = 72,900, joint thresholds:
+        //   72,900 × 2.70% = 1,968.30 / 26 = 75.70  (all within the first bracket)
+        var married = Calculate(3000m, PayFrequency.Biweekly, "Married", county: "Anne Arundel County");
+        var headOfHousehold = Calculate(3000m, PayFrequency.Biweekly, "Head of Household", county: "Anne Arundel County");
+
+        Assert.Equal(75.70m, CountyIncome(married));
+        Assert.Equal(75.70m, CountyIncome(headOfHousehold));
+    }
+
+    [Fact]
+    public void County_Frederick_AppliesGraduatedBracketsMarginally()
+    {
+        // Single brackets: 2.25% to 25,000, 2.75% to 50,000, 2.96% to 150,000, then 3.20%.
+        //   25,000 × 2.25%           =   562.50
+        //   25,000 × 2.75%           =   687.50
+        //   (75,450 − 50,000) × 2.96% =   753.32
+        //   total 2,003.32 / 26      =    77.05
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Frederick County");
+
+        Assert.Equal(77.05m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_Frederick_TopBracketAppliesAtHighIncome()
+    {
+        // Single, $8,000 biweekly: annual taxable = 208,000 − 2,550 = 205,450
+        //   25,000 × 2.25%            =   562.50
+        //   25,000 × 2.75%            =   687.50
+        //   100,000 × 2.96%           = 2,960.00
+        //   (205,450 − 150,000) × 3.20% = 1,774.40
+        //   total 5,984.40 / 26       =   230.17
+        var result = Calculate(8000m, PayFrequency.Biweekly, "Single", county: "Frederick County");
+
+        Assert.Equal(230.17m, CountyIncome(result));
+    }
+
+    [Fact]
+    public void County_LineIsSeparateFromStateIncomeTax_AndBothSumToWithholding()
+    {
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Montgomery County");
+
+        // Maryland's own tables report a combined figure; the scalar keeps that
+        // total while the lines stay itemized.
+        Assert.Equal(StateIncome(result) + CountyIncome(result), result.Withholding);
+        Assert.Equal(2, result.TaxLines!.Count);
+    }
+
+    [Fact]
+    public void County_LineNamesTheSelectedCounty()
+    {
+        var result = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Talbot County");
+        var line = result.TaxLines!.Single(l => l.Kind == StateTaxLineKind.CountyIncome);
+
+        Assert.Equal("County Income Tax (Talbot County)", line.Label);
+        Assert.Equal(69.65m, line.Amount);
+    }
+
+    [Fact]
+    public void County_PreTaxDeductionsReduceTheCountyBaseToo()
+    {
+        // County tax follows the same taxable wages as the state brackets, so a
+        // pre-tax deduction lowers both.
+        var withDeduction = Calculate(
+            3000m, PayFrequency.Biweekly, "Single", preTaxDeductions: 500m, county: "Montgomery County");
+        var without = Calculate(3000m, PayFrequency.Biweekly, "Single", county: "Montgomery County");
+
+        Assert.True(CountyIncome(withDeduction) < CountyIncome(without));
+    }
+
+    // ── Validation ───────────────────────────────────────────────────
+
+    [Fact]
+    public void Validate_UnknownCounty_ReturnsError()
+    {
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
+        var errors = calc.Validate(new StateInputValues
+        {
+            ["FilingStatus"] = "Single",
+            ["County"] = "Atlantis County"
+        });
+
+        Assert.Contains(errors, e => e.StartsWith("County must be one of:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Validate_KnownCounty_ReturnsNoCountyError()
+    {
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
+        var errors = calc.Validate(new StateInputValues
+        {
+            ["FilingStatus"] = "Single",
+            ["County"] = "Howard County"
+        });
+
+        Assert.DoesNotContain(errors, e => e.StartsWith("County must be one of:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Schema_County_DefaultsToUnknownMarylandCounty_AndIsListedFirst()
+    {
+        // The MAUI picker falls back to the first option when its binding briefly
+        // nulls, so the safe default must also be the first entry.
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
+        var field = Assert.Single(calc.GetInputSchema(), f => f.Key == "County");
+
+        Assert.Equal("Unknown Maryland County", field.DefaultValue);
+        Assert.Equal("Unknown Maryland County", field.Options![0]);
+        Assert.Equal(26, field.Options!.Count);
+        Assert.Contains("Baltimore City", field.Options);
+        Assert.Contains("Prince George's County", field.Options);
     }
 
     // ── Helper ───────────────────────────────────────────────────────
+
+    /// <summary>The state income-tax line alone, excluding the county line.</summary>
+    private static decimal StateIncome(StateWithholdingResult result) =>
+        result.TaxLines!.Single(l => l.Kind == StateTaxLineKind.StateIncome).Amount;
+
+    /// <summary>The county income-tax line alone.</summary>
+    private static decimal CountyIncome(StateWithholdingResult result) =>
+        result.TaxLines!.Single(l => l.Kind == StateTaxLineKind.CountyIncome).Amount;
 
     private static StateWithholdingResult Calculate(
         decimal GrossWages,
@@ -331,9 +525,10 @@ public class MarylandWithholdingCalculatorTest
         string filingStatus,
         int exemptions = 0,
         decimal additionalWithholding = 0m,
-        decimal preTaxDeductions = 0m)
+        decimal preTaxDeductions = 0m,
+        string? county = null)
     {
-        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table);
         var context = new CommonWithholdingContext(
             UsState.MD,
             GrossWages: GrossWages,
@@ -346,6 +541,8 @@ public class MarylandWithholdingCalculatorTest
             ["Exemptions"]            = exemptions,
             ["AdditionalWithholding"] = additionalWithholding
         };
+        if (county is not null)
+            values["County"] = county;
         return calc.Calculate(context, values);
     }
 }

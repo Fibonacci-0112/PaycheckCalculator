@@ -192,6 +192,7 @@ public sealed class PayCalculator
         }
 
         var assessmentRuleIds = RuleIds(stateName, taxYear, TaxRuleScope.PayrollAssessment);
+        var localRuleIds = RuleIds(stateName, taxYear, TaxRuleScope.LocalWithholding);
         foreach (var line in stateTaxLines)
         {
             // Siblings of the same kind need a discriminator so each keeps its own
@@ -201,7 +202,12 @@ public sealed class PayCalculator
                 BuildStateTaxLineExplanation(
                     line, stateResult, stateName, stateGross, preTaxReducingStateWages,
                     subKey: hasSiblings ? line.ExplanationSubKey : null),
-                line.Kind == StateTaxLineKind.PayrollAssessment ? assessmentRuleIds : stateRuleIds));
+                line.Kind switch
+                {
+                    StateTaxLineKind.PayrollAssessment => assessmentRuleIds,
+                    StateTaxLineKind.CountyIncome or StateTaxLineKind.LocalIncome => localRuleIds,
+                    _ => stateRuleIds
+                }));
         }
 
         lines.Add(BuildNetExplanation(grossPay, preTax, postTax, federalWithholding,

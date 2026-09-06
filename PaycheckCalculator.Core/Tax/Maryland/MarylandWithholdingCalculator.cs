@@ -1,3 +1,4 @@
+using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
 using PaycheckCalculator.Core.Tax.State;
 
@@ -131,10 +132,14 @@ public sealed class MarylandWithholdingCalculator : IStateWithholdingCalculator
     // ── IStateWithholdingCalculator ──────────────────────────────────
 
     private readonly IReadOnlyList<string> _filingStatusOptions;
+    private readonly IReadOnlyList<string> _countyOptions;
+    private readonly MarylandCountyRates _countyRates;
 
-    public MarylandWithholdingCalculator(IStateSchemaProvider schemaProvider)
+    public MarylandWithholdingCalculator(IStateSchemaProvider schemaProvider, MarylandCountyRates countyRates)
     {
         _filingStatusOptions = schemaProvider.GetOptions(UsState.MD, "FilingStatus");
+        _countyOptions = schemaProvider.GetOptions(UsState.MD, "County");
+        _countyRates = countyRates;
     }
 
     public UsState State => UsState.MD;
@@ -152,6 +157,10 @@ public sealed class MarylandWithholdingCalculator : IStateWithholdingCalculator
 
         if (values.GetValueOrDefault("AdditionalWithholding", 0m) < 0m)
             errors.Add("Additional Withholding cannot be negative.");
+
+        var county = values.GetValueOrDefault<string>("County", "");
+        if (_countyOptions.Count > 0 && !_countyOptions.Contains(county))
+            errors.Add($"County must be one of: {string.Join(", ", _countyOptions)}.");
 
         return errors;
     }
@@ -202,11 +211,117 @@ public sealed class MarylandWithholdingCalculator : IStateWithholdingCalculator
         // Step 8: Add any per-period extra withholding.
         withholding += extraWithholding;
 
+        // Step 9: County income tax. Every Maryland employee pays one, on the same
+        // taxable income the state brackets use; the Comptroller's own tables fold
+        // it into a combined figure, but it is shown here as its own line.
+        var county = _countyRates.Calculate(
+            values.GetValueOrDefault<string>("County", _countyRates.DefaultCounty),
+            annualTaxableIncome,
+            isMarriedOrHoH);
+        var countyWithholding = Math.Round(county.AnnualTax / periods, 2, MidpointRounding.AwayFromZero);
+
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding,
+                Steps = BuildStateSteps(
+                    context, taxableWages, periods, annualWages, standardDeduction,
+                    exemptions, exemptionDeduction, annualTaxableIncome, annualTax,
+                    periodTax, extraWithholding, withholding),
+                Reference = "Comptroller of Maryland, 2026 Employer Withholding Guide — percentage method."
+            },
+            new()
+            {
+                Kind = StateTaxLineKind.CountyIncome,
+                Label = $"County Income Tax ({county.CountyName})",
+                ShortCode = "County",
+                Amount = countyWithholding,
+                Steps = BuildCountySteps(county, periods, countyWithholding),
+                Reference = "Comptroller of Maryland, 2026 Maryland State and Local Income Tax Withholding Information, Attachment 1."
+            }
+        };
+
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding  = withholding
+            TaxLines = lines
         };
+    }
+
+    private static IReadOnlyList<ExplanationStep> BuildStateSteps(
+        CommonWithholdingContext context,
+        decimal taxableWages,
+        int periods,
+        decimal annualWages,
+        decimal standardDeduction,
+        int exemptions,
+        decimal exemptionDeduction,
+        decimal annualTaxableIncome,
+        decimal annualTax,
+        decimal periodTax,
+        decimal extraWithholding,
+        decimal withholding)
+    {
+        var steps = new List<ExplanationStep>();
+        StateExplanationSteps.AddTaxableWagesSteps(steps, context, taxableWages);
+
+        steps.Add(new ExplanationStep(
+            "Annualized wages",
+            "Maryland's percentage method works on a yearly figure, then divides back down.",
+            annualWages,
+            $"{StateExplanationSteps.Money(taxableWages)} × {periods} = {StateExplanationSteps.Money(annualWages)}"));
+
+        steps.Add(new ExplanationStep(
+            "Less standard deduction",
+            "15% of annual wages, bounded by the filing status minimum and maximum.",
+            standardDeduction,
+            $"− {StateExplanationSteps.Money(standardDeduction)}"));
+
+        if (exemptions > 0)
+        {
+            steps.Add(new ExplanationStep(
+                "Less MW507 exemptions",
+                $"{exemptions} exemption(s) at {StateExplanationSteps.Money(ExemptionAmount)} each.",
+                exemptionDeduction,
+                $"− {StateExplanationSteps.Money(exemptionDeduction)}"));
+        }
+
+        steps.Add(new ExplanationStep(
+            "Annual taxable income",
+            "The base for both the state brackets and the county rate.",
+            annualTaxableIncome,
+            $"= {StateExplanationSteps.Money(annualTaxableIncome)}"));
+
+        steps.Add(new ExplanationStep(
+            "State income tax for the year",
+            "Maryland's graduated rate schedule, 2% up to 6.5%.",
+            annualTax,
+            $"= {StateExplanationSteps.Money(annualTax)}"));
+
+        steps.Add(new ExplanationStep(
+            "State income tax this period",
+            "The annual figure divided back down to the payroll period.",
+            Math.Round(periodTax, 2, MidpointRounding.AwayFromZero),
+            $"{StateExplanationSteps.Money(annualTax)} ÷ {periods} = {StateExplanationSteps.Money(Math.Round(periodTax, 2, MidpointRounding.AwayFromZero))}"));
+
+        StateExplanationSteps.AddExtraWithholdingStep(steps, extraWithholding, withholding, "Form MW507");
+        return steps;
+    }
+
+    private static IReadOnlyList<ExplanationStep> BuildCountySteps(
+        MarylandCountyTax county, int periods, decimal countyWithholding)
+    {
+        var steps = new List<ExplanationStep>(county.Steps)
+        {
+            new("County income tax this period",
+                "Maryland county tax is withheld every payday alongside the state portion.",
+                countyWithholding,
+                $"{StateExplanationSteps.Money(county.AnnualTax)} ÷ {periods} = {StateExplanationSteps.Money(countyWithholding)}")
+        };
+        return steps;
     }
 
     // ── Bracket helpers ───────────────────────────────────────────────

@@ -71,6 +71,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         var ctJson     = dataReader.ReadAllText("connecticut_withholding_2026.json");
         var suppJson   = dataReader.ReadAllText("state_supplemental_2026.json");
         var assessJson = dataReader.ReadAllText("state_payroll_assessments_2026.json");
+        var mdCountyJson = dataReader.ReadAllText("md_county_rates_2026.json");
         var sourceManifestJson = dataReader.ReadAllText("tax_source_manifest_2026.json");
         var sourceCatalog = TaxSourceCatalog.Load(sourceManifestJson);
 
@@ -91,6 +92,9 @@ public static class PaycheckCoreServiceCollectionExtensions
         var assessments = StatePayrollAssessments.Load(assessJson);
         services.AddSingleton<IStateSchemaProvider>(schemaProvider);
         services.AddSingleton(assessments);
+
+        var mdCountyRates = MarylandCountyRates.Load(mdCountyJson);
+        services.AddSingleton(mdCountyRates);
 
         services.AddSingleton(dataReader);
         services.AddSingleton(sourceCatalog);
@@ -132,7 +136,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         stateRegistry.Register(new KentuckyWithholdingCalculator());
         stateRegistry.Register(new LouisianaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new MaineWithholdingCalculator(schemaProvider));
-        stateRegistry.Register(new MarylandWithholdingCalculator(schemaProvider));
+        stateRegistry.Register(new MarylandWithholdingCalculator(schemaProvider, mdCountyRates));
         stateRegistry.Register(new MassachusettsWithholdingCalculator(schemaProvider, assessments));
         stateRegistry.Register(new MichiganWithholdingCalculator());
         stateRegistry.Register(new MinnesotaWithholdingCalculator(schemaProvider));
