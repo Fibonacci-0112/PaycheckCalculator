@@ -127,7 +127,9 @@
       "calculatorClass": "Irs15TPercentageCalculator",
       "approximations": [],
       "exclusions": [
-        "This is an employer withholding method, not a Form 1040 income-tax liability calculation."
+        "This is an employer withholding method, not a Form 1040 income-tax liability calculation.",
+        "Nonresident-alien withholding is not supported: the additional amount Publication 15-T and Notice 1392 require to be added to a nonresident alien's wages is not applied.",
+        "A Form W-4 claiming exempt status is not supported; withholding is computed as though no exemption were claimed."
       ],
       "applicabilityNotes": "Automated payroll-systems percentage method for 2026 Forms W-4."
     },
@@ -152,7 +154,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Some municipalities levy occupational taxes outside the state table."
+        "Municipal occupational taxes, such as Birmingham's, are not withheld here."
       ],
       "applicabilityNotes": "Official 2026 booklet includes tables and employer instructions."
     },
@@ -354,7 +356,7 @@
       "calculatorClass": "StateSupplementalCalculator",
       "approximations": [],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "California SDI is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "California withholds bonuses and stock options at 10.23%. Other supplemental wages use 6.6%. State Disability Insurance (SDI) is withheld separately and is not included here."
     },
@@ -379,7 +381,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Local occupational privilege taxes may apply in certain cities."
+        "City occupational privilege taxes are not withheld here."
       ],
       "applicabilityNotes": "The guide links the DR 1098 worksheet used in the computation method."
     },
@@ -401,7 +403,7 @@
         "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
       ],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "the Colorado FAMLI premium is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "CO supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
     },
@@ -448,7 +450,7 @@
         "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
       ],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "the Connecticut Paid Family and Medical Leave contribution is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "CT supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
     },
@@ -473,7 +475,8 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Wilmington's earned-income tax may require separate treatment."
+        "Wilmington's earned-income tax is not withheld here.",
+        "Delaware Paid Leave employee contributions are not withheld here."
       ],
       "applicabilityNotes": "Official webpage provides daily through monthly wage-bracket tables."
     },
@@ -683,7 +686,7 @@
         "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
       ],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "Hawaii TDI is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "HI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
     },
@@ -800,9 +803,9 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "County income-tax rates are included in the official notice."
+        "Indiana county income tax is not withheld here, though every resident owes one; the rate depends on the county of residence and principal work."
       ],
-      "applicabilityNotes": "Use both state and employee county-of-residence/work rates as directed."
+      "applicabilityNotes": "State flat-rate withholding on adjusted gross income. The official notice also lists county rates, which this calculator does not apply."
     },
     {
       "id": "state-in-supplemental-2026",
@@ -937,7 +940,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Many localities levy occupational/payroll taxes separately."
+        "Local occupational and payroll taxes, which most Kentucky counties and cities levy, are not withheld here."
       ],
       "applicabilityNotes": "Separate official 2026 tables: https://revenue.ky.gov/Forms/2026%20WH%20Tax%20Tables.pdf"
     },
@@ -1031,7 +1034,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "No general local wage income-tax table identified."
+        "Maine Paid Family and Medical Leave employee contributions are not withheld here."
       ],
       "applicabilityNotes": "Official booklet contains instructions, methods, and tables."
     },
@@ -1147,7 +1150,7 @@
         "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
       ],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "Massachusetts PFML contributions is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "MA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
     },
@@ -1172,7 +1175,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Several cities levy separate local income taxes and publish their own rules."
+        "City income taxes, including Detroit's, are not withheld here."
       ],
       "applicabilityNotes": "State guide only; city withholding may require additional sources."
     },
@@ -1219,7 +1222,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "No general local wage income-tax table identified."
+        "Minnesota Paid Leave employee premiums, which began January 1 2026, are not withheld here."
       ],
       "applicabilityNotes": "Official instruction booklet and tax tables."
     },
@@ -1311,7 +1314,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Kansas City and St. Louis earnings taxes may apply separately."
+        "The Kansas City and St. Louis earnings taxes are not withheld here."
       ],
       "applicabilityNotes": "Separate official 2026 withholding table: https://dor.mo.gov/forms/Withholding%20Table%20-%20ALL_2026.pdf"
     },
@@ -1558,7 +1561,7 @@
         "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
       ],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "New Jersey TDI and FLI is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "NJ supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
     },
@@ -1628,7 +1631,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "New York City and Yonkers have separate official withholding tables."
+        "New York City and Yonkers resident income taxes are not withheld here; both publish their own withholding tables."
       ],
       "applicabilityNotes": "NYC: https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nyc.pdf | Yonkers: https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_y.pdf"
     },
@@ -1648,7 +1651,7 @@
       "calculatorClass": "StateSupplementalCalculator",
       "approximations": [],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "New York disability benefits and Paid Family Leave contributions is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "New York State supplemental rate. New York City and Yonkers add separate local supplemental withholding that is not included here."
     },
@@ -1763,7 +1766,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "School-district and municipal income taxes may require separate handling."
+        "Municipal and school-district income taxes are not withheld here."
       ],
       "applicabilityNotes": "The official page maintains current state tables and school-district rates; municipal systems are separate."
     },
@@ -1853,7 +1856,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Statewide transit and certain local payroll taxes may apply outside this income-tax formula."
+        "Statewide transit tax and local payroll taxes, such as the Portland-area transit levies, are not withheld here."
       ],
       "applicabilityNotes": "Separate official 2026 wage-bracket tables: https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-tables_206-430_2026.pdf"
     },
@@ -1873,7 +1876,7 @@
       "calculatorClass": "StateSupplementalCalculator",
       "approximations": [],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "the Paid Leave Oregon contribution is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "OR supplemental wages use the FlatRate entry in state_supplemental_2026.json."
     },
@@ -1898,7 +1901,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Local EIT, LST, and Philadelphia Wage Tax may apply separately."
+        "Local Earned Income Tax, the Local Services Tax, and the Philadelphia Wage Tax are not withheld here."
       ],
       "applicabilityNotes": "The state guide does not replace local earned-income-tax resources."
     },
@@ -1965,7 +1968,7 @@
       "calculatorClass": "StateSupplementalCalculator",
       "approximations": [],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "Rhode Island TDI is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "RI supplemental wages use the FlatRate entry in state_supplemental_2026.json."
     },
@@ -2309,7 +2312,7 @@
         "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
       ],
       "exclusions": [
-        "Paid Family & Medical Leave and WA Cares payroll deductions are separate programs."
+        "The Washington Paid Family & Medical Leave employee premium is not withheld here. The WA Cares long-term-care premium is."
       ],
       "applicabilityNotes": "Halfpricesoft identifies Washington as a no-income-tax state; this scope excludes payroll-program deductions."
     },
@@ -2329,7 +2332,7 @@
       "calculatorClass": "StateSupplementalCalculator",
       "approximations": [],
       "exclusions": [
-        "Local taxes and employee payroll assessments are not included in bonus mode."
+        "the WA Cares premium is withheld from supplemental wages in practice but is not applied in bonus mode."
       ],
       "applicabilityNotes": "WA supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
     },

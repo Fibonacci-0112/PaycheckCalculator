@@ -831,6 +831,17 @@
                         }
                     </div>
 
+                    @if (_result.Explanation.AccuracyNotes.Count > 0)
+                    {
+                        <div class="result-card">
+                            <div class="result-card-title">Assumptions &amp; Exclusions</div>
+                            @foreach (var note in _result.Explanation.AccuracyNotes)
+                            {
+                                <p class="form-note"><strong>@note.Title:</strong> @note.Description</p>
+                            }
+                        </div>
+                    }
+
                     <div class="result-card result-summary">
                         <div class="result-row">
                             <span>Total Taxes &amp; Withholdings</span>
