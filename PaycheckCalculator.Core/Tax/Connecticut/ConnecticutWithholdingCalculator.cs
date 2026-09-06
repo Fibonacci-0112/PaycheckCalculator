@@ -48,7 +48,7 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
     /// Connecticut Paid Family and Medical Leave Insurance (PFMLI) employee
     /// contribution rate (0.5%) applied to all gross wages per period.
     /// </summary>
-    private const decimal PfmliRate = 0.005m;
+    private readonly StatePayrollAssessments _assessments;
 
     /// <summary>Display label used for PFMLI on the results screen and exports.</summary>
     private const string PfmliLabel = "Family Leave Insurance (FLI)";
@@ -57,8 +57,12 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
 
     // ── Construction ────────────────────────────────────────────────
 
-    public ConnecticutWithholdingCalculator(string json, IStateSchemaProvider schemaProvider)
+    public ConnecticutWithholdingCalculator(
+        string json,
+        IStateSchemaProvider schemaProvider,
+        StatePayrollAssessments assessments)
     {
+        _assessments = assessments;
         var root = JsonSerializer.Deserialize<CtWithholdingRoot>(json,
                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                    ?? throw new InvalidOperationException(
@@ -118,7 +122,7 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
         var reducedWithholding = values.GetValueOrDefault("ReducedWithholding", 0m);
 
         // CT PFMLI: 0.5% of ALL gross wages (not reduced by pre-tax deductions)
-        var pfmli = Math.Round(Math.Max(0m, context.GrossWages) * PfmliRate, 2, MidpointRounding.AwayFromZero);
+        var pfmliLines = _assessments.BuildLines(State, context, values);
 
         // No Form CT-W4: flat 6.99% of taxable wages per period
         if (codeDisplay == "No Form CT-W4")
@@ -128,9 +132,8 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
             return new StateWithholdingResult
             {
                 TaxableWages = taxableWages,
-                Withholding = Math.Round(perPeriod, 2, MidpointRounding.AwayFromZero),
-                DisabilityInsurance = pfmli,
-                DisabilityInsuranceLabel = PfmliLabel,
+                TaxLines = WithAssessments(
+                    Math.Round(perPeriod, 2, MidpointRounding.AwayFromZero), pfmliLines),
                 Description = "No Form CT-W4 — taxable wages taxed at 6.99%"
             };
         }
@@ -142,9 +145,8 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
             return new StateWithholdingResult
             {
                 TaxableWages = taxableWages,
-                Withholding = Math.Round(perPeriod, 2, MidpointRounding.AwayFromZero),
-                DisabilityInsurance = pfmli,
-                DisabilityInsuranceLabel = PfmliLabel,
+                TaxLines = WithAssessments(
+                    Math.Round(perPeriod, 2, MidpointRounding.AwayFromZero), pfmliLines),
                 Description = perPeriod == 0m
                     ? "Code E — no Connecticut withholding required"
                     : null
@@ -198,9 +200,8 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding = Math.Round(finalWithholding, 2, MidpointRounding.AwayFromZero),
-            DisabilityInsurance = pfmli,
-            DisabilityInsuranceLabel = PfmliLabel
+            TaxLines = WithAssessments(
+                Math.Round(finalWithholding, 2, MidpointRounding.AwayFromZero), pfmliLines)
         };
     }
 
@@ -433,4 +434,27 @@ public sealed class ConnecticutWithholdingCalculator : IStateWithholdingCalculat
         [JsonPropertyName("credit")]
         public decimal Credit { get; set; }
     }
+
+    /// <summary>
+    /// Connecticut has three withholding paths (No Form CT-W4, Code E, and the
+    /// full worksheet) that all withhold the same PFMLI contribution, so each
+    /// return combines its own income-tax figure with the shared assessment lines.
+    /// </summary>
+    private static IReadOnlyList<StateTaxLine> WithAssessments(
+        decimal withholding,
+        IReadOnlyList<StateTaxLine> assessments)
+    {
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding
+            }
+        };
+        lines.AddRange(assessments);
+        return lines;
+    }
+
 }

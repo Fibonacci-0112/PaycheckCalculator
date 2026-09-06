@@ -10,6 +10,7 @@
       "options": ["Single", "Married"]
     },
     { "key": "Allowances", "label": "HW-4 Allowances", "type": "Integer", "default": 0 },
-    { "key": "AdditionalWithholding", "label": "Additional Withholding", "type": "Decimal", "default": 0 }
+    { "key": "AdditionalWithholding", "label": "Additional Withholding", "type": "Decimal", "default": 0 },
+    { "key": "EmployerPaysTdi", "label": "Employer Pays Full TDI Premium", "type": "Toggle", "default": false }
   ]
 }

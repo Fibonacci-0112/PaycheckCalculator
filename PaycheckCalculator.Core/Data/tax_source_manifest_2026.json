@@ -1,117 +1,2690 @@
 {
   "taxYear": 2026,
   "rules": [
-    {"id":"federal-form-1040es-2026","jurisdiction":"US","taxYear":2026,"scope":"EstimatedPayments","calculationModes":["SelfEmployment"],"publicationTitle":"2026 Form 1040-ES, Estimated Tax for Individuals","officialUrl":"https://www.irs.gov/pub/irs-pdf/f1040es.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"SelfEmploymentCalculator","approximations":["The calculator splits annual estimates into four equal installments."],"exclusions":["State installment schedules and filing-time adjustments can differ from the federal schedule."],"applicabilityNotes":"Standard federal estimated-payment installment dates."},
-    {"id":"federal-schedule-se-2026","jurisdiction":"US","taxYear":2026,"scope":"SelfEmploymentTax","calculationModes":["SelfEmployment"],"publicationTitle":"2026 Schedule SE (Form 1040), Self-Employment Tax","officialUrl":"https://www.irs.gov/pub/irs-pdf/f1040sse.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"SelfEmploymentCalculator","approximations":[],"exclusions":["Federal income tax is excluded from self-employment mode."],"applicabilityNotes":"Schedule SE net-earnings multiplier and Social Security/Medicare tax computation."},
-    {"id":"federal-additional-medicare-2026","jurisdiction":"US","taxYear":2026,"scope":"AdditionalMedicare","calculationModes":["Standard","GrossUp","AnnualProjection","Bonus","SelfEmployment"],"publicationTitle":"IRS Topic No. 560, Additional Medicare Tax","officialUrl":"https://www.irs.gov/taxtopics/tc560","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"FicaCalculator","approximations":[],"exclusions":["Employer withholding uses the $200,000 threshold regardless of the employee's filing status; final filing liability can differ."],"applicabilityNotes":"Additional Medicare withholding and self-employment threshold rule."},
-    {"id":"federal-fica-2026","jurisdiction":"US","taxYear":2026,"scope":"SocialSecurityMedicare","calculationModes":["Standard","GrossUp","Bonus"],"publicationTitle":"IRS Publication 15 (Circular E), Social Security and Medicare Taxes","officialUrl":"https://www.irs.gov/pub/irs-pdf/p15.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"FicaCalculator","approximations":[],"exclusions":["Final employee tax may depend on wages from other employers."],"applicabilityNotes":"Employee Social Security and Medicare withholding rules."},
-    {"id":"federal-irs-pub-15-supplemental-2026","jurisdiction":"US","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"IRS Publication 15 (Circular E), Supplemental Wages","officialUrl":"https://www.irs.gov/pub/irs-pdf/p15.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"FlatRate","calculatorClass":"FederalSupplementalCalculator","approximations":[],"exclusions":["The aggregate method is not modeled; this calculator uses the optional flat-rate method."],"applicabilityNotes":"Federal optional flat-rate supplemental-wage withholding."},
-    {"id":"federal-irs-pub-15t-2026","jurisdiction":"US","taxYear":2026,"scope":"FederalWithholding","calculationModes":["Standard","GrossUp","AnnualProjection"],"publicationTitle":"IRS Publication 15-T, Federal Income Tax Withholding Methods","officialUrl":"https://www.irs.gov/pub/irs-pdf/p15t.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"JsonTable","calculatorClass":"Irs15TPercentageCalculator","approximations":[],"exclusions":["This is an employer withholding method, not a Form 1040 income-tax liability calculation."],"applicabilityNotes":"Automated payroll-systems percentage method for 2026 Forms W-4."},
-    {"id":"state-al-regular-2026","jurisdiction":"AL","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Withholding Tax Tables and Instructions for Employers and Withholding Agents","officialUrl":"https://www.revenue.alabama.gov/wp-content/uploads/2026/01/whbooklet_0126.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"AlabamaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Some municipalities levy occupational taxes outside the state table."],"applicabilityNotes":"Official 2026 booklet includes tables and employer instructions."},
-    {"id":"state-al-supplemental-2026","jurisdiction":"AL","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Withholding Tax Tables and Instructions for Employers and Withholding Agents","officialUrl":"https://www.revenue.alabama.gov/wp-content/uploads/2026/01/whbooklet_0126.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"AL supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ak-regular-2026","jurisdiction":"AK","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://dor.alaska.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Other employer payroll obligations may apply; outside this income-tax scope."],"applicabilityNotes":"Halfpricesoft identifies Alaska as a no-income-tax state."},
-    {"id":"state-ak-supplemental-2026","jurisdiction":"AK","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://dor.alaska.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"AK supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-az-regular-2026","jurisdiction":"AZ","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Arizona Form A-4 \u2014 Arizona Withholding Percentage Election","officialUrl":"https://azdor.gov/sites/default/files/document/FORMS_WITHHOLDING_2026_A-4_f.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"PercentageElection","calculatorClass":"ArizonaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Arizona withholding is elected as a percentage of gross taxable wages rather than a wage-bracket table."},
-    {"id":"state-az-supplemental-2026","jurisdiction":"AZ","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Arizona Form A-4 \u2014 Arizona Withholding Percentage Election","officialUrl":"https://azdor.gov/sites/default/files/document/FORMS_WITHHOLDING_2026_A-4_f.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"AZ supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-ar-regular-2026","jurisdiction":"AR","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Arkansas Withholding Tax Formula","officialUrl":"https://www.dfa.arkansas.gov/wp-content/uploads/Withholding-Tax-Formula.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"JsonTable","calculatorClass":"ArkansasWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The official forms page also provides 2026 employer instructions and low-income tables."},
-    {"id":"state-ar-supplemental-2026","jurisdiction":"AR","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Arkansas Withholding Tax Formula","officialUrl":"https://www.dfa.arkansas.gov/wp-content/uploads/Withholding-Tax-Formula.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"AR supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ca-regular-2026","jurisdiction":"CA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Withholding Schedules \u2014 Method B, Exact Calculation Method","officialUrl":"https://edd.ca.gov/siteassets/files/pdf_pub_ctr/26methb.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"JsonTable","calculatorClass":"CaliforniaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Some local payroll taxes may exist; this source covers state personal income-tax withholding."],"applicabilityNotes":"EDD also publishes Method A wage-bracket tables: https://edd.ca.gov/siteassets/files/pdf_pub_ctr/26metha.pdf"},
-    {"id":"state-ca-supplemental-2026","jurisdiction":"CA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Withholding Schedules \u2014 Method B, Exact Calculation Method","officialUrl":"https://edd.ca.gov/siteassets/files/pdf_pub_ctr/26methb.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"California withholds bonuses and stock options at 10.23%. Other supplemental wages use 6.6%. State Disability Insurance (SDI) is withheld separately and is not included here."},
-    {"id":"state-co-regular-2026","jurisdiction":"CO","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Colorado Wage Withholding Tax Guide","officialUrl":"https://tax.colorado.gov/sites/tax/files/documents/Wage_Withholding_Tax_Guide_Jan_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"JsonTable","calculatorClass":"ColoradoWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Local occupational privilege taxes may apply in certain cities."],"applicabilityNotes":"The guide links the DR 1098 worksheet used in the computation method."},
-    {"id":"state-co-supplemental-2026","jurisdiction":"CO","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Colorado Wage Withholding Tax Guide","officialUrl":"https://tax.colorado.gov/sites/tax/files/documents/Wage_Withholding_Tax_Guide_Jan_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"CO supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-ct-regular-2026","jurisdiction":"CT","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Withholding Forms, Tables, Circular CT, and Calculation Rules","officialUrl":"https://portal.ct.gov/DRS/DRS-Forms/Current-Year-Forms/Withholding-Forms","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"JsonTable","calculatorClass":"ConnecticutWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The page maintains the 2026 tables, Circular CT employer guide, supplemental table, and TPG-211 calculation rules."},
-    {"id":"state-ct-supplemental-2026","jurisdiction":"CT","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Withholding Forms, Tables, Circular CT, and Calculation Rules","officialUrl":"https://portal.ct.gov/DRS/DRS-Forms/Current-Year-Forms/Withholding-Forms","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"CT supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-de-regular-2026","jurisdiction":"DE","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Employer's Guide \u2014 Withholding Tables","officialUrl":"https://revenue.delaware.gov/employers-guide-withholding-tables/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"DelawareWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Wilmington's earned-income tax may require separate treatment."],"applicabilityNotes":"Official webpage provides daily through monthly wage-bracket tables."},
-    {"id":"state-de-supplemental-2026","jurisdiction":"DE","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Employer's Guide \u2014 Withholding Tables","officialUrl":"https://revenue.delaware.gov/employers-guide-withholding-tables/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"DE supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-dc-regular-2026","jurisdiction":"DC","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"FR-230 Income Tax Withholding Instructions and Tables","officialUrl":"https://otr.cfo.dc.gov/sites/default/files/dc/sites/otr/publication/attachments/2018%20FR-230_12.13.17.pdf","revisionDate":"2018-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"DistrictOfColumbiaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["D.C. is treated as a jurisdiction, not a local add-on to a state table."],"applicabilityNotes":"Check the current forms page before production use; annual return instructions are newer than the located computation booklet."},
-    {"id":"state-dc-supplemental-2026","jurisdiction":"DC","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"FR-230 Income Tax Withholding Instructions and Tables","officialUrl":"https://otr.cfo.dc.gov/sites/default/files/dc/sites/otr/publication/attachments/2018%20FR-230_12.13.17.pdf","revisionDate":"2018-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"DC supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-fl-regular-2026","jurisdiction":"FL","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://floridarevenue.com/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Reemployment tax and other employer obligations remain outside this income-tax scope."],"applicabilityNotes":"Halfpricesoft identifies Florida as a no-income-tax state."},
-    {"id":"state-fl-supplemental-2026","jurisdiction":"FL","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://floridarevenue.com/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"FL supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-ga-regular-2026","jurisdiction":"GA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Employer's Tax Guide","officialUrl":"https://dor.georgia.gov/employers-tax-guide","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"GeorgiaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The official page maintains the current employer guide download."},
-    {"id":"state-ga-supplemental-2026","jurisdiction":"GA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Employer's Tax Guide","officialUrl":"https://dor.georgia.gov/employers-tax-guide","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"GA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-hi-regular-2026","jurisdiction":"HI","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Booklet A \u2014 Employer's Tax Guide","officialUrl":"https://tax.hawaii.gov/geninfo/a2_b2_4empl_whhold/","revisionDate":"2025-01-01","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"HawaiiWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The revised guide applies to withholding beginning January 1, 2026 and includes rates and tables."},
-    {"id":"state-hi-supplemental-2026","jurisdiction":"HI","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Booklet A \u2014 Employer's Tax Guide","officialUrl":"https://tax.hawaii.gov/geninfo/a2_b2_4empl_whhold/","revisionDate":"2025-01-01","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"HI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-id-regular-2026","jurisdiction":"ID","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Table for Percentage Computation Method of Withholding","officialUrl":"https://tax.idaho.gov/document-mngr/pubs_epb00744/","revisionDate":"2025-04-28","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"IdahoWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Use the official withholding-guides page to confirm whether a newer table has been posted."},
-    {"id":"state-id-supplemental-2026","jurisdiction":"ID","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Table for Percentage Computation Method of Withholding","officialUrl":"https://tax.idaho.gov/document-mngr/pubs_epb00744/","revisionDate":"2025-04-28","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"ID supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-il-regular-2026","jurisdiction":"IL","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Booklet IL-700-T \u2014 Illinois Withholding Tax Tables","officialUrl":"https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/withholding/documents/currentyear/il-700-t.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"IllinoisWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Effective for amounts paid January 1 through December 31, 2026."},
-    {"id":"state-il-supplemental-2026","jurisdiction":"IL","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Booklet IL-700-T \u2014 Illinois Withholding Tax Tables","officialUrl":"https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/withholding/documents/currentyear/il-700-t.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"IL supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-in-regular-2026","jurisdiction":"IN","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Departmental Notice #1 \u2014 State and County Withholding Computation","officialUrl":"https://www.in.gov/dor/files/dn01.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"IndianaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["County income-tax rates are included in the official notice."],"applicabilityNotes":"Use both state and employee county-of-residence/work rates as directed."},
-    {"id":"state-in-supplemental-2026","jurisdiction":"IN","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Departmental Notice #1 \u2014 State and County Withholding Computation","officialUrl":"https://www.in.gov/dor/files/dn01.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"IN supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-ia-regular-2026","jurisdiction":"IA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Iowa Withholding Tax Information \u2014 Formula and Tables","officialUrl":"https://revenue.iowa.gov/taxes/tax-guidance/withholding-tax/iowa-withholding-tax-information","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"IowaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax withholding table identified."],"applicabilityNotes":"Official guidance supports both manual tables and the computer formula."},
-    {"id":"state-ia-supplemental-2026","jurisdiction":"IA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Iowa Withholding Tax Information \u2014 Formula and Tables","officialUrl":"https://revenue.iowa.gov/taxes/tax-guidance/withholding-tax/iowa-withholding-tax-information","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"IA supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ks-regular-2026","jurisdiction":"KS","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"KW-100 Kansas Withholding Tax Guide","officialUrl":"https://ksrevenue.gov/pdf/kw100.pdf","effectiveDate":"2024-07-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"KansasWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Current open-ended guide located on the official site."},
-    {"id":"state-ks-supplemental-2026","jurisdiction":"KS","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"KW-100 Kansas Withholding Tax Guide","officialUrl":"https://ksrevenue.gov/pdf/kw100.pdf","effectiveDate":"2024-07-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"KS supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ky-regular-2026","jurisdiction":"KY","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Kentucky Withholding Tax Formula","officialUrl":"https://revenue.ky.gov/Forms/2026%20Withholding%20Formula.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"KentuckyWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Many localities levy occupational/payroll taxes separately."],"applicabilityNotes":"Separate official 2026 tables: https://revenue.ky.gov/Forms/2026%20WH%20Tax%20Tables.pdf"},
-    {"id":"state-ky-supplemental-2026","jurisdiction":"KY","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Kentucky Withholding Tax Formula","officialUrl":"https://revenue.ky.gov/Forms/2026%20Withholding%20Formula.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"KY supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-la-regular-2026","jurisdiction":"LA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"R-1306 Louisiana Withholding Tables and Formulas","officialUrl":"https://revenue.louisiana.gov/tax-forms/businesses/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"LouisianaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The official business-forms page maintains the current R-1306 download."},
-    {"id":"state-la-supplemental-2026","jurisdiction":"LA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"R-1306 Louisiana Withholding Tables and Formulas","officialUrl":"https://revenue.louisiana.gov/tax-forms/businesses/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"LA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-me-regular-2026","jurisdiction":"ME","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Withholding Tables for Individual Income Tax","officialUrl":"https://www.maine.gov/revenue/sites/maine.gov.revenue/files/inline-files/26_wh_tab_instr.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MaineWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official booklet contains instructions, methods, and tables."},
-    {"id":"state-me-supplemental-2026","jurisdiction":"ME","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Withholding Tables for Individual Income Tax","officialUrl":"https://www.maine.gov/revenue/sites/maine.gov.revenue/files/inline-files/26_wh_tab_instr.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"ME supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-md-regular-2026","jurisdiction":"MD","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Maryland Employer Withholding Guide","officialUrl":"https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/instructions/withholding/2026/withholding-guide.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MarylandWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["County/local income-tax rates are built into Maryland withholding methods."],"applicabilityNotes":"Use the employee's county or nonresident rate as directed by the guide."},
-    {"id":"state-md-supplemental-2026","jurisdiction":"MD","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Maryland Employer Withholding Guide","officialUrl":"https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/instructions/withholding/2026/withholding-guide.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MD supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-ma-regular-2026","jurisdiction":"MA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Massachusetts Circular M \u2014 Income Tax Withholding Tables at 5.0%","officialUrl":"https://www.mass.gov/doc/massachusetts-circular-m-income-tax-withholding-tables-at-50-effective-january-1-2026/download","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MassachusettsWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official 2026 Circular M."},
-    {"id":"state-ma-supplemental-2026","jurisdiction":"MA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Massachusetts Circular M \u2014 Income Tax Withholding Tables at 5.0%","officialUrl":"https://www.mass.gov/doc/massachusetts-circular-m-income-tax-withholding-tables-at-50-effective-january-1-2026/download","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-mi-regular-2026","jurisdiction":"MI","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Michigan Income Tax Withholding Guide (Form 446)","officialUrl":"https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/SUW/TY2026/446_Withholding-Guide_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MichiganWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Several cities levy separate local income taxes and publish their own rules."],"applicabilityNotes":"State guide only; city withholding may require additional sources."},
-    {"id":"state-mi-supplemental-2026","jurisdiction":"MI","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Michigan Income Tax Withholding Guide (Form 446)","officialUrl":"https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/SUW/TY2026/446_Withholding-Guide_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-mn-regular-2026","jurisdiction":"MN","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Minnesota Income Tax Withholding Instructions and Tables","officialUrl":"https://www.revenue.state.mn.us/sites/default/files/2025-12/wh-inst-26.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MinnesotaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official instruction booklet and tax tables."},
-    {"id":"state-mn-supplemental-2026","jurisdiction":"MN","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Minnesota Income Tax Withholding Instructions and Tables","officialUrl":"https://www.revenue.state.mn.us/sites/default/files/2025-12/wh-inst-26.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MN supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ms-regular-2026","jurisdiction":"MS","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Withholding Income Tax Tables and Employer Instructions (Pub. 89-700)","officialUrl":"https://www.dor.ms.gov/sites/default/files/business/89700251.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MississippiWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Current official booklet located for 2026."},
-    {"id":"state-ms-supplemental-2026","jurisdiction":"MS","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Withholding Income Tax Tables and Employer Instructions (Pub. 89-700)","officialUrl":"https://www.dor.ms.gov/sites/default/files/business/89700251.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MS supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-mo-regular-2026","jurisdiction":"MO","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Missouri Employer's Tax Guide (Form 4282)","officialUrl":"https://dor.mo.gov/forms/4282_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MissouriWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Kansas City and St. Louis earnings taxes may apply separately."],"applicabilityNotes":"Separate official 2026 withholding table: https://dor.mo.gov/forms/Withholding%20Table%20-%20ALL_2026.pdf"},
-    {"id":"state-mo-supplemental-2026","jurisdiction":"MO","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Missouri Employer's Tax Guide (Form 4282)","officialUrl":"https://dor.mo.gov/forms/4282_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MO supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-mt-regular-2026","jurisdiction":"MT","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Montana Employer and Information Agent Guide with Withholding Tables","officialUrl":"https://revenue.mt.gov/publications/montana-employer-and-information-agent-guide","revisionDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"MontanaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The official page maintains the 2026 guide download."},
-    {"id":"state-mt-supplemental-2026","jurisdiction":"MT","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Montana Employer and Information Agent Guide with Withholding Tables","officialUrl":"https://revenue.mt.gov/publications/montana-employer-and-information-agent-guide","revisionDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"MT supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ne-regular-2026","jurisdiction":"NE","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Nebraska Circular EN","officialUrl":"https://revenue.nebraska.gov/sites/default/files/doc/business/Cir_En_2025/2026cir_en_whole.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"NebraskaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official circular includes wage withholding instructions and tables."},
-    {"id":"state-ne-supplemental-2026","jurisdiction":"NE","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Nebraska Circular EN","officialUrl":"https://revenue.nebraska.gov/sites/default/files/doc/business/Cir_En_2025/2026cir_en_whole.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"NE supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-nv-regular-2026","jurisdiction":"NV","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://tax.nv.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Nevada Modified Business Tax is employer-side and outside employee income withholding."],"applicabilityNotes":"Halfpricesoft identifies Nevada as a no-income-tax state."},
-    {"id":"state-nv-supplemental-2026","jurisdiction":"NV","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://tax.nv.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"NV supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-nh-regular-2026","jurisdiction":"NH","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No tax on wages \u2014 no wage withholding table","officialUrl":"https://www.revenue.nh.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["The former Interest and Dividends Tax was not a wage-withholding system."],"applicabilityNotes":"Halfpricesoft identifies New Hampshire as a no-wage-income-tax state."},
-    {"id":"state-nh-supplemental-2026","jurisdiction":"NH","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No tax on wages \u2014 no wage withholding table","officialUrl":"https://www.revenue.nh.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"NH supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-nj-regular-2026","jurisdiction":"NJ","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"NJ-WT New Jersey Income Tax Withholding Instructions","officialUrl":"https://www.nj.gov/treasury/taxation/pdf/current/njwt.pdf","revisionDate":"2025-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"NewJerseyWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general municipal wage-withholding table in this state guide."],"applicabilityNotes":"Official current PDF; the payroll page also links supplemental withholding tables."},
-    {"id":"state-nj-supplemental-2026","jurisdiction":"NJ","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"NJ-WT New Jersey Income Tax Withholding Instructions","officialUrl":"https://www.nj.gov/treasury/taxation/pdf/current/njwt.pdf","revisionDate":"2025-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"NJ supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-nm-regular-2026","jurisdiction":"NM","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"FYI-104 New Mexico Withholding Tax","officialUrl":"https://realfile.tax.newmexico.gov/FYI-104.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"NewMexicoWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Current official FYI publication includes tables for wages paid on or after January 1, 2026."},
-    {"id":"state-nm-supplemental-2026","jurisdiction":"NM","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"FYI-104 New Mexico Withholding Tax","officialUrl":"https://realfile.tax.newmexico.gov/FYI-104.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"NM supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ny-regular-2026","jurisdiction":"NY","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"NYS-50-T-NYS \u2014 New York State Withholding Tax Tables and Methods","officialUrl":"https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nys.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"NewYorkWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["New York City and Yonkers have separate official withholding tables."],"applicabilityNotes":"NYC: https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nyc.pdf | Yonkers: https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_y.pdf"},
-    {"id":"state-ny-supplemental-2026","jurisdiction":"NY","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"NYS-50-T-NYS \u2014 New York State Withholding Tax Tables and Methods","officialUrl":"https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nys.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"New York State supplemental rate. New York City and Yonkers add separate local supplemental withholding that is not included here."},
-    {"id":"state-nc-regular-2026","jurisdiction":"NC","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"NC-30 Income Tax Withholding Tables and Instructions for Employers","officialUrl":"https://www.ncdor.gov/income-tax-withholding-tables-and-instructions-employers/open","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"NorthCarolinaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official current NC-30 download."},
-    {"id":"state-nc-supplemental-2026","jurisdiction":"NC","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"NC-30 Income Tax Withholding Tables and Instructions for Employers","officialUrl":"https://www.ncdor.gov/income-tax-withholding-tables-and-instructions-employers/open","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"NC supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-nd-regular-2026","jurisdiction":"ND","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Income Tax Withholding Rates and Instructions","officialUrl":"https://www.tax.nd.gov/sites/www/files/documents/forms/individual/2026-iit/2026-income-tax-withholding-rates-booklet.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"NorthDakotaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official 2026 booklet."},
-    {"id":"state-nd-supplemental-2026","jurisdiction":"ND","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Income Tax Withholding Rates and Instructions","officialUrl":"https://www.tax.nd.gov/sites/www/files/documents/forms/individual/2026-iit/2026-income-tax-withholding-rates-booklet.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"ND supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-oh-regular-2026","jurisdiction":"OH","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Employer Withholding \u2014 Current Tables and Optional Computer Method","officialUrl":"https://tax.ohio.gov/business/employer-withholding","revisionDate":"2026-07-18","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"OhioWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["School-district and municipal income taxes may require separate handling."],"applicabilityNotes":"The official page maintains current state tables and school-district rates; municipal systems are separate."},
-    {"id":"state-oh-supplemental-2026","jurisdiction":"OH","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Employer Withholding \u2014 Current Tables and Optional Computer Method","officialUrl":"https://tax.ohio.gov/business/employer-withholding","revisionDate":"2026-07-18","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"OH supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-ok-regular-2026","jurisdiction":"OK","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"OW-2 Oklahoma Income Tax Withholding Tables","officialUrl":"https://oklahoma.gov/tax/reporting-resources/publications.html","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"JsonTable","calculatorClass":"OklahomaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The official publications page maintains the current OW-2 download."},
-    {"id":"state-ok-supplemental-2026","jurisdiction":"OK","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"OW-2 Oklahoma Income Tax Withholding Tables","officialUrl":"https://oklahoma.gov/tax/reporting-resources/publications.html","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"OK supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-or-regular-2026","jurisdiction":"OR","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Oregon Withholding Tax Formulas","officialUrl":"https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-formulas_206-436_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"OregonWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Statewide transit and certain local payroll taxes may apply outside this income-tax formula."],"applicabilityNotes":"Separate official 2026 wage-bracket tables: https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-tables_206-430_2026.pdf"},
-    {"id":"state-or-supplemental-2026","jurisdiction":"OR","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Oregon Withholding Tax Formulas","officialUrl":"https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-formulas_206-436_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"OR supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-pa-regular-2026","jurisdiction":"PA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"REV-415 Employer Withholding Information Guide","officialUrl":"https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/employerwithholding/documents/rev-415.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"PennsylvaniaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Local EIT, LST, and Philadelphia Wage Tax may apply separately."],"applicabilityNotes":"The state guide does not replace local earned-income-tax resources."},
-    {"id":"state-pa-supplemental-2026","jurisdiction":"PA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"REV-415 Employer Withholding Information Guide","officialUrl":"https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/employerwithholding/documents/rev-415.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"PA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-ri-regular-2026","jurisdiction":"RI","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Rhode Island Withholding Tax Booklet","officialUrl":"https://tax.ri.gov/sites/g/files/xkgbur541/files/2025-12/2026%20Withholding%20Tax%20Booklet.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"RhodeIslandWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official 2026 booklet. Halfpricesoft's agency-button coverage was incomplete for Rhode Island."},
-    {"id":"state-ri-supplemental-2026","jurisdiction":"RI","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Rhode Island Withholding Tax Booklet","officialUrl":"https://tax.ri.gov/sites/g/files/xkgbur541/files/2025-12/2026%20Withholding%20Tax%20Booklet.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"RI supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-sc-regular-2026","jurisdiction":"SC","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"South Carolina Withholding Tax Formula (WH-1603F)","officialUrl":"https://dor.sc.gov/sites/dor/files/forms/WH1603F_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"SouthCarolinaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"The official forms page also links tables and Form SC W-4. Halfpricesoft's agency-button coverage was incomplete for South Carolina."},
-    {"id":"state-sc-supplemental-2026","jurisdiction":"SC","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"South Carolina Withholding Tax Formula (WH-1603F)","officialUrl":"https://dor.sc.gov/sites/dor/files/forms/WH1603F_2026.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"SC supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-sd-regular-2026","jurisdiction":"SD","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://dor.sd.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Other employer payroll obligations may apply; outside this income-tax scope."],"applicabilityNotes":"Halfpricesoft identifies South Dakota as a no-income-tax state."},
-    {"id":"state-sd-supplemental-2026","jurisdiction":"SD","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://dor.sd.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"SD supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-tn-regular-2026","jurisdiction":"TN","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://www.tn.gov/revenue.html","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["The former Hall income tax was not wage withholding and has been repealed."],"applicabilityNotes":"Halfpricesoft identifies Tennessee as a no-wage-income-tax state."},
-    {"id":"state-tn-supplemental-2026","jurisdiction":"TN","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://www.tn.gov/revenue.html","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"TN supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-tx-regular-2026","jurisdiction":"TX","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://comptroller.texas.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"NoIncomeTaxWithholdingAdapter","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Other employer payroll obligations may apply; outside this income-tax scope."],"applicabilityNotes":"Halfpricesoft identifies Texas as a no-income-tax state."},
-    {"id":"state-tx-supplemental-2026","jurisdiction":"TX","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://comptroller.texas.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"TX supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-ut-regular-2026","jurisdiction":"UT","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Publication 14 \u2014 Withholding Tax Guide","officialUrl":"https://files.tax.utah.gov/tax/forms/pubs/pub-14.pdf","effectiveDate":"2026-06-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"UtahWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Use the effective date when applying midyear 2026 changes."},
-    {"id":"state-ut-supplemental-2026","jurisdiction":"UT","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Publication 14 \u2014 Withholding Tax Guide","officialUrl":"https://files.tax.utah.gov/tax/forms/pubs/pub-14.pdf","effectiveDate":"2026-06-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"UT supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-vt-regular-2026","jurisdiction":"VT","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"2026 Income Tax Withholding Instructions, Tables, and Charts","officialUrl":"https://tax.vermont.gov/sites/tax/files/documents/GB-1210.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"VermontWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Effective January 1 through December 31, 2026; verify the revision on the official page before production use."},
-    {"id":"state-vt-supplemental-2026","jurisdiction":"VT","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"2026 Income Tax Withholding Instructions, Tables, and Charts","officialUrl":"https://tax.vermont.gov/sites/tax/files/documents/GB-1210.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"PercentageElection","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"Vermont withholds 30% of the federal income tax withheld on the supplemental payment."},
-    {"id":"state-va-regular-2026","jurisdiction":"VA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Income Tax Withholding Guide for Employers","officialUrl":"https://www.tax.virginia.gov/sites/default/files/vatax-pdf/employer-withholding-instructions.pdf","revisionDate":"2025-07-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"VirginiaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Current open-ended official guide located."},
-    {"id":"state-va-supplemental-2026","jurisdiction":"VA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Income Tax Withholding Guide for Employers","officialUrl":"https://www.tax.virginia.gov/sites/default/files/vatax-pdf/employer-withholding-instructions.pdf","revisionDate":"2025-07-01","lastVerificationDate":"2026-07-18","implementationType":"FlatRate","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"VA supplemental wages use the FlatRate entry in state_supplemental_2026.json."},
-    {"id":"state-wa-regular-2026","jurisdiction":"WA","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No broad state individual wage income tax \u2014 no withholding table","officialUrl":"https://dor.wa.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"WashingtonWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Paid Family & Medical Leave and WA Cares payroll deductions are separate programs."],"applicabilityNotes":"Halfpricesoft identifies Washington as a no-income-tax state; this scope excludes payroll-program deductions."},
-    {"id":"state-wa-supplemental-2026","jurisdiction":"WA","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No broad state individual wage income tax \u2014 no withholding table","officialUrl":"https://dor.wa.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"WA supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-wv-regular-2026","jurisdiction":"WV","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"IT-100.2.A Tables for Percentage Method of Withholding","officialUrl":"https://tax.wv.gov/Documents/Withholding/it100.2a.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"WestVirginiaWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Certain municipal fees may apply separately; not part of state income-tax tables."],"applicabilityNotes":"Official percentage-method tables."},
-    {"id":"state-wv-supplemental-2026","jurisdiction":"WV","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"IT-100.2.A Tables for Percentage Method of Withholding","officialUrl":"https://tax.wv.gov/Documents/Withholding/it100.2a.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"WV supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-wi-regular-2026","jurisdiction":"WI","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"Publication W-166 \u2014 Wisconsin Withholding Tax Guide","officialUrl":"https://www.revenue.wi.gov/dor%20publications/pb166.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"CodedFormula","calculatorClass":"WisconsinWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["No general local wage income-tax table identified."],"applicabilityNotes":"Official 2026 guide."},
-    {"id":"state-wi-supplemental-2026","jurisdiction":"WI","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"Publication W-166 \u2014 Wisconsin Withholding Tax Guide","officialUrl":"https://www.revenue.wi.gov/dor%20publications/pb166.pdf","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"UnsupportedRegularAggregateSupplementalMethod","calculatorClass":"StateSupplementalCalculator","approximations":["The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"WI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."},
-    {"id":"state-wy-regular-2026","jurisdiction":"WY","taxYear":2026,"scope":"RegularWithholding","calculationModes":["Standard","GrossUp","AnnualProjection","SelfEmployment"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://revenue.wyo.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"WyomingWithholdingCalculator","approximations":["Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."],"exclusions":["Other employer payroll obligations may apply; outside this income-tax scope."],"applicabilityNotes":"Halfpricesoft identifies Wyoming as a no-income-tax state."},
-    {"id":"state-wy-supplemental-2026","jurisdiction":"WY","taxYear":2026,"scope":"SupplementalWithholding","calculationModes":["Bonus"],"publicationTitle":"No state individual wage income tax \u2014 no withholding table","officialUrl":"https://revenue.wyo.gov/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-07-18","implementationType":"NoIncomeTaxAdapter","calculatorClass":"StateSupplementalCalculator","approximations":[],"exclusions":["Local taxes and employee payroll assessments are not included in bonus mode."],"applicabilityNotes":"WY supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."},
-    {"id":"state-ca-payroll-assessment-2026","jurisdiction":"CA","taxYear":2026,"scope":"PayrollAssessment","calculationModes":["Standard","GrossUp"],"publicationTitle":"State Disability Insurance (SDI) Rates and Withholding","officialUrl":"https://edd.ca.gov/en/payroll_taxes/rates_and_withholding/","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"CaliforniaWithholdingCalculator","approximations":[],"exclusions":["Not applied in bonus or self-employment mode."],"applicabilityNotes":"State Disability Insurance employee contribution; bonus mode excludes SDI."},
-    {"id":"state-co-payroll-assessment-2026","jurisdiction":"CO","taxYear":2026,"scope":"PayrollAssessment","calculationModes":["Standard","GrossUp"],"publicationTitle":"Colorado FAMLI Premiums and Reports","officialUrl":"https://famli.colorado.gov/employers/premiums-and-reports","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"ColoradoWithholdingCalculator","approximations":[],"exclusions":["Not applied in bonus or self-employment mode."],"applicabilityNotes":"Employee Family and Medical Leave Insurance premium."},
-    {"id":"state-ct-payroll-assessment-2026","jurisdiction":"CT","taxYear":2026,"scope":"PayrollAssessment","calculationModes":["Standard","GrossUp"],"publicationTitle":"Connecticut Paid Leave Contributions","officialUrl":"https://www.ctpaidleave.org/how-ct-paid-leave-works","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"ConnecticutWithholdingCalculator","approximations":[],"exclusions":["Not applied in bonus or self-employment mode."],"applicabilityNotes":"Employee Paid Family and Medical Leave contribution."},
-    {"id":"state-wa-payroll-assessment-2026","jurisdiction":"WA","taxYear":2026,"scope":"PayrollAssessment","calculationModes":["Standard","GrossUp"],"publicationTitle":"RCW 50B.04.080 \u2014 WA Cares Premium Assessment","officialUrl":"https://app.leg.wa.gov/RCW/default.aspx?cite=50B.04.080","effectiveDate":"2026-01-01","lastVerificationDate":"2026-08-08","implementationType":"CodedFormula","calculatorClass":"WashingtonWithholdingCalculator","approximations":[],"exclusions":["Not applied in bonus or self-employment mode."],"applicabilityNotes":"WA Cares Fund employee premium, subject to exemption input."}
+    {
+      "id": "federal-form-1040es-2026",
+      "jurisdiction": "US",
+      "taxYear": 2026,
+      "scope": "EstimatedPayments",
+      "calculationModes": [
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Form 1040-ES, Estimated Tax for Individuals",
+      "officialUrl": "https://www.irs.gov/pub/irs-pdf/f1040es.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "SelfEmploymentCalculator",
+      "approximations": [
+        "The calculator splits annual estimates into four equal installments."
+      ],
+      "exclusions": [
+        "State installment schedules and filing-time adjustments can differ from the federal schedule."
+      ],
+      "applicabilityNotes": "Standard federal estimated-payment installment dates."
+    },
+    {
+      "id": "federal-schedule-se-2026",
+      "jurisdiction": "US",
+      "taxYear": 2026,
+      "scope": "SelfEmploymentTax",
+      "calculationModes": [
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Schedule SE (Form 1040), Self-Employment Tax",
+      "officialUrl": "https://www.irs.gov/pub/irs-pdf/f1040sse.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "SelfEmploymentCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Federal income tax is excluded from self-employment mode."
+      ],
+      "applicabilityNotes": "Schedule SE net-earnings multiplier and Social Security/Medicare tax computation."
+    },
+    {
+      "id": "federal-additional-medicare-2026",
+      "jurisdiction": "US",
+      "taxYear": 2026,
+      "scope": "AdditionalMedicare",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "Bonus",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "IRS Topic No. 560, Additional Medicare Tax",
+      "officialUrl": "https://www.irs.gov/taxtopics/tc560",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "FicaCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Employer withholding uses the $200,000 threshold regardless of the employee's filing status; final filing liability can differ."
+      ],
+      "applicabilityNotes": "Additional Medicare withholding and self-employment threshold rule."
+    },
+    {
+      "id": "federal-fica-2026",
+      "jurisdiction": "US",
+      "taxYear": 2026,
+      "scope": "SocialSecurityMedicare",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "Bonus"
+      ],
+      "publicationTitle": "IRS Publication 15 (Circular E), Social Security and Medicare Taxes",
+      "officialUrl": "https://www.irs.gov/pub/irs-pdf/p15.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "FicaCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Final employee tax may depend on wages from other employers."
+      ],
+      "applicabilityNotes": "Employee Social Security and Medicare withholding rules."
+    },
+    {
+      "id": "federal-irs-pub-15-supplemental-2026",
+      "jurisdiction": "US",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "IRS Publication 15 (Circular E), Supplemental Wages",
+      "officialUrl": "https://www.irs.gov/pub/irs-pdf/p15.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "FlatRate",
+      "calculatorClass": "FederalSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "The aggregate method is not modeled; this calculator uses the optional flat-rate method."
+      ],
+      "applicabilityNotes": "Federal optional flat-rate supplemental-wage withholding."
+    },
+    {
+      "id": "federal-irs-pub-15t-2026",
+      "jurisdiction": "US",
+      "taxYear": 2026,
+      "scope": "FederalWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection"
+      ],
+      "publicationTitle": "IRS Publication 15-T, Federal Income Tax Withholding Methods",
+      "officialUrl": "https://www.irs.gov/pub/irs-pdf/p15t.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "JsonTable",
+      "calculatorClass": "Irs15TPercentageCalculator",
+      "approximations": [],
+      "exclusions": [
+        "This is an employer withholding method, not a Form 1040 income-tax liability calculation."
+      ],
+      "applicabilityNotes": "Automated payroll-systems percentage method for 2026 Forms W-4."
+    },
+    {
+      "id": "state-al-regular-2026",
+      "jurisdiction": "AL",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Withholding Tax Tables and Instructions for Employers and Withholding Agents",
+      "officialUrl": "https://www.revenue.alabama.gov/wp-content/uploads/2026/01/whbooklet_0126.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "AlabamaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Some municipalities levy occupational taxes outside the state table."
+      ],
+      "applicabilityNotes": "Official 2026 booklet includes tables and employer instructions."
+    },
+    {
+      "id": "state-al-supplemental-2026",
+      "jurisdiction": "AL",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Withholding Tax Tables and Instructions for Employers and Withholding Agents",
+      "officialUrl": "https://www.revenue.alabama.gov/wp-content/uploads/2026/01/whbooklet_0126.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "AL supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ak-regular-2026",
+      "jurisdiction": "AK",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://dor.alaska.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Other employer payroll obligations may apply; outside this income-tax scope."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Alaska as a no-income-tax state."
+    },
+    {
+      "id": "state-ak-supplemental-2026",
+      "jurisdiction": "AK",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://dor.alaska.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "AK supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-az-regular-2026",
+      "jurisdiction": "AZ",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Arizona Form A-4 — Arizona Withholding Percentage Election",
+      "officialUrl": "https://azdor.gov/sites/default/files/document/FORMS_WITHHOLDING_2026_A-4_f.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "PercentageElection",
+      "calculatorClass": "ArizonaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Arizona withholding is elected as a percentage of gross taxable wages rather than a wage-bracket table."
+    },
+    {
+      "id": "state-az-supplemental-2026",
+      "jurisdiction": "AZ",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Arizona Form A-4 — Arizona Withholding Percentage Election",
+      "officialUrl": "https://azdor.gov/sites/default/files/document/FORMS_WITHHOLDING_2026_A-4_f.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "AZ supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ar-regular-2026",
+      "jurisdiction": "AR",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Arkansas Withholding Tax Formula",
+      "officialUrl": "https://www.dfa.arkansas.gov/wp-content/uploads/Withholding-Tax-Formula.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "JsonTable",
+      "calculatorClass": "ArkansasWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The official forms page also provides 2026 employer instructions and low-income tables."
+    },
+    {
+      "id": "state-ar-supplemental-2026",
+      "jurisdiction": "AR",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Arkansas Withholding Tax Formula",
+      "officialUrl": "https://www.dfa.arkansas.gov/wp-content/uploads/Withholding-Tax-Formula.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "AR supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ca-regular-2026",
+      "jurisdiction": "CA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Withholding Schedules — Method B, Exact Calculation Method",
+      "officialUrl": "https://edd.ca.gov/siteassets/files/pdf_pub_ctr/26methb.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "JsonTable",
+      "calculatorClass": "CaliforniaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Some local payroll taxes may exist; this source covers state personal income-tax withholding."
+      ],
+      "applicabilityNotes": "EDD also publishes Method A wage-bracket tables: https://edd.ca.gov/siteassets/files/pdf_pub_ctr/26metha.pdf"
+    },
+    {
+      "id": "state-ca-supplemental-2026",
+      "jurisdiction": "CA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Withholding Schedules — Method B, Exact Calculation Method",
+      "officialUrl": "https://edd.ca.gov/siteassets/files/pdf_pub_ctr/26methb.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "California withholds bonuses and stock options at 10.23%. Other supplemental wages use 6.6%. State Disability Insurance (SDI) is withheld separately and is not included here."
+    },
+    {
+      "id": "state-co-regular-2026",
+      "jurisdiction": "CO",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Colorado Wage Withholding Tax Guide",
+      "officialUrl": "https://tax.colorado.gov/sites/tax/files/documents/Wage_Withholding_Tax_Guide_Jan_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "JsonTable",
+      "calculatorClass": "ColoradoWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Local occupational privilege taxes may apply in certain cities."
+      ],
+      "applicabilityNotes": "The guide links the DR 1098 worksheet used in the computation method."
+    },
+    {
+      "id": "state-co-supplemental-2026",
+      "jurisdiction": "CO",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Colorado Wage Withholding Tax Guide",
+      "officialUrl": "https://tax.colorado.gov/sites/tax/files/documents/Wage_Withholding_Tax_Guide_Jan_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "CO supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ct-regular-2026",
+      "jurisdiction": "CT",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Withholding Forms, Tables, Circular CT, and Calculation Rules",
+      "officialUrl": "https://portal.ct.gov/DRS/DRS-Forms/Current-Year-Forms/Withholding-Forms",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "JsonTable",
+      "calculatorClass": "ConnecticutWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The page maintains the 2026 tables, Circular CT employer guide, supplemental table, and TPG-211 calculation rules."
+    },
+    {
+      "id": "state-ct-supplemental-2026",
+      "jurisdiction": "CT",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Withholding Forms, Tables, Circular CT, and Calculation Rules",
+      "officialUrl": "https://portal.ct.gov/DRS/DRS-Forms/Current-Year-Forms/Withholding-Forms",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "CT supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-de-regular-2026",
+      "jurisdiction": "DE",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Employer's Guide — Withholding Tables",
+      "officialUrl": "https://revenue.delaware.gov/employers-guide-withholding-tables/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "DelawareWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Wilmington's earned-income tax may require separate treatment."
+      ],
+      "applicabilityNotes": "Official webpage provides daily through monthly wage-bracket tables."
+    },
+    {
+      "id": "state-de-supplemental-2026",
+      "jurisdiction": "DE",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Employer's Guide — Withholding Tables",
+      "officialUrl": "https://revenue.delaware.gov/employers-guide-withholding-tables/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "DE supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-dc-regular-2026",
+      "jurisdiction": "DC",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "FR-230 Income Tax Withholding Instructions and Tables",
+      "officialUrl": "https://otr.cfo.dc.gov/sites/default/files/dc/sites/otr/publication/attachments/2018%20FR-230_12.13.17.pdf",
+      "revisionDate": "2018-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "DistrictOfColumbiaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "D.C. is treated as a jurisdiction, not a local add-on to a state table."
+      ],
+      "applicabilityNotes": "Check the current forms page before production use; annual return instructions are newer than the located computation booklet."
+    },
+    {
+      "id": "state-dc-supplemental-2026",
+      "jurisdiction": "DC",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "FR-230 Income Tax Withholding Instructions and Tables",
+      "officialUrl": "https://otr.cfo.dc.gov/sites/default/files/dc/sites/otr/publication/attachments/2018%20FR-230_12.13.17.pdf",
+      "revisionDate": "2018-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "DC supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-fl-regular-2026",
+      "jurisdiction": "FL",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://floridarevenue.com/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Reemployment tax and other employer obligations remain outside this income-tax scope."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Florida as a no-income-tax state."
+    },
+    {
+      "id": "state-fl-supplemental-2026",
+      "jurisdiction": "FL",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://floridarevenue.com/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "FL supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ga-regular-2026",
+      "jurisdiction": "GA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Employer's Tax Guide",
+      "officialUrl": "https://dor.georgia.gov/employers-tax-guide",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "GeorgiaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The official page maintains the current employer guide download."
+    },
+    {
+      "id": "state-ga-supplemental-2026",
+      "jurisdiction": "GA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Employer's Tax Guide",
+      "officialUrl": "https://dor.georgia.gov/employers-tax-guide",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "GA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-hi-regular-2026",
+      "jurisdiction": "HI",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Booklet A — Employer's Tax Guide",
+      "officialUrl": "https://tax.hawaii.gov/geninfo/a2_b2_4empl_whhold/",
+      "revisionDate": "2025-01-01",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "HawaiiWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The revised guide applies to withholding beginning January 1, 2026 and includes rates and tables."
+    },
+    {
+      "id": "state-hi-supplemental-2026",
+      "jurisdiction": "HI",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Booklet A — Employer's Tax Guide",
+      "officialUrl": "https://tax.hawaii.gov/geninfo/a2_b2_4empl_whhold/",
+      "revisionDate": "2025-01-01",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "HI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-id-regular-2026",
+      "jurisdiction": "ID",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Table for Percentage Computation Method of Withholding",
+      "officialUrl": "https://tax.idaho.gov/document-mngr/pubs_epb00744/",
+      "revisionDate": "2025-04-28",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "IdahoWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Use the official withholding-guides page to confirm whether a newer table has been posted."
+    },
+    {
+      "id": "state-id-supplemental-2026",
+      "jurisdiction": "ID",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Table for Percentage Computation Method of Withholding",
+      "officialUrl": "https://tax.idaho.gov/document-mngr/pubs_epb00744/",
+      "revisionDate": "2025-04-28",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "ID supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-il-regular-2026",
+      "jurisdiction": "IL",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Booklet IL-700-T — Illinois Withholding Tax Tables",
+      "officialUrl": "https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/withholding/documents/currentyear/il-700-t.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "IllinoisWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Effective for amounts paid January 1 through December 31, 2026."
+    },
+    {
+      "id": "state-il-supplemental-2026",
+      "jurisdiction": "IL",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Booklet IL-700-T — Illinois Withholding Tax Tables",
+      "officialUrl": "https://tax.illinois.gov/content/dam/soi/en/web/tax/forms/withholding/documents/currentyear/il-700-t.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "IL supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-in-regular-2026",
+      "jurisdiction": "IN",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Departmental Notice #1 — State and County Withholding Computation",
+      "officialUrl": "https://www.in.gov/dor/files/dn01.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "IndianaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "County income-tax rates are included in the official notice."
+      ],
+      "applicabilityNotes": "Use both state and employee county-of-residence/work rates as directed."
+    },
+    {
+      "id": "state-in-supplemental-2026",
+      "jurisdiction": "IN",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Departmental Notice #1 — State and County Withholding Computation",
+      "officialUrl": "https://www.in.gov/dor/files/dn01.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "IN supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ia-regular-2026",
+      "jurisdiction": "IA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Iowa Withholding Tax Information — Formula and Tables",
+      "officialUrl": "https://revenue.iowa.gov/taxes/tax-guidance/withholding-tax/iowa-withholding-tax-information",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "IowaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax withholding table identified."
+      ],
+      "applicabilityNotes": "Official guidance supports both manual tables and the computer formula."
+    },
+    {
+      "id": "state-ia-supplemental-2026",
+      "jurisdiction": "IA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Iowa Withholding Tax Information — Formula and Tables",
+      "officialUrl": "https://revenue.iowa.gov/taxes/tax-guidance/withholding-tax/iowa-withholding-tax-information",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "IA supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ks-regular-2026",
+      "jurisdiction": "KS",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "KW-100 Kansas Withholding Tax Guide",
+      "officialUrl": "https://ksrevenue.gov/pdf/kw100.pdf",
+      "effectiveDate": "2024-07-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "KansasWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Current open-ended guide located on the official site."
+    },
+    {
+      "id": "state-ks-supplemental-2026",
+      "jurisdiction": "KS",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "KW-100 Kansas Withholding Tax Guide",
+      "officialUrl": "https://ksrevenue.gov/pdf/kw100.pdf",
+      "effectiveDate": "2024-07-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "KS supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ky-regular-2026",
+      "jurisdiction": "KY",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Kentucky Withholding Tax Formula",
+      "officialUrl": "https://revenue.ky.gov/Forms/2026%20Withholding%20Formula.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "KentuckyWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Many localities levy occupational/payroll taxes separately."
+      ],
+      "applicabilityNotes": "Separate official 2026 tables: https://revenue.ky.gov/Forms/2026%20WH%20Tax%20Tables.pdf"
+    },
+    {
+      "id": "state-ky-supplemental-2026",
+      "jurisdiction": "KY",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Kentucky Withholding Tax Formula",
+      "officialUrl": "https://revenue.ky.gov/Forms/2026%20Withholding%20Formula.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "KY supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-la-regular-2026",
+      "jurisdiction": "LA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "R-1306 Louisiana Withholding Tables and Formulas",
+      "officialUrl": "https://revenue.louisiana.gov/tax-forms/businesses/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "LouisianaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The official business-forms page maintains the current R-1306 download."
+    },
+    {
+      "id": "state-la-supplemental-2026",
+      "jurisdiction": "LA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "R-1306 Louisiana Withholding Tables and Formulas",
+      "officialUrl": "https://revenue.louisiana.gov/tax-forms/businesses/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "LA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-me-regular-2026",
+      "jurisdiction": "ME",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Withholding Tables for Individual Income Tax",
+      "officialUrl": "https://www.maine.gov/revenue/sites/maine.gov.revenue/files/inline-files/26_wh_tab_instr.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MaineWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official booklet contains instructions, methods, and tables."
+    },
+    {
+      "id": "state-me-supplemental-2026",
+      "jurisdiction": "ME",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Withholding Tables for Individual Income Tax",
+      "officialUrl": "https://www.maine.gov/revenue/sites/maine.gov.revenue/files/inline-files/26_wh_tab_instr.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "ME supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-md-regular-2026",
+      "jurisdiction": "MD",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Maryland Employer Withholding Guide",
+      "officialUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/instructions/withholding/2026/withholding-guide.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MarylandWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "County/local income-tax rates are built into Maryland withholding methods."
+      ],
+      "applicabilityNotes": "Use the employee's county or nonresident rate as directed by the guide."
+    },
+    {
+      "id": "state-md-supplemental-2026",
+      "jurisdiction": "MD",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Maryland Employer Withholding Guide",
+      "officialUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/instructions/withholding/2026/withholding-guide.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MD supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ma-regular-2026",
+      "jurisdiction": "MA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Massachusetts Circular M — Income Tax Withholding Tables at 5.0%",
+      "officialUrl": "https://www.mass.gov/doc/massachusetts-circular-m-income-tax-withholding-tables-at-50-effective-january-1-2026/download",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MassachusettsWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official 2026 Circular M."
+    },
+    {
+      "id": "state-ma-supplemental-2026",
+      "jurisdiction": "MA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Massachusetts Circular M — Income Tax Withholding Tables at 5.0%",
+      "officialUrl": "https://www.mass.gov/doc/massachusetts-circular-m-income-tax-withholding-tables-at-50-effective-january-1-2026/download",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-mi-regular-2026",
+      "jurisdiction": "MI",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Michigan Income Tax Withholding Guide (Form 446)",
+      "officialUrl": "https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/SUW/TY2026/446_Withholding-Guide_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MichiganWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Several cities levy separate local income taxes and publish their own rules."
+      ],
+      "applicabilityNotes": "State guide only; city withholding may require additional sources."
+    },
+    {
+      "id": "state-mi-supplemental-2026",
+      "jurisdiction": "MI",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Michigan Income Tax Withholding Guide (Form 446)",
+      "officialUrl": "https://www.michigan.gov/taxes/-/media/Project/Websites/taxes/Forms/SUW/TY2026/446_Withholding-Guide_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-mn-regular-2026",
+      "jurisdiction": "MN",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Minnesota Income Tax Withholding Instructions and Tables",
+      "officialUrl": "https://www.revenue.state.mn.us/sites/default/files/2025-12/wh-inst-26.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MinnesotaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official instruction booklet and tax tables."
+    },
+    {
+      "id": "state-mn-supplemental-2026",
+      "jurisdiction": "MN",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Minnesota Income Tax Withholding Instructions and Tables",
+      "officialUrl": "https://www.revenue.state.mn.us/sites/default/files/2025-12/wh-inst-26.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MN supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ms-regular-2026",
+      "jurisdiction": "MS",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Withholding Income Tax Tables and Employer Instructions (Pub. 89-700)",
+      "officialUrl": "https://www.dor.ms.gov/sites/default/files/business/89700251.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MississippiWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Current official booklet located for 2026."
+    },
+    {
+      "id": "state-ms-supplemental-2026",
+      "jurisdiction": "MS",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Withholding Income Tax Tables and Employer Instructions (Pub. 89-700)",
+      "officialUrl": "https://www.dor.ms.gov/sites/default/files/business/89700251.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MS supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-mo-regular-2026",
+      "jurisdiction": "MO",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Missouri Employer's Tax Guide (Form 4282)",
+      "officialUrl": "https://dor.mo.gov/forms/4282_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MissouriWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Kansas City and St. Louis earnings taxes may apply separately."
+      ],
+      "applicabilityNotes": "Separate official 2026 withholding table: https://dor.mo.gov/forms/Withholding%20Table%20-%20ALL_2026.pdf"
+    },
+    {
+      "id": "state-mo-supplemental-2026",
+      "jurisdiction": "MO",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Missouri Employer's Tax Guide (Form 4282)",
+      "officialUrl": "https://dor.mo.gov/forms/4282_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MO supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-mt-regular-2026",
+      "jurisdiction": "MT",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Montana Employer and Information Agent Guide with Withholding Tables",
+      "officialUrl": "https://revenue.mt.gov/publications/montana-employer-and-information-agent-guide",
+      "revisionDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "MontanaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The official page maintains the 2026 guide download."
+    },
+    {
+      "id": "state-mt-supplemental-2026",
+      "jurisdiction": "MT",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Montana Employer and Information Agent Guide with Withholding Tables",
+      "officialUrl": "https://revenue.mt.gov/publications/montana-employer-and-information-agent-guide",
+      "revisionDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "MT supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ne-regular-2026",
+      "jurisdiction": "NE",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Nebraska Circular EN",
+      "officialUrl": "https://revenue.nebraska.gov/sites/default/files/doc/business/Cir_En_2025/2026cir_en_whole.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "NebraskaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official circular includes wage withholding instructions and tables."
+    },
+    {
+      "id": "state-ne-supplemental-2026",
+      "jurisdiction": "NE",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Nebraska Circular EN",
+      "officialUrl": "https://revenue.nebraska.gov/sites/default/files/doc/business/Cir_En_2025/2026cir_en_whole.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "NE supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-nv-regular-2026",
+      "jurisdiction": "NV",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://tax.nv.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Nevada Modified Business Tax is employer-side and outside employee income withholding."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Nevada as a no-income-tax state."
+    },
+    {
+      "id": "state-nv-supplemental-2026",
+      "jurisdiction": "NV",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://tax.nv.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "NV supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-nh-regular-2026",
+      "jurisdiction": "NH",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No tax on wages — no wage withholding table",
+      "officialUrl": "https://www.revenue.nh.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "The former Interest and Dividends Tax was not a wage-withholding system."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies New Hampshire as a no-wage-income-tax state."
+    },
+    {
+      "id": "state-nh-supplemental-2026",
+      "jurisdiction": "NH",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No tax on wages — no wage withholding table",
+      "officialUrl": "https://www.revenue.nh.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "NH supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-nj-regular-2026",
+      "jurisdiction": "NJ",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "NJ-WT New Jersey Income Tax Withholding Instructions",
+      "officialUrl": "https://www.nj.gov/treasury/taxation/pdf/current/njwt.pdf",
+      "revisionDate": "2025-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "NewJerseyWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general municipal wage-withholding table in this state guide."
+      ],
+      "applicabilityNotes": "Official current PDF; the payroll page also links supplemental withholding tables."
+    },
+    {
+      "id": "state-nj-supplemental-2026",
+      "jurisdiction": "NJ",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "NJ-WT New Jersey Income Tax Withholding Instructions",
+      "officialUrl": "https://www.nj.gov/treasury/taxation/pdf/current/njwt.pdf",
+      "revisionDate": "2025-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "NJ supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-nm-regular-2026",
+      "jurisdiction": "NM",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "FYI-104 New Mexico Withholding Tax",
+      "officialUrl": "https://realfile.tax.newmexico.gov/FYI-104.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "NewMexicoWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Current official FYI publication includes tables for wages paid on or after January 1, 2026."
+    },
+    {
+      "id": "state-nm-supplemental-2026",
+      "jurisdiction": "NM",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "FYI-104 New Mexico Withholding Tax",
+      "officialUrl": "https://realfile.tax.newmexico.gov/FYI-104.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "NM supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ny-regular-2026",
+      "jurisdiction": "NY",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "NYS-50-T-NYS — New York State Withholding Tax Tables and Methods",
+      "officialUrl": "https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nys.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "NewYorkWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "New York City and Yonkers have separate official withholding tables."
+      ],
+      "applicabilityNotes": "NYC: https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nyc.pdf | Yonkers: https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_y.pdf"
+    },
+    {
+      "id": "state-ny-supplemental-2026",
+      "jurisdiction": "NY",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "NYS-50-T-NYS — New York State Withholding Tax Tables and Methods",
+      "officialUrl": "https://www.tax.ny.gov/pdf/publications/withholding/nys50_t_nys.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "New York State supplemental rate. New York City and Yonkers add separate local supplemental withholding that is not included here."
+    },
+    {
+      "id": "state-nc-regular-2026",
+      "jurisdiction": "NC",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "NC-30 Income Tax Withholding Tables and Instructions for Employers",
+      "officialUrl": "https://www.ncdor.gov/income-tax-withholding-tables-and-instructions-employers/open",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "NorthCarolinaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official current NC-30 download."
+    },
+    {
+      "id": "state-nc-supplemental-2026",
+      "jurisdiction": "NC",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "NC-30 Income Tax Withholding Tables and Instructions for Employers",
+      "officialUrl": "https://www.ncdor.gov/income-tax-withholding-tables-and-instructions-employers/open",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "NC supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-nd-regular-2026",
+      "jurisdiction": "ND",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Income Tax Withholding Rates and Instructions",
+      "officialUrl": "https://www.tax.nd.gov/sites/www/files/documents/forms/individual/2026-iit/2026-income-tax-withholding-rates-booklet.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "NorthDakotaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official 2026 booklet."
+    },
+    {
+      "id": "state-nd-supplemental-2026",
+      "jurisdiction": "ND",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Income Tax Withholding Rates and Instructions",
+      "officialUrl": "https://www.tax.nd.gov/sites/www/files/documents/forms/individual/2026-iit/2026-income-tax-withholding-rates-booklet.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "ND supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-oh-regular-2026",
+      "jurisdiction": "OH",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Employer Withholding — Current Tables and Optional Computer Method",
+      "officialUrl": "https://tax.ohio.gov/business/employer-withholding",
+      "revisionDate": "2026-07-18",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "OhioWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "School-district and municipal income taxes may require separate handling."
+      ],
+      "applicabilityNotes": "The official page maintains current state tables and school-district rates; municipal systems are separate."
+    },
+    {
+      "id": "state-oh-supplemental-2026",
+      "jurisdiction": "OH",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Employer Withholding — Current Tables and Optional Computer Method",
+      "officialUrl": "https://tax.ohio.gov/business/employer-withholding",
+      "revisionDate": "2026-07-18",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "OH supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ok-regular-2026",
+      "jurisdiction": "OK",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "OW-2 Oklahoma Income Tax Withholding Tables",
+      "officialUrl": "https://oklahoma.gov/tax/reporting-resources/publications.html",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "JsonTable",
+      "calculatorClass": "OklahomaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The official publications page maintains the current OW-2 download."
+    },
+    {
+      "id": "state-ok-supplemental-2026",
+      "jurisdiction": "OK",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "OW-2 Oklahoma Income Tax Withholding Tables",
+      "officialUrl": "https://oklahoma.gov/tax/reporting-resources/publications.html",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "OK supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-or-regular-2026",
+      "jurisdiction": "OR",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Oregon Withholding Tax Formulas",
+      "officialUrl": "https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-formulas_206-436_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "OregonWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Statewide transit and certain local payroll taxes may apply outside this income-tax formula."
+      ],
+      "applicabilityNotes": "Separate official 2026 wage-bracket tables: https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-tables_206-430_2026.pdf"
+    },
+    {
+      "id": "state-or-supplemental-2026",
+      "jurisdiction": "OR",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Oregon Withholding Tax Formulas",
+      "officialUrl": "https://www.oregon.gov/dor/forms/FormsPubs/withholding-tax-formulas_206-436_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "OR supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-pa-regular-2026",
+      "jurisdiction": "PA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "REV-415 Employer Withholding Information Guide",
+      "officialUrl": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/employerwithholding/documents/rev-415.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "PennsylvaniaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Local EIT, LST, and Philadelphia Wage Tax may apply separately."
+      ],
+      "applicabilityNotes": "The state guide does not replace local earned-income-tax resources."
+    },
+    {
+      "id": "state-pa-supplemental-2026",
+      "jurisdiction": "PA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "REV-415 Employer Withholding Information Guide",
+      "officialUrl": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/employerwithholding/documents/rev-415.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "PA supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ri-regular-2026",
+      "jurisdiction": "RI",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Rhode Island Withholding Tax Booklet",
+      "officialUrl": "https://tax.ri.gov/sites/g/files/xkgbur541/files/2025-12/2026%20Withholding%20Tax%20Booklet.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "RhodeIslandWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official 2026 booklet. Halfpricesoft's agency-button coverage was incomplete for Rhode Island."
+    },
+    {
+      "id": "state-ri-supplemental-2026",
+      "jurisdiction": "RI",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Rhode Island Withholding Tax Booklet",
+      "officialUrl": "https://tax.ri.gov/sites/g/files/xkgbur541/files/2025-12/2026%20Withholding%20Tax%20Booklet.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "RI supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-sc-regular-2026",
+      "jurisdiction": "SC",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "South Carolina Withholding Tax Formula (WH-1603F)",
+      "officialUrl": "https://dor.sc.gov/sites/dor/files/forms/WH1603F_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "SouthCarolinaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "The official forms page also links tables and Form SC W-4. Halfpricesoft's agency-button coverage was incomplete for South Carolina."
+    },
+    {
+      "id": "state-sc-supplemental-2026",
+      "jurisdiction": "SC",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "South Carolina Withholding Tax Formula (WH-1603F)",
+      "officialUrl": "https://dor.sc.gov/sites/dor/files/forms/WH1603F_2026.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "SC supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-sd-regular-2026",
+      "jurisdiction": "SD",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://dor.sd.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Other employer payroll obligations may apply; outside this income-tax scope."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies South Dakota as a no-income-tax state."
+    },
+    {
+      "id": "state-sd-supplemental-2026",
+      "jurisdiction": "SD",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://dor.sd.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "SD supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-tn-regular-2026",
+      "jurisdiction": "TN",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://www.tn.gov/revenue.html",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "The former Hall income tax was not wage withholding and has been repealed."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Tennessee as a no-wage-income-tax state."
+    },
+    {
+      "id": "state-tn-supplemental-2026",
+      "jurisdiction": "TN",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://www.tn.gov/revenue.html",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "TN supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-tx-regular-2026",
+      "jurisdiction": "TX",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://comptroller.texas.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "NoIncomeTaxWithholdingAdapter",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Other employer payroll obligations may apply; outside this income-tax scope."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Texas as a no-income-tax state."
+    },
+    {
+      "id": "state-tx-supplemental-2026",
+      "jurisdiction": "TX",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://comptroller.texas.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "TX supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ut-regular-2026",
+      "jurisdiction": "UT",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Publication 14 — Withholding Tax Guide",
+      "officialUrl": "https://files.tax.utah.gov/tax/forms/pubs/pub-14.pdf",
+      "effectiveDate": "2026-06-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "UtahWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Use the effective date when applying midyear 2026 changes."
+    },
+    {
+      "id": "state-ut-supplemental-2026",
+      "jurisdiction": "UT",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Publication 14 — Withholding Tax Guide",
+      "officialUrl": "https://files.tax.utah.gov/tax/forms/pubs/pub-14.pdf",
+      "effectiveDate": "2026-06-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "UT supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-vt-regular-2026",
+      "jurisdiction": "VT",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "2026 Income Tax Withholding Instructions, Tables, and Charts",
+      "officialUrl": "https://tax.vermont.gov/sites/tax/files/documents/GB-1210.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "VermontWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Effective January 1 through December 31, 2026; verify the revision on the official page before production use."
+    },
+    {
+      "id": "state-vt-supplemental-2026",
+      "jurisdiction": "VT",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "2026 Income Tax Withholding Instructions, Tables, and Charts",
+      "officialUrl": "https://tax.vermont.gov/sites/tax/files/documents/GB-1210.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "PercentageElection",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "Vermont withholds 30% of the federal income tax withheld on the supplemental payment."
+    },
+    {
+      "id": "state-va-regular-2026",
+      "jurisdiction": "VA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Income Tax Withholding Guide for Employers",
+      "officialUrl": "https://www.tax.virginia.gov/sites/default/files/vatax-pdf/employer-withholding-instructions.pdf",
+      "revisionDate": "2025-07-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "VirginiaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Current open-ended official guide located."
+    },
+    {
+      "id": "state-va-supplemental-2026",
+      "jurisdiction": "VA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Income Tax Withholding Guide for Employers",
+      "officialUrl": "https://www.tax.virginia.gov/sites/default/files/vatax-pdf/employer-withholding-instructions.pdf",
+      "revisionDate": "2025-07-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "FlatRate",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "VA supplemental wages use the FlatRate entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-wa-regular-2026",
+      "jurisdiction": "WA",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No broad state individual wage income tax — no withholding table",
+      "officialUrl": "https://dor.wa.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "WashingtonWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Paid Family & Medical Leave and WA Cares payroll deductions are separate programs."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Washington as a no-income-tax state; this scope excludes payroll-program deductions."
+    },
+    {
+      "id": "state-wa-supplemental-2026",
+      "jurisdiction": "WA",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No broad state individual wage income tax — no withholding table",
+      "officialUrl": "https://dor.wa.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "WA supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-wv-regular-2026",
+      "jurisdiction": "WV",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "IT-100.2.A Tables for Percentage Method of Withholding",
+      "officialUrl": "https://tax.wv.gov/Documents/Withholding/it100.2a.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "WestVirginiaWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Certain municipal fees may apply separately; not part of state income-tax tables."
+      ],
+      "applicabilityNotes": "Official percentage-method tables."
+    },
+    {
+      "id": "state-wv-supplemental-2026",
+      "jurisdiction": "WV",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "IT-100.2.A Tables for Percentage Method of Withholding",
+      "officialUrl": "https://tax.wv.gov/Documents/Withholding/it100.2a.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "WV supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-wi-regular-2026",
+      "jurisdiction": "WI",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "Publication W-166 — Wisconsin Withholding Tax Guide",
+      "officialUrl": "https://www.revenue.wi.gov/dor%20publications/pb166.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "WisconsinWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "No general local wage income-tax table identified."
+      ],
+      "applicabilityNotes": "Official 2026 guide."
+    },
+    {
+      "id": "state-wi-supplemental-2026",
+      "jurisdiction": "WI",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "Publication W-166 — Wisconsin Withholding Tax Guide",
+      "officialUrl": "https://www.revenue.wi.gov/dor%20publications/pb166.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "UnsupportedRegularAggregateSupplementalMethod",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [
+        "The calculator does not compute the required regular/aggregate supplemental method; displayed state withholding is zero."
+      ],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "WI supplemental wages use the RegularMethod entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-wy-regular-2026",
+      "jurisdiction": "WY",
+      "taxYear": 2026,
+      "scope": "RegularWithholding",
+      "calculationModes": [
+        "Standard",
+        "GrossUp",
+        "AnnualProjection",
+        "SelfEmployment"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://revenue.wyo.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "WyomingWithholdingCalculator",
+      "approximations": [
+        "Self-employment mode applies this wage-withholding formula to annual net earnings as a state-liability proxy."
+      ],
+      "exclusions": [
+        "Other employer payroll obligations may apply; outside this income-tax scope."
+      ],
+      "applicabilityNotes": "Halfpricesoft identifies Wyoming as a no-income-tax state."
+    },
+    {
+      "id": "state-wy-supplemental-2026",
+      "jurisdiction": "WY",
+      "taxYear": 2026,
+      "scope": "SupplementalWithholding",
+      "calculationModes": [
+        "Bonus"
+      ],
+      "publicationTitle": "No state individual wage income tax — no withholding table",
+      "officialUrl": "https://revenue.wyo.gov/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-07-18",
+      "implementationType": "NoIncomeTaxAdapter",
+      "calculatorClass": "StateSupplementalCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Local taxes and employee payroll assessments are not included in bonus mode."
+      ],
+      "applicabilityNotes": "WY supplemental wages use the NoIncomeTax entry in state_supplemental_2026.json."
+    },
+    {
+      "id": "state-ca-payroll-assessment-2026",
+      "jurisdiction": "CA",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "State Disability Insurance (SDI) Rates and Withholding",
+      "officialUrl": "https://edd.ca.gov/en/payroll_taxes/rates_and_withholding/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "CaliforniaWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode."
+      ],
+      "applicabilityNotes": "State Disability Insurance employee contribution; bonus mode excludes SDI."
+    },
+    {
+      "id": "state-co-payroll-assessment-2026",
+      "jurisdiction": "CO",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "Colorado FAMLI Premium and Benefits Calculator (2026 premium rates)",
+      "officialUrl": "https://famli.colorado.gov/individuals-and-families/how-famli-works/premium-and-benefits-calculator",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "ColoradoWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode.",
+        "Employers may choose to pay the full premium, in which case nothing is withheld."
+      ],
+      "applicabilityNotes": "Employee share of the FAMLI premium: half of the 0.88% total, i.e. 0.44% of wages up to the $184,500 federal Social Security wage cap."
+    },
+    {
+      "id": "state-ct-payroll-assessment-2026",
+      "jurisdiction": "CT",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "Connecticut Paid Leave Contributions",
+      "officialUrl": "https://www.ctpaidleave.org/how-ct-paid-leave-works",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "ConnecticutWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode.",
+        "Connecticut caps contributions at the Social Security contribution base; that cap is not applied here, so a high earner's premium is overstated late in the year."
+      ],
+      "applicabilityNotes": "Employee Paid Family and Medical Leave contribution of 0.5% of wages."
+    },
+    {
+      "id": "state-wa-payroll-assessment-2026",
+      "jurisdiction": "WA",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "RCW 50B.04.080 — WA Cares Premium Assessment",
+      "officialUrl": "https://app.leg.wa.gov/RCW/default.aspx?cite=50B.04.080",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-08-08",
+      "implementationType": "CodedFormula",
+      "calculatorClass": "WashingtonWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode."
+      ],
+      "applicabilityNotes": "WA Cares Fund employee premium, subject to exemption input."
+    },
+    {
+      "id": "state-nj-payroll-assessment-2026",
+      "jurisdiction": "NJ",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "New Jersey Department of Labor — Employer Rate Information (2026 worker rates and taxable wage bases)",
+      "officialUrl": "https://www.nj.gov/labor/ea/employer-services/rate-info/",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "NewJerseyWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode.",
+        "Worker Unemployment Insurance and Workforce Development contributions on the separate $44,800 base are not withheld here."
+      ],
+      "applicabilityNotes": "Temporary Disability Insurance (0.19%) and Family Leave Insurance (0.23%) worker contributions on the $171,100 worker taxable wage base."
+    },
+    {
+      "id": "state-ny-payroll-assessment-2026",
+      "jurisdiction": "NY",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "New York Paid Family Leave 2026 contribution rate; Workers' Compensation Law 209(3)(a) disability contribution",
+      "officialUrl": "https://paidfamilyleave.ny.gov/2026",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "NewYorkWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode.",
+        "Employers may elect to pay either contribution on the employee's behalf, in which case nothing is withheld."
+      ],
+      "applicabilityNotes": "Paid Family Leave employee contribution of 0.432% capped at $411.91 per year, plus the statutory disability contribution of 0.5% of wages capped at $0.60 per week."
+    },
+    {
+      "id": "state-ma-payroll-assessment-2026",
+      "jurisdiction": "MA",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "Massachusetts Department of Family and Medical Leave — Contribution Rates and Calculator (2026)",
+      "officialUrl": "https://www.mass.gov/info-details/paid-family-and-medical-leave-employer-contribution-rates-and-calculator",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "MassachusettsWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode.",
+        "Employers may choose to cover more than the minimum employee share, reducing or eliminating the withholding."
+      ],
+      "applicabilityNotes": "Employee share of the Paid Family and Medical Leave contribution: 0.28% medical and 0.18% family, capped by the Social Security taxable maximum."
+    },
+    {
+      "id": "state-ri-payroll-assessment-2026",
+      "jurisdiction": "RI",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "Rhode Island Department of Labor and Training — TDI/TCI for Employers (2026)",
+      "officialUrl": "https://dlt.ri.gov/individuals/temporary-disability-caregiver-insurance/employers",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "RhodeIslandWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode."
+      ],
+      "applicabilityNotes": "Temporary Disability Insurance employee wage deduction of 1.1% on a $100,000 taxable wage base."
+    },
+    {
+      "id": "state-or-payroll-assessment-2026",
+      "jurisdiction": "OR",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "Paid Leave Oregon — Employer contribution rates (2026)",
+      "officialUrl": "https://paidleave.oregon.gov/employers/Pages/default.aspx",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "OregonWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode.",
+        "Employers may choose to pay all or part of the employee contribution, reducing or eliminating the withholding."
+      ],
+      "applicabilityNotes": "Employee share of Paid Leave Oregon: 60% of the 1% total contribution, i.e. 0.6% of gross wages up to $184,500."
+    },
+    {
+      "id": "state-hi-payroll-assessment-2026",
+      "jurisdiction": "HI",
+      "taxYear": 2026,
+      "scope": "PayrollAssessment",
+      "calculationModes": [
+        "Standard",
+        "GrossUp"
+      ],
+      "publicationTitle": "Hawaii DLIR Disability Compensation Division — 2026 Maximum Weekly Wage Base and Maximum Weekly Benefit Amount",
+      "officialUrl": "https://labor.hawaii.gov/dcd/files/2025/12/2026-Maximum-Weekly-Wage-Base.pdf",
+      "effectiveDate": "2026-01-01",
+      "lastVerificationDate": "2026-09-06",
+      "implementationType": "JsonTable",
+      "calculatorClass": "HawaiiWithholdingCalculator",
+      "approximations": [],
+      "exclusions": [
+        "Not applied in bonus or self-employment mode."
+      ],
+      "applicabilityNotes": "Temporary Disability Insurance employee share, capped at 0.5% of weekly wages and a $7.50 maximum weekly deduction; suppressed when the employer carries the full premium."
+    }
   ]
 }

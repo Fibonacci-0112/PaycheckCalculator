@@ -50,6 +50,8 @@ public static class PaycheckInputValidator
             errors.Add("YTD Social Security wages cannot be negative.");
         if (input.YtdMedicareWages < 0)
             errors.Add("YTD Medicare wages cannot be negative.");
+        if (input.YtdStateWages < 0)
+            errors.Add("YTD state wages cannot be negative.");
 
         if (input.PaycheckNumber < 1 || input.PaycheckNumber > MaxPaycheckNumber)
             errors.Add($"Paycheck number must be between 1 and {MaxPaycheckNumber}.");

@@ -52,7 +52,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void State_ReturnsNewYork()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         Assert.Equal(UsState.NY, calc.State);
     }
 
@@ -61,7 +61,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsFilingStatus_Allowances_AdditionalWithholding()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         Assert.Equal(3, schema.Count);
@@ -73,7 +73,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Schema_FilingStatus_DefaultsSingle_HasThreeOptions()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var field = Assert.Single(calc.GetInputSchema(), f => f.Key == "FilingStatus");
 
         Assert.Equal(NewYorkWithholdingCalculator.StatusSingle, field.DefaultValue);
@@ -424,7 +424,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Validate_InvalidFilingStatus_ReturnsError()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues { ["FilingStatus"] = "InvalidStatus" };
 
         var errors = calc.Validate(values);
@@ -436,7 +436,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAllowances_ReturnsError()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = NewYorkWithholdingCalculator.StatusSingle,
@@ -452,7 +452,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAdditionalWithholding_ReturnsError()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = NewYorkWithholdingCalculator.StatusSingle,
@@ -468,7 +468,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Validate_ValidInputs_ReturnsNoErrors()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = NewYorkWithholdingCalculator.StatusMarried,
@@ -484,7 +484,7 @@ public class NewYorkWithholdingCalculatorTest
     [Fact]
     public void Validate_AllThreeStatuses_AreValid()
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         foreach (var status in new[]
         {
             NewYorkWithholdingCalculator.StatusSingle,
@@ -508,7 +508,7 @@ public class NewYorkWithholdingCalculatorTest
         decimal additionalWithholding = 0m,
         decimal preTaxDeductions = 0m)
     {
-        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.NY,
             GrossWages: GrossWages,
@@ -523,4 +523,111 @@ public class NewYorkWithholdingCalculatorTest
         };
         return calc.Calculate(context, values);
     }
+
+    // ── DBL and PFL employee contributions ────────────────────────────
+    //
+    // DBL: Workers' Compensation Law 209(3)(a) — one-half of one percent of
+    // wages, not in excess of sixty cents per week.
+    // https://www.nysenate.gov/legislation/laws/WKC/209
+    // PFL 2026: 0.432% of gross wages, capped at $411.91 for the year.
+    // https://paidfamilyleave.ny.gov/2026
+
+    [Fact]
+    public void Dbl_BelowWeeklyCap_IsHalfOfOnePercent()
+    {
+        // Weekly $100 × 0.5% = $0.50, under the $0.60 weekly ceiling.
+        var result = CalculateAssessments(grossWages: 100m, frequency: PayFrequency.Weekly);
+
+        Assert.Equal(0.50m, Assert.Single(result.TaxLines!, l => l.ShortCode == "DBL").Amount);
+    }
+
+    [Fact]
+    public void Dbl_AboveWeeklyCap_IsCappedAtSixtyCents()
+    {
+        var result = CalculateAssessments(grossWages: 3000m, frequency: PayFrequency.Weekly);
+
+        Assert.Equal(0.60m, Assert.Single(result.TaxLines!, l => l.ShortCode == "DBL").Amount);
+    }
+
+    [Fact]
+    public void Dbl_WeeklyCapScalesWithPayFrequency()
+    {
+        // The ceiling is statutory per week, so a biweekly payroll caps at
+        // $1.20 and a semimonthly one at 52/24 × $0.60 = $1.30.
+        var biweekly = CalculateAssessments(grossWages: 5000m, frequency: PayFrequency.Biweekly);
+        var semimonthly = CalculateAssessments(grossWages: 5000m, frequency: PayFrequency.Semimonthly);
+        var monthly = CalculateAssessments(grossWages: 5000m, frequency: PayFrequency.Monthly);
+
+        Assert.Equal(1.20m, Assert.Single(biweekly.TaxLines!, l => l.ShortCode == "DBL").Amount);
+        Assert.Equal(1.30m, Assert.Single(semimonthly.TaxLines!, l => l.ShortCode == "DBL").Amount);
+        Assert.Equal(2.60m, Assert.Single(monthly.TaxLines!, l => l.ShortCode == "DBL").Amount);
+    }
+
+    [Fact]
+    public void Pfl_IsRateOnGrossWages()
+    {
+        // 3,000 × 0.432% = 12.96
+        var result = CalculateAssessments(grossWages: 3000m);
+
+        Assert.Equal(12.96m, Assert.Single(result.TaxLines!, l => l.ShortCode == "PFL").Amount);
+    }
+
+    [Fact]
+    public void Pfl_StopsAtAnnualContributionMaximum()
+    {
+        // $95,000 YTD has already produced $410.40 of the $411.91 maximum,
+        // so only $1.51 remains to withhold.
+        var result = CalculateAssessments(grossWages: 3000m, ytdStateWages: 95_000m);
+
+        Assert.Equal(1.51m, Assert.Single(result.TaxLines!, l => l.ShortCode == "PFL").Amount);
+    }
+
+    [Fact]
+    public void Pfl_OnceMaximumReached_WithholdsNothingFurther()
+    {
+        var result = CalculateAssessments(grossWages: 3000m, ytdStateWages: 100_000m);
+
+        Assert.DoesNotContain(result.TaxLines!, l => l.ShortCode == "PFL");
+    }
+
+    [Fact]
+    public void Assessments_UseGrossWages_NotReducedByPreTaxDeductions()
+    {
+        var result = CalculateAssessments(grossWages: 3000m, preTaxDeductions: 1000m);
+
+        Assert.Equal(12.96m, Assert.Single(result.TaxLines!, l => l.ShortCode == "PFL").Amount);
+    }
+
+    [Fact]
+    public void Assessments_OrderedByAmountDescending()
+    {
+        var lines = PayCalculatorTestHarness.StateLines(UsState.NY, grossWages: 3000m)
+            .Where(l => l.Kind == StateTaxLineKind.PayrollAssessment)
+            .ToList();
+
+        Assert.Equal("PFL", lines[0].ShortCode);
+        Assert.Equal("DBL", lines[1].ShortCode);
+    }
+
+    private static StateWithholdingResult CalculateAssessments(
+        decimal grossWages,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal preTaxDeductions = 0m,
+        decimal ytdStateWages = 0m)
+    {{
+        var calc = new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
+
+        var context = new CommonWithholdingContext(
+            UsState.NY,
+            GrossWages: grossWages,
+            PayPeriod: frequency,
+            Year: 2026,
+            PreTaxDeductionsReducingStateWages: preTaxDeductions,
+            YtdStateWages: ytdStateWages);
+
+        var values = PayCalculatorTestHarness.DefaultValues(TestSchemas.Provider.GetSchema(UsState.NY));
+
+        return calc.Calculate(context, values);
+    }}
+
 }

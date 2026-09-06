@@ -1,4 +1,5 @@
 using PaycheckCalculator.Core.Explanation;
+using PaycheckCalculator.Core.Tax.State;
 
 namespace PaycheckCalculator.Core.Models;
 
@@ -16,6 +17,14 @@ public sealed class PaycheckResult
     public decimal StateWithholding { get; init; }
     public decimal StateDisabilityInsurance { get; init; }
     public string StateDisabilityInsuranceLabel { get; init; } = "State Disability Insurance";
+
+    /// <summary>
+    /// Every state-level tax line this paycheck carries — state, county and local
+    /// income tax plus each payroll assessment — already ordered for display by
+    /// <see cref="StateTaxLineOrdering"/>. The scalar members above remain
+    /// populated as the aggregate of these lines.
+    /// </summary>
+    public IReadOnlyList<StateTaxLine> StateTaxLines { get; init; } = Array.Empty<StateTaxLine>();
 
     public decimal FicaTaxableWages { get; init; }
     public decimal SocialSecurityWithholding { get; init; }

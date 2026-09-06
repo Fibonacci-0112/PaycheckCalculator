@@ -9,7 +9,7 @@ public class ColoradoWithholdingCalculatorTest
     {
         var dataPath = Path.Combine(AppContext.BaseDirectory, "co_dr0004_2026.json");
         var json = File.ReadAllText(dataPath);
-        return new ColoradoWithholdingCalculator(json, TestSchemas.Provider);
+        return new ColoradoWithholdingCalculator(json, TestSchemas.Provider, TestAssessments.Table);
     }
 
     [Fact]
@@ -290,42 +290,88 @@ public class ColoradoWithholdingCalculatorTest
         Assert.Equal(0m, result.Withholding);
     }
 
-    // ── FMLI (Family and Medical Leave Insurance) ───────────────────
+    // ── FAMLI (Family and Medical Leave Insurance) ──────────────────
+    //
+    // Colorado FAMLI 2026: the total premium is 0.88% of wages, split evenly, so
+    // the employee pays 0.44% on wages up to the $184,500 federal Social Security
+    // wage cap.
+    // https://famli.colorado.gov/individuals-and-families/how-famli-works/premium-and-benefits-calculator
 
     [Fact]
-    public void Fmli_CalculatedOnGrossWages()
+    public void Famli_CalculatedOnGrossWages()
     {
-        var calc = LoadCalculator();
+        // 5,000 × 0.44% = 22.00
+        var result = CalculateFamli(grossWages: 5000m, frequency: PayFrequency.Biweekly);
 
-        var context = new CommonWithholdingContext(
-            UsState.CO,
-            GrossWages: 5000m,
-            PayPeriod: PayFrequency.Biweekly,
-            Year: 2026);
-
-        var result = calc.Calculate(context, new StateInputValues());
-
-        // FMLI = 5000 * 0.00044 = 2.20
-        Assert.Equal(2.20m, result.DisabilityInsurance);
+        Assert.Equal(22.00m, result.DisabilityInsurance);
     }
 
     [Fact]
-    public void Fmli_UsesGrossWages_NotReducedByPreTaxDeductions()
+    public void Famli_UsesGrossWages_NotReducedByPreTaxDeductions()
+    {
+        // The premium follows gross wages (10,000), not reduced wages (8,000):
+        // 10,000 × 0.44% = 44.00
+        var result = CalculateFamli(
+            grossWages: 10_000m, frequency: PayFrequency.Monthly, preTaxDeductions: 2000m);
+
+        Assert.Equal(44.00m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Famli_HasItsOwnLabel_NotTheGenericDisabilityHeading()
+    {
+        var result = CalculateFamli(grossWages: 5000m, frequency: PayFrequency.Biweekly);
+
+        Assert.Equal("Family and Medical Leave Insurance (FAMLI)", result.DisabilityInsuranceLabel);
+    }
+
+    [Fact]
+    public void Famli_StopsAtSocialSecurityWageCap()
+    {
+        // $180,000 earned leaves $4,500 of the $184,500 cap: 4,500 × 0.44% = 19.80
+        var result = CalculateFamli(
+            grossWages: 10_000m, frequency: PayFrequency.Monthly, ytdStateWages: 180_000m);
+
+        Assert.Equal(19.80m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Famli_AtWageCap_WithholdsNothingFurther()
+    {
+        var result = CalculateFamli(
+            grossWages: 10_000m, frequency: PayFrequency.Monthly, ytdStateWages: 184_500m);
+
+        Assert.Equal(0m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Famli_RoundsAwayFromZero()
+    {
+        // 125 × 0.44% = 0.55 exactly; 1,125 × 0.44% = 4.95.
+        // 625 × 0.44% = 2.75; 2,625 × 0.44% = 11.55.
+        // 78.75 × 0.44% = 0.3465 → 0.35.
+        var result = CalculateFamli(grossWages: 78.75m, frequency: PayFrequency.Weekly);
+
+        Assert.Equal(0.35m, result.DisabilityInsurance);
+    }
+
+    private static StateWithholdingResult CalculateFamli(
+        decimal grossWages,
+        PayFrequency frequency,
+        decimal preTaxDeductions = 0m,
+        decimal ytdStateWages = 0m)
     {
         var calc = LoadCalculator();
 
         var context = new CommonWithholdingContext(
             UsState.CO,
-            GrossWages: 10000m,
-            PayPeriod: PayFrequency.Monthly,
+            GrossWages: grossWages,
+            PayPeriod: frequency,
             Year: 2026,
-            PreTaxDeductionsReducingStateWages: 2000m);
+            PreTaxDeductionsReducingStateWages: preTaxDeductions,
+            YtdStateWages: ytdStateWages);
 
-        var result = calc.Calculate(context, new StateInputValues());
-
-        // FMLI uses gross wages (10000), not reduced wages (8000)
-        // FMLI = 10000 * 0.00044 = 4.40
-        Assert.Equal(4.40m, result.DisabilityInsurance);
+        return calc.Calculate(context, new StateInputValues());
     }
 
     // ── Pre-tax deductions ──────────────────────────────────────────
@@ -421,15 +467,15 @@ public class ColoradoWithholdingCalculatorTest
 
         Assert.Equal(0m, result.TaxableWages);
         Assert.Equal(0m, result.Withholding);
-        // FMLI still applies to gross wages
-        // FMLI = 1000 * 0.00044 = 0.44
-        Assert.Equal(0.44m, result.DisabilityInsurance);
+        // FAMLI still applies to gross wages
+        // FAMLI = 1000 × 0.44% = 4.40
+        Assert.Equal(4.40m, result.DisabilityInsurance);
     }
 
     // ── Combined scenario ───────────────────────────────────────────
 
     [Fact]
-    public void CombinedScenario_HeadOfHousehold_3Jobs_WithDeductionsAndFmli()
+    public void CombinedScenario_HeadOfHousehold_3Jobs_WithDeductionsAndFamli()
     {
         var calc = LoadCalculator();
 
@@ -458,7 +504,7 @@ public class ColoradoWithholdingCalculatorTest
         Assert.Equal(3500m, result.TaxableWages);
         Assert.Equal(151.31m, result.Withholding);
 
-        // FMLI = 4000 * 0.00044 = 1.76
-        Assert.Equal(1.76m, result.DisabilityInsurance);
+        // FAMLI = 4000 × 0.44% = 17.60
+        Assert.Equal(17.60m, result.DisabilityInsurance);
     }
 }

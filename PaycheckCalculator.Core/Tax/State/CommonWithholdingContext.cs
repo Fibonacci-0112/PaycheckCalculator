@@ -35,5 +35,12 @@ public sealed record CommonWithholdingContext
     /// computed before state tax. States like Alabama deduct this
     /// from gross income when calculating state taxable wages.
     /// </summary>
-    decimal FederalWithholdingPerPeriod = 0m
+    decimal FederalWithholdingPerPeriod = 0m,
+
+    /// <summary>
+    /// Year-to-date wages already counted toward this state's payroll-assessment
+    /// wage base. States that cap a disability or paid-leave premium at an annual
+    /// wage base use this the way FICA uses year-to-date Social Security wages.
+    /// </summary>
+    decimal YtdStateWages = 0m
 );

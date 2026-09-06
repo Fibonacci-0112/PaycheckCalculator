@@ -69,14 +69,23 @@ public sealed class PayCalculator
             input.Frequency,
             Year: input.TaxYear,
             PreTaxDeductionsReducingStateWages: preTaxState,
-            FederalWithholdingPerPeriod: RoundMoney(federal));
+            FederalWithholdingPerPeriod: RoundMoney(federal),
+            YtdStateWages: input.YtdStateWages);
         var stateValues = input.StateInputValues ?? new StateInputValues();
         var stateResult = calc.Calculate(context, stateValues);
+
+        // The displayed state lines are the source of truth for the state portion:
+        // a jurisdiction may levy several (New Jersey withholds SDI and FLI; Maryland
+        // withholds state and county income tax), and net must be derived from the
+        // same already-rounded amounts the user sees.
+        var stateTaxLines = StateTaxLineResolver.Resolve(stateResult);
+        var stateIncomeTotal = SumLines(stateTaxLines, assessments: false);
+        var stateAssessmentTotal = SumLines(stateTaxLines, assessments: true);
 
         // Derive net from the same cent-rounded components returned to callers so
         // every displayed paycheck balances exactly.
         var net = RoundMoney(gross) - RoundMoney(preTax) - RoundMoney(postTax)
-                - RoundMoney(stateResult.Withholding) - RoundMoney(stateResult.DisabilityInsurance)
+                - stateIncomeTotal - stateAssessmentTotal
                 - RoundMoney(ss) - RoundMoney(medicare) - RoundMoney(addl) - RoundMoney(federal);
 
         var explanation = BuildExplanation(
@@ -99,6 +108,9 @@ public sealed class PayCalculator
             federalExplanation: fedDetail.Explanation,
             ficaDetail: ficaDetail,
             stateResult: stateResult,
+            stateTaxLines: stateTaxLines,
+            stateIncomeTotal: stateIncomeTotal,
+            stateAssessmentTotal: stateAssessmentTotal,
             stateName: input.State,
             taxYear: input.TaxYear,
             stateGross: gross,
@@ -113,9 +125,10 @@ public sealed class PayCalculator
             TaxYear = input.TaxYear,
             State = input.State,
             StateTaxableWages = RoundMoney(stateResult.TaxableWages),
-            StateWithholding = RoundMoney(stateResult.Withholding),
-            StateDisabilityInsurance = RoundMoney(stateResult.DisabilityInsurance),
-            StateDisabilityInsuranceLabel = stateResult.DisabilityInsuranceLabel,
+            StateTaxLines = stateTaxLines,
+            StateWithholding = stateIncomeTotal,
+            StateDisabilityInsurance = stateAssessmentTotal,
+            StateDisabilityInsuranceLabel = AssessmentLabel(stateTaxLines, stateResult),
             FicaTaxableWages = RoundMoney(ficaWages),
             SocialSecurityWithholding = RoundMoney(ss),
             MedicareWithholding = RoundMoney(medicare),
@@ -147,6 +160,9 @@ public sealed class PayCalculator
         LineExplanation federalExplanation,
         FicaCalculationResult ficaDetail,
         StateWithholdingResult stateResult,
+        IReadOnlyList<StateTaxLine> stateTaxLines,
+        decimal stateIncomeTotal,
+        decimal stateAssessmentTotal,
         UsState stateName,
         int taxYear,
         decimal stateGross,
@@ -175,22 +191,43 @@ public sealed class PayCalculator
                 RuleIds("US", taxYear, TaxRuleScope.AdditionalMedicare)));
         }
 
-        lines.Add(AttachSources(
-            BuildStateExplanation(stateResult, stateName, stateGross, preTaxReducingStateWages),
-            stateRuleIds));
-
-        if (stateResult.DisabilityInsurance > 0m)
+        var assessmentRuleIds = RuleIds(stateName, taxYear, TaxRuleScope.PayrollAssessment);
+        foreach (var line in stateTaxLines)
         {
+            // Siblings of the same kind need a discriminator so each keeps its own
+            // breakdown; a lone line stays unkeyed so existing lookups are unchanged.
+            var hasSiblings = stateTaxLines.Count(other => other.Kind == line.Kind) > 1;
             lines.Add(AttachSources(
-                BuildStateDisabilityExplanation(stateResult, stateName),
-                RuleIds(stateName, taxYear, TaxRuleScope.PayrollAssessment)));
+                BuildStateTaxLineExplanation(
+                    line, stateResult, stateName, stateGross, preTaxReducingStateWages,
+                    subKey: hasSiblings ? line.ExplanationSubKey : null),
+                line.Kind == StateTaxLineKind.PayrollAssessment ? assessmentRuleIds : stateRuleIds));
         }
 
         lines.Add(BuildNetExplanation(grossPay, preTax, postTax, federalWithholding,
             ficaDetail.SocialSecurity, ficaDetail.Medicare, ficaDetail.AdditionalMedicare,
-            stateResult.Withholding, stateResult.DisabilityInsurance, net));
+            stateIncomeTotal, stateAssessmentTotal, net));
 
         return new PaycheckExplanation(lines, _sourceCatalog);
+    }
+
+    private static decimal SumLines(IReadOnlyList<StateTaxLine> lines, bool assessments) =>
+        lines.Where(l => (l.Kind == StateTaxLineKind.PayrollAssessment) == assessments)
+             .Sum(l => l.Amount);
+
+    private static string AssessmentLabel(
+        IReadOnlyList<StateTaxLine> lines,
+        StateWithholdingResult stateResult)
+    {
+        var assessments = lines.Where(l => l.Kind == StateTaxLineKind.PayrollAssessment).ToList();
+        return assessments.Count switch
+        {
+            0 => stateResult.DisabilityInsuranceLabel,
+            1 => assessments[0].Label,
+            // The legacy scalar carries a single label, so several programs collapse
+            // into one heading; the itemized lines keep each program's own name.
+            _ => "State Disability & Paid Leave"
+        };
     }
 
     private IReadOnlyList<string> RuleIds(UsState state, int taxYear, TaxRuleScope scope) =>
@@ -405,23 +442,69 @@ public sealed class PayCalculator
             $"{state} state taxable wage rules (2026).");
     }
 
-    private static LineExplanation BuildStateExplanation(
+    private static ExplanationLineKey KeyFor(StateTaxLineKind kind) => kind switch
+    {
+        StateTaxLineKind.CountyIncome => ExplanationLineKey.StateCountyIncome,
+        StateTaxLineKind.LocalIncome => ExplanationLineKey.StateLocalIncome,
+        StateTaxLineKind.PayrollAssessment => ExplanationLineKey.StateDisability,
+        _ => ExplanationLineKey.StateWithholding
+    };
+
+    private static LineExplanation BuildStateTaxLineExplanation(
+        StateTaxLine line,
+        StateWithholdingResult stateResult,
+        UsState state,
+        decimal stateGross,
+        decimal preTaxReducingStateWages,
+        string? subKey)
+    {
+        var key = KeyFor(line.Kind);
+        var title = line.Kind == StateTaxLineKind.StateIncome
+            ? $"{line.Label} ({state})"
+            : line.Label;
+
+        // Calculators that opt in supply the full worksheet narrative themselves.
+        if (line.Steps is { Count: > 0 })
+        {
+            return new LineExplanation(
+                key, title, line.Amount, line.Steps,
+                line.Reference ?? DefaultReference(line.Kind, state),
+                SubKey: subKey);
+        }
+
+        var steps = line.Kind == StateTaxLineKind.StateIncome
+            ? BuildFallbackIncomeSteps(line, stateResult, state, stateGross, preTaxReducingStateWages)
+            : new List<ExplanationStep>
+            {
+                new(line.Label,
+                    string.IsNullOrEmpty(stateResult.Description)
+                        ? $"{state} mandates this line in addition to state income tax."
+                        : stateResult.Description,
+                    line.Amount,
+                    $"= {Money(line.Amount)}")
+            };
+
+        return new LineExplanation(
+            key, title, line.Amount, steps,
+            line.Reference ?? DefaultReference(line.Kind, state),
+            SubKey: subKey);
+    }
+
+    private static string DefaultReference(StateTaxLineKind kind, UsState state) => kind switch
+    {
+        StateTaxLineKind.CountyIncome => $"{state} county income-tax rules (2026).",
+        StateTaxLineKind.LocalIncome => $"{state} local income-tax rules (2026).",
+        StateTaxLineKind.PayrollAssessment => $"{state} state disability / leave insurance rules (2026).",
+        _ => $"{state} state withholding rules (2026)."
+    };
+
+    private static List<ExplanationStep> BuildFallbackIncomeSteps(
+        StateTaxLine line,
         StateWithholdingResult stateResult,
         UsState state,
         decimal stateGross,
         decimal preTaxReducingStateWages)
     {
-        // Calculators that opt in supply the full worksheet narrative themselves.
-        if (stateResult.WithholdingSteps is { Count: > 0 })
-        {
-            return new LineExplanation(
-                ExplanationLineKey.StateWithholding,
-                $"State Income Tax ({state})",
-                stateResult.Withholding,
-                stateResult.WithholdingSteps,
-                stateResult.WithholdingReference ?? $"{state} state withholding rules (2026).");
-        }
-
         var steps = new List<ExplanationStep>();
 
         if (preTaxReducingStateWages > 0m)
@@ -449,44 +532,10 @@ public sealed class PayCalculator
             string.IsNullOrEmpty(stateResult.Description)
                 ? $"Computed by the {state} state withholding calculator using your filing inputs."
                 : stateResult.Description,
-            stateResult.Withholding,
-            $"= {Money(stateResult.Withholding)}"));
+            line.Amount,
+            $"= {Money(line.Amount)}"));
 
-        return new LineExplanation(
-            ExplanationLineKey.StateWithholding,
-            $"State Income Tax ({state})",
-            stateResult.Withholding,
-            steps,
-            $"{state} state withholding rules (2026).");
-    }
-
-    private static LineExplanation BuildStateDisabilityExplanation(StateWithholdingResult stateResult, UsState state)
-    {
-        if (stateResult.DisabilityInsuranceSteps is { Count: > 0 })
-        {
-            return new LineExplanation(
-                ExplanationLineKey.StateDisability,
-                stateResult.DisabilityInsuranceLabel,
-                stateResult.DisabilityInsurance,
-                stateResult.DisabilityInsuranceSteps,
-                stateResult.DisabilityInsuranceReference ?? $"{state} state disability / leave insurance rules (2026).");
-        }
-
-        var steps = new List<ExplanationStep>
-        {
-            new(stateResult.DisabilityInsuranceLabel,
-                string.IsNullOrEmpty(stateResult.Description)
-                    ? $"{state} mandates this line in addition to state income tax."
-                    : stateResult.Description,
-                stateResult.DisabilityInsurance,
-                $"= {Money(stateResult.DisabilityInsurance)}"),
-        };
-        return new LineExplanation(
-            ExplanationLineKey.StateDisability,
-            stateResult.DisabilityInsuranceLabel,
-            stateResult.DisabilityInsurance,
-            steps,
-            $"{state} state disability / leave insurance rules (2026).");
+        return steps;
     }
 
     private static LineExplanation BuildNetExplanation(

@@ -45,6 +45,14 @@ public sealed class PaycheckInput
     public decimal YtdMedicareWages { get; init; } = 0m;
 
     /// <summary>
+    /// Year-to-date wages already subject to this state's payroll assessments
+    /// (disability, paid family/medical leave, employee SUI). Several states cap
+    /// those premiums at an annual taxable wage base, so the calculator needs to
+    /// know how much of the base is already used up. Ignored by states with no cap.
+    /// </summary>
+    public decimal YtdStateWages { get; init; } = 0m;
+
+    /// <summary>
     /// 1-based paycheck number within the current year (e.g. 1 for the first paycheck).
     /// Used by the annual projection calculator to compute projected YTD and remaining paychecks.
     /// Defaults to 1 when not specified.

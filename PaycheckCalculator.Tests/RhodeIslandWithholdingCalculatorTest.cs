@@ -32,7 +32,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void State_ReturnsRhodeIsland()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         Assert.Equal(UsState.RI, calc.State);
     }
 
@@ -41,7 +41,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsFilingStatus_Exemptions_AdditionalWithholding()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         Assert.Equal(3, schema.Count);
@@ -53,7 +53,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void Schema_FilingStatus_DefaultsSingle_OptionsIncludeAllThree()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var field = Assert.Single(calc.GetInputSchema(), f => f.Key == "FilingStatus");
 
         Assert.Equal("Single", field.DefaultValue);
@@ -367,7 +367,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void Validate_InvalidFilingStatus_ReturnsError()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues { ["FilingStatus"] = "InvalidStatus" };
 
         var errors = calc.Validate(values);
@@ -379,7 +379,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeExemptions_ReturnsError()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = "Single",
@@ -395,7 +395,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAdditionalWithholding_ReturnsError()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = "Married",
@@ -411,7 +411,7 @@ public class RhodeIslandWithholdingCalculatorTest
     [Fact]
     public void Validate_ValidInputs_ReturnsNoErrors()
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = "Head of Household",
@@ -434,7 +434,7 @@ public class RhodeIslandWithholdingCalculatorTest
         decimal additionalWithholding = 0m,
         decimal preTaxDeductions = 0m)
     {
-        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider);
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.RI,
             GrossWages: GrossWages,
@@ -449,4 +449,77 @@ public class RhodeIslandWithholdingCalculatorTest
         };
         return calc.Calculate(context, values);
     }
+
+    // ── TDI employee contribution ─────────────────────────────────────
+    //
+    // Rhode Island DLT 2026: 1.1% employee wage deduction on a $100,000
+    // taxable wage base.
+    // https://dlt.ri.gov/individuals/temporary-disability-caregiver-insurance/employers
+
+    [Fact]
+    public void Tdi_IsOnePointOnePercentOfGrossWages()
+    {
+        // 3,000 × 1.1% = 33.00
+        var result = CalculateAssessments(grossWages: 3000m);
+
+        Assert.Equal(33.00m, Assert.Single(result.TaxLines!, l => l.ShortCode == "TDI").Amount);
+        Assert.Equal("Temporary Disability Insurance (TDI)", result.DisabilityInsuranceLabel);
+    }
+
+    [Fact]
+    public void Tdi_UsesGrossWages_NotReducedByPreTaxDeductions()
+    {
+        var result = CalculateAssessments(grossWages: 3000m, preTaxDeductions: 1000m);
+
+        Assert.Equal(33.00m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Tdi_StopsAtTaxableWageBase()
+    {
+        // $99,000 earned leaves $1,000 of the $100,000 base: 1,000 × 1.1% = 11.00
+        var result = CalculateAssessments(grossWages: 5000m, ytdStateWages: 99_000m);
+
+        Assert.Equal(11.00m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Tdi_AtWageBase_WithholdsNothingFurther()
+    {
+        var result = CalculateAssessments(grossWages: 5000m, ytdStateWages: 100_000m);
+
+        Assert.Equal(0m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Tdi_RoundsAwayFromZero()
+    {
+        // 115 × 1.1% = 1.265 exactly — a true midpoint, so away-from-zero gives
+        // 1.27 where banker's rounding would give 1.26.
+        var result = CalculateAssessments(grossWages: 115m);
+
+        Assert.Equal(1.27m, result.DisabilityInsurance);
+    }
+
+    private static StateWithholdingResult CalculateAssessments(
+        decimal grossWages,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal preTaxDeductions = 0m,
+        decimal ytdStateWages = 0m)
+    {{
+        var calc = new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
+
+        var context = new CommonWithholdingContext(
+            UsState.RI,
+            GrossWages: grossWages,
+            PayPeriod: frequency,
+            Year: 2026,
+            PreTaxDeductionsReducingStateWages: preTaxDeductions,
+            YtdStateWages: ytdStateWages);
+
+        var values = PayCalculatorTestHarness.DefaultValues(TestSchemas.Provider.GetSchema(UsState.RI));
+
+        return calc.Calculate(context, values);
+    }}
+
 }

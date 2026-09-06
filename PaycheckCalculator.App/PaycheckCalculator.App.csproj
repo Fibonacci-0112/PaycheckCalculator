@@ -53,6 +53,7 @@
 	<MauiAsset Include="..\PaycheckCalculator.Core\Data\ar_withholding_2026.json" LogicalName="ar_withholding_2026.json" />
 	<MauiAsset Include="..\PaycheckCalculator.Core\Data\co_dr0004_2026.json" LogicalName="co_dr0004_2026.json" />
 	<MauiAsset Include="..\PaycheckCalculator.Core\Data\connecticut_withholding_2026.json" LogicalName="connecticut_withholding_2026.json" />
+	<MauiAsset Include="..\PaycheckCalculator.Core\Data\state_payroll_assessments_2026.json" LogicalName="state_payroll_assessments_2026.json" />
 	<MauiAsset Include="..\PaycheckCalculator.Core\Data\state_supplemental_2026.json" LogicalName="state_supplemental_2026.json" />
 	<MauiAsset Include="..\PaycheckCalculator.Core\Data\tax_source_manifest_2026.json" LogicalName="tax_source_manifest_2026.json" />
 	<MauiAsset Include="..\PaycheckCalculator.Core\Data\Schemas\*.json" LogicalName="schemas\%(Filename)%(Extension)" />

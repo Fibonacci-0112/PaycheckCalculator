@@ -70,6 +70,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         var coJson     = dataReader.ReadAllText("co_dr0004_2026.json");
         var ctJson     = dataReader.ReadAllText("connecticut_withholding_2026.json");
         var suppJson   = dataReader.ReadAllText("state_supplemental_2026.json");
+        var assessJson = dataReader.ReadAllText("state_payroll_assessments_2026.json");
         var sourceManifestJson = dataReader.ReadAllText("tax_source_manifest_2026.json");
         var sourceCatalog = TaxSourceCatalog.Load(sourceManifestJson);
 
@@ -87,7 +88,9 @@ public static class PaycheckCoreServiceCollectionExtensions
             }
         }
         var schemaProvider = new JsonStateSchemaProvider(schemaJsonMap);
+        var assessments = StatePayrollAssessments.Load(assessJson);
         services.AddSingleton<IStateSchemaProvider>(schemaProvider);
+        services.AddSingleton(assessments);
 
         services.AddSingleton(dataReader);
         services.AddSingleton(sourceCatalog);
@@ -100,8 +103,8 @@ public static class PaycheckCoreServiceCollectionExtensions
 
         var arFormulaCalc = new ArkansasFormulaCalculator(arJson);
         var caPercentCalc = new CaliforniaPercentageCalculator(caJson);
-        var coCalc        = new ColoradoWithholdingCalculator(coJson, schemaProvider);
-        var ctCalc        = new ConnecticutWithholdingCalculator(ctJson, schemaProvider);
+        var coCalc        = new ColoradoWithholdingCalculator(coJson, schemaProvider, assessments);
+        var ctCalc        = new ConnecticutWithholdingCalculator(ctJson, schemaProvider, assessments);
         var okCalc        = new OklahomaOw2PercentageCalculator(okJson);
 
         services.AddSingleton(arFormulaCalc);
@@ -120,7 +123,7 @@ public static class PaycheckCoreServiceCollectionExtensions
         stateRegistry.Register(new DelawareWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new DistrictOfColumbiaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new GeorgiaWithholdingCalculator(schemaProvider));
-        stateRegistry.Register(new HawaiiWithholdingCalculator(schemaProvider));
+        stateRegistry.Register(new HawaiiWithholdingCalculator(schemaProvider, assessments));
         stateRegistry.Register(new IdahoWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new IllinoisWithholdingCalculator());
         stateRegistry.Register(new IndianaWithholdingCalculator());
@@ -130,21 +133,21 @@ public static class PaycheckCoreServiceCollectionExtensions
         stateRegistry.Register(new LouisianaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new MaineWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new MarylandWithholdingCalculator(schemaProvider));
-        stateRegistry.Register(new MassachusettsWithholdingCalculator(schemaProvider));
+        stateRegistry.Register(new MassachusettsWithholdingCalculator(schemaProvider, assessments));
         stateRegistry.Register(new MichiganWithholdingCalculator());
         stateRegistry.Register(new MinnesotaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new MississippiWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new MissouriWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new MontanaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new NebraskaWithholdingCalculator(schemaProvider));
-        stateRegistry.Register(new NewJerseyWithholdingCalculator(schemaProvider));
+        stateRegistry.Register(new NewJerseyWithholdingCalculator(schemaProvider, assessments));
         stateRegistry.Register(new NewMexicoWithholdingCalculator(schemaProvider));
-        stateRegistry.Register(new NewYorkWithholdingCalculator(schemaProvider));
+        stateRegistry.Register(new NewYorkWithholdingCalculator(schemaProvider, assessments));
         stateRegistry.Register(new NorthCarolinaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new NorthDakotaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new OhioWithholdingCalculator());
-        stateRegistry.Register(new OregonWithholdingCalculator(schemaProvider));
-        stateRegistry.Register(new RhodeIslandWithholdingCalculator(schemaProvider));
+        stateRegistry.Register(new OregonWithholdingCalculator(schemaProvider, assessments));
+        stateRegistry.Register(new RhodeIslandWithholdingCalculator(schemaProvider, assessments));
         stateRegistry.Register(new SouthCarolinaWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new UtahWithholdingCalculator(schemaProvider));
         stateRegistry.Register(new VermontWithholdingCalculator(schemaProvider));

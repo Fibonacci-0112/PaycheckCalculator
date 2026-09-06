@@ -45,6 +45,10 @@
       <Link>TaxData\us_irs_15t_2026_percentage_automated.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\PaycheckCalculator.Core\Data\state_payroll_assessments_2026.json">
+      <Link>TaxData\state_payroll_assessments_2026.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\PaycheckCalculator.Core\Data\state_supplemental_2026.json">
       <Link>TaxData\state_supplemental_2026.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -45,7 +45,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void State_ReturnsNewJersey()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         Assert.Equal(UsState.NJ, calc.State);
     }
 
@@ -54,7 +54,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsFilingStatus_Allowances_AdditionalWithholding()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         Assert.Equal(3, schema.Count);
@@ -66,7 +66,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Schema_FilingStatus_DefaultsStatusA_HasFiveOptions()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var field = Assert.Single(calc.GetInputSchema(), f => f.Key == "FilingStatus");
 
         Assert.Equal(NewJerseyWithholdingCalculator.StatusA, field.DefaultValue);
@@ -357,7 +357,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Validate_InvalidFilingStatus_ReturnsError()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues { ["FilingStatus"] = "InvalidStatus" };
 
         var errors = calc.Validate(values);
@@ -369,7 +369,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAllowances_ReturnsError()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = NewJerseyWithholdingCalculator.StatusA,
@@ -385,7 +385,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAdditionalWithholding_ReturnsError()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = NewJerseyWithholdingCalculator.StatusA,
@@ -401,7 +401,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Validate_ValidInputs_ReturnsNoErrors()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = NewJerseyWithholdingCalculator.StatusB,
@@ -417,7 +417,7 @@ public class NewJerseyWithholdingCalculatorTest
     [Fact]
     public void Validate_AllFiveStatusCodes_AreValid()
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         foreach (var status in new[]
         {
             NewJerseyWithholdingCalculator.StatusA,
@@ -443,7 +443,7 @@ public class NewJerseyWithholdingCalculatorTest
         decimal additionalWithholding = 0m,
         decimal preTaxDeductions = 0m)
     {
-        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider);
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.NJ,
             GrossWages: GrossWages,
@@ -458,4 +458,101 @@ public class NewJerseyWithholdingCalculatorTest
         };
         return calc.Calculate(context, values);
     }
+
+    // ── TDI and FLI employee contributions ────────────────────────────
+    //
+    // New Jersey DOL 2026 worker rates: D.I. 0.0019 and F.L.I. 0.0023, both on
+    // the $171,100 worker taxable wage base.
+    // https://www.nj.gov/labor/ea/employer-services/rate-info/
+
+    [Fact]
+    public void Assessments_DisabilityAndFamilyLeave_AreSeparateLines()
+    {
+        // TDI: 3,000 × 0.19% = 5.70    FLI: 3,000 × 0.23% = 6.90
+        var result = CalculateAssessments(grossWages: 3000m);
+
+        Assert.Equal(5.70m, Assert.Single(result.TaxLines!, l => l.ShortCode == "SDI").Amount);
+        Assert.Equal(6.90m, Assert.Single(result.TaxLines!, l => l.ShortCode == "FLI").Amount);
+        Assert.Equal(12.60m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Assessments_OrderedByAmountDescending()
+    {
+        var lines = PayCalculatorTestHarness.StateLines(UsState.NJ, grossWages: 3000m)
+            .Where(l => l.Kind == StateTaxLineKind.PayrollAssessment)
+            .ToList();
+
+        Assert.Equal("FLI", lines[0].ShortCode);
+        Assert.Equal("SDI", lines[1].ShortCode);
+    }
+
+    [Fact]
+    public void Assessments_UseGrossWages_NotReducedByPreTaxDeductions()
+    {
+        var result = CalculateAssessments(grossWages: 3000m, preTaxDeductions: 1000m);
+
+        Assert.Equal(12.60m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Assessments_StopAtWorkerTaxableWageBase()
+    {
+        // $170,000 earned leaves $1,100 of the $171,100 base.
+        // TDI: 1,100 × 0.19% = 2.09    FLI: 1,100 × 0.23% = 2.53
+        var result = CalculateAssessments(grossWages: 5000m, ytdStateWages: 170_000m);
+
+        Assert.Equal(2.09m, Assert.Single(result.TaxLines!, l => l.ShortCode == "SDI").Amount);
+        Assert.Equal(2.53m, Assert.Single(result.TaxLines!, l => l.ShortCode == "FLI").Amount);
+    }
+
+    [Fact]
+    public void Assessments_AtWageBase_WithholdNothingFurther()
+    {
+        var result = CalculateAssessments(grossWages: 5000m, ytdStateWages: 171_100m);
+
+        Assert.Equal(0m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Assessments_RoundAwayFromZero()
+    {
+        // 150 × 0.19% = 0.285 and 150 × 0.23% = 0.345 — both true midpoints,
+        // so away-from-zero gives 0.29 and 0.35 where banker's rounding would
+        // give 0.28 and 0.34.
+        var result = CalculateAssessments(grossWages: 150m);
+
+        Assert.Equal(0.29m, Assert.Single(result.TaxLines!, l => l.ShortCode == "SDI").Amount);
+        Assert.Equal(0.35m, Assert.Single(result.TaxLines!, l => l.ShortCode == "FLI").Amount);
+    }
+
+    [Fact]
+    public void Assessments_CollapsedLabel_NamesBothPrograms()
+    {
+        var result = CalculateAssessments(grossWages: 3000m);
+
+        Assert.Equal("State Disability & Paid Leave", result.DisabilityInsuranceLabel);
+    }
+
+    private static StateWithholdingResult CalculateAssessments(
+        decimal grossWages,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal preTaxDeductions = 0m,
+        decimal ytdStateWages = 0m)
+    {{
+        var calc = new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
+
+        var context = new CommonWithholdingContext(
+            UsState.NJ,
+            GrossWages: grossWages,
+            PayPeriod: frequency,
+            Year: 2026,
+            PreTaxDeductionsReducingStateWages: preTaxDeductions,
+            YtdStateWages: ytdStateWages);
+
+        var values = PayCalculatorTestHarness.DefaultValues(TestSchemas.Provider.GetSchema(UsState.NJ));
+
+        return calc.Calculate(context, values);
+    }}
+
 }
