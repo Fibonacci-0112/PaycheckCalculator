@@ -188,9 +188,12 @@ public sealed class NewYorkWithholdingCalculator : IStateWithholdingCalculator
 
         private readonly IReadOnlyList<string> _filingStatusOptions;
 
-    public NewYorkWithholdingCalculator(IStateSchemaProvider schemaProvider)
+        private readonly StatePayrollAssessments _assessments;
+
+    public NewYorkWithholdingCalculator(IStateSchemaProvider schemaProvider, StatePayrollAssessments assessments)
     {
         _filingStatusOptions = schemaProvider.GetOptions(UsState.NY, "FilingStatus");
+        _assessments = assessments;
     }
 
 public UsState State => UsState.NY;
@@ -306,7 +309,8 @@ public UsState State => UsState.NY;
             TaxableWages = taxableWages,
             Withholding  = withholding,
             WithholdingSteps = steps,
-            WithholdingReference = "NYS Publication NYS-50-T-NYS (2026); Form IT-2104."
+            WithholdingReference = "NYS Publication NYS-50-T-NYS (2026); Form IT-2104.",
+            TaxLines = BuildTaxLines(context, values, withholding, steps)
         };
     }
 
@@ -458,4 +462,30 @@ public UsState State => UsState.NY;
         PayFrequency.Annual      => 1,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
+
+    /// <summary>
+    /// The state income-tax line plus every employee-paid NY payroll assessment
+    /// this pay period. Programs the employee is exempt from are omitted entirely.
+    /// </summary>
+    private IReadOnlyList<StateTaxLine> BuildTaxLines(
+        CommonWithholdingContext context,
+        StateInputValues values,
+        decimal withholding,
+        IReadOnlyList<ExplanationStep> steps)
+    {
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding,
+                Steps = steps,
+                Reference = "NYS Publication NYS-50-T-NYS (2026); Form IT-2104."
+            }
+        };
+        lines.AddRange(_assessments.BuildLines(State, context, values));
+        return lines;
+    }
+
 }

@@ -198,11 +198,12 @@ public static class StateMetadata
 
         S(UsState.MD, "Maryland", "maryland",
             "Maryland Paycheck Calculator 2026 — State + County Tax & Take-Home Pay",
-            "Calculate your Maryland take-home pay for 2026. Maryland combines progressive state income tax (2%–5.75%) with mandatory county withholding.",
-            "Maryland withholding combines a progressive state income tax (six brackets from 2% up to 5.75%) " +
+            "Calculate your Maryland take-home pay for 2026. Maryland combines progressive state income tax (2%–6.5%) with mandatory county withholding.",
+            "Maryland withholding combines a progressive state income tax (ten brackets from 2% up to 6.5%) " +
             "with mandatory county income tax withholding. County rates vary by jurisdiction — " +
-            "ranging from about 2.25% to 3.2% — and are withheld from every paycheck based on your county " +
-            "of residence. Total Maryland effective withholding is typically 6–9% of wages depending on income and county."),
+            "from 2.25% to 3.30% for 2026 — and are withheld from every paycheck based on your county " +
+            "of residence. Anne Arundel and Frederick apply graduated county rates. Total Maryland effective " +
+            "withholding is typically 6–9% of wages depending on income and county."),
 
         S(UsState.ME, "Maine", "maine",
             "Maine Paycheck Calculator 2026 — State Tax & Take-Home Pay",

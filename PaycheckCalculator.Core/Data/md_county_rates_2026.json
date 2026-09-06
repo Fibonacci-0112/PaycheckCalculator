@@ -1,0 +1,68 @@
+{
+  "taxYear": 2026,
+  "documentTitle": "2026 Maryland State and Local Income Tax Withholding Information, Attachment 1 — Local Income Tax Withholding Rates for 2026",
+  "sourceUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/md/state-payroll/memos/2026/2026-maryland-state-and-local-withholding-information.pdf",
+  "note": "Rates are a percentage of Maryland taxable wages — the same base the state brackets use. The county of residence reported on Form MW507 determines the rate. Anne Arundel and Frederick apply graduated rates; the brackets are marginal, matching how the state schedule works.",
+  "defaultCounty": "Unknown Maryland County",
+  "defaultNote": "The Comptroller directs employers to withhold at the highest local rate (3.30% for 2026) when the employee has not reported a county, so that is this calculator's default too.",
+  "counties": [
+    { "name": "Unknown Maryland County", "code": "**", "rate": 0.0330 },
+    { "name": "Allegany County", "code": "01", "rate": 0.0320 },
+    {
+      "name": "Anne Arundel County",
+      "code": "02",
+      "brackets": {
+        "single": [
+          { "upTo": 50000, "rate": 0.0270 },
+          { "upTo": 400000, "rate": 0.0294 },
+          { "rate": 0.0320 }
+        ],
+        "joint": [
+          { "upTo": 75000, "rate": 0.0270 },
+          { "upTo": 480000, "rate": 0.0294 },
+          { "rate": 0.0320 }
+        ]
+      }
+    },
+    { "name": "Baltimore City", "code": "04", "rate": 0.0320 },
+    { "name": "Baltimore County", "code": "03", "rate": 0.0320 },
+    { "name": "Calvert County", "code": "05", "rate": 0.0320 },
+    { "name": "Caroline County", "code": "06", "rate": 0.0320 },
+    { "name": "Carroll County", "code": "07", "rate": 0.0303 },
+    { "name": "Cecil County", "code": "08", "rate": 0.0274 },
+    { "name": "Charles County", "code": "09", "rate": 0.0303 },
+    { "name": "Dorchester County", "code": "10", "rate": 0.0330 },
+    {
+      "name": "Frederick County",
+      "code": "11",
+      "brackets": {
+        "single": [
+          { "upTo": 25000, "rate": 0.0225 },
+          { "upTo": 50000, "rate": 0.0275 },
+          { "upTo": 150000, "rate": 0.0296 },
+          { "rate": 0.0320 }
+        ],
+        "joint": [
+          { "upTo": 25000, "rate": 0.0225 },
+          { "upTo": 100000, "rate": 0.0275 },
+          { "upTo": 250000, "rate": 0.0296 },
+          { "rate": 0.0320 }
+        ]
+      }
+    },
+    { "name": "Garrett County", "code": "12", "rate": 0.0265 },
+    { "name": "Harford County", "code": "13", "rate": 0.0306 },
+    { "name": "Howard County", "code": "14", "rate": 0.0320 },
+    { "name": "Kent County", "code": "15", "rate": 0.0330 },
+    { "name": "Montgomery County", "code": "16", "rate": 0.0320 },
+    { "name": "Prince George's County", "code": "17", "rate": 0.0320 },
+    { "name": "Queen Anne's County", "code": "18", "rate": 0.0320 },
+    { "name": "St. Mary's County", "code": "19", "rate": 0.0320 },
+    { "name": "Somerset County", "code": "20", "rate": 0.0320 },
+    { "name": "Talbot County", "code": "21", "rate": 0.0240 },
+    { "name": "Washington County", "code": "22", "rate": 0.0295 },
+    { "name": "Wicomico County", "code": "23", "rate": 0.0320 },
+    { "name": "Worcester County", "code": "24", "rate": 0.0225 },
+    { "name": "Nonresident / Out of State", "code": "25-76", "rate": 0.0225 }
+  ]
+}

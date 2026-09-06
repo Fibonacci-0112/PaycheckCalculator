@@ -3,6 +3,7 @@ using System.Text;
 using PaycheckCalculator.Blazor.Models;
 using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
+using PaycheckCalculator.Core.Tax.State;
 
 namespace PaycheckCalculator.Blazor.Services.Export;
 
@@ -103,13 +104,17 @@ public static class PaycheckPdfRenderer
         layout.Row("FICA Taxable Income", Money(result.FicaTaxableWages), TextDark);
         layout.Row("State Taxable Income", Money(result.StateTaxableWages), TextDark);
 
-        layout.SectionHeader("Taxes");
+        layout.SectionHeader("Federal");
         layout.Row("Federal Tax", Money(result.FederalWithholding), Red);
         layout.Row("Social Security Tax", Money(result.SocialSecurityWithholding), Red);
         layout.Row("Medicare Tax", Money(result.MedicareWithholding + result.AdditionalMedicareWithholding), Red);
-        layout.Row("State Income Tax", Money(result.StateWithholding), Red);
-        if (result.StateDisabilityInsurance > 0m)
-            layout.Row(result.StateDisabilityInsuranceLabel, Money(result.StateDisabilityInsurance), Red);
+
+        if (result.StateTaxLines.Count > 0)
+        {
+            layout.SectionHeader(UsStateNames.GetDisplayName(result.State));
+            foreach (var line in result.StateTaxLines)
+                layout.Row(line.Label, Money(line.Amount), Red);
+        }
 
         layout.Banner("NET PAY", Money(result.NetPay), Green);
     }

@@ -43,7 +43,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void State_ReturnsOregon()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         Assert.Equal(UsState.OR, calc.State);
     }
 
@@ -52,7 +52,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsExpectedFields()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         Assert.Equal(3, schema.Count);
@@ -64,7 +64,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Schema_FilingStatus_DefaultsSingle_OptionsIncludeHeadOfHousehold()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var field = Assert.Single(calc.GetInputSchema(), f => f.Key == "FilingStatus");
 
         Assert.Equal("Single", field.DefaultValue);
@@ -428,7 +428,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Validate_InvalidFilingStatus_ReturnsError()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues { ["FilingStatus"] = "InvalidStatus" };
 
         var errors = calc.Validate(values);
@@ -440,7 +440,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAllowances_ReturnsError()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = "Single",
@@ -456,7 +456,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAdditionalWithholding_ReturnsError()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = "Single",
@@ -472,7 +472,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Validate_ValidInputs_ReturnsNoErrors()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = "Married",
@@ -488,7 +488,7 @@ public class OregonWithholdingCalculatorTest
     [Fact]
     public void Validate_AllFilingStatuses_AreAccepted()
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
 
         foreach (var status in new[] { "Single", "Married", "Head of Household" })
         {
@@ -507,7 +507,7 @@ public class OregonWithholdingCalculatorTest
         decimal additionalWithholding = 0m,
         decimal preTaxDeductions = 0m)
     {
-        var calc = new OregonWithholdingCalculator(TestSchemas.Provider);
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.OR,
             GrossWages: GrossWages,
@@ -522,4 +522,77 @@ public class OregonWithholdingCalculatorTest
         };
         return calc.Calculate(context, values);
     }
+
+    // ── Paid Leave Oregon employee contribution ───────────────────────
+    //
+    // Paid Leave Oregon 2026: total contribution 1% of gross wages up to
+    // $184,500; employees pay 60% of that, i.e. 0.6%.
+    // https://paidleave.oregon.gov/employers/Pages/default.aspx
+
+    [Fact]
+    public void PaidLeave_IsSixTenthsOfOnePercentOfGrossWages()
+    {
+        // 3,000 × 0.6% = 18.00
+        var result = CalculateAssessments(grossWages: 3000m);
+
+        Assert.Equal(18.00m, Assert.Single(result.TaxLines!, l => l.ShortCode == "PFML").Amount);
+        Assert.Equal("Paid Leave Oregon", result.DisabilityInsuranceLabel);
+    }
+
+    [Fact]
+    public void PaidLeave_UsesGrossWages_NotReducedByPreTaxDeductions()
+    {
+        var result = CalculateAssessments(grossWages: 3000m, preTaxDeductions: 1000m);
+
+        Assert.Equal(18.00m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void PaidLeave_StopsAtWageBase()
+    {
+        // $180,000 earned leaves $4,500 of the $184,500 base: 4,500 × 0.6% = 27.00
+        var result = CalculateAssessments(grossWages: 10_000m, ytdStateWages: 180_000m);
+
+        Assert.Equal(27.00m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void PaidLeave_AtWageBase_WithholdsNothingFurther()
+    {
+        var result = CalculateAssessments(grossWages: 10_000m, ytdStateWages: 184_500m);
+
+        Assert.Equal(0m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void PaidLeave_RoundsAwayFromZero()
+    {
+        // 107.50 × 0.6% = 0.645 exactly — a true midpoint, so away-from-zero
+        // gives 0.65 where banker's rounding would give 0.64.
+        var result = CalculateAssessments(grossWages: 107.50m);
+
+        Assert.Equal(0.65m, result.DisabilityInsurance);
+    }
+
+    private static StateWithholdingResult CalculateAssessments(
+        decimal grossWages,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal preTaxDeductions = 0m,
+        decimal ytdStateWages = 0m)
+    {{
+        var calc = new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
+
+        var context = new CommonWithholdingContext(
+            UsState.OR,
+            GrossWages: grossWages,
+            PayPeriod: frequency,
+            Year: 2026,
+            PreTaxDeductionsReducingStateWages: preTaxDeductions,
+            YtdStateWages: ytdStateWages);
+
+        var values = PayCalculatorTestHarness.DefaultValues(TestSchemas.Provider.GetSchema(UsState.OR));
+
+        return calc.Calculate(context, values);
+    }}
+
 }

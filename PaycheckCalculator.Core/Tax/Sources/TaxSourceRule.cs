@@ -9,6 +9,9 @@ public enum TaxRuleScope
     SocialSecurityMedicare,
     AdditionalMedicare,
     RegularWithholding,
+
+    /// <summary>County or municipal income tax withheld alongside the state rate.</summary>
+    LocalWithholding,
     PayrollAssessment,
     SupplementalWithholding,
     SelfEmploymentTax,

@@ -91,9 +91,12 @@ public sealed class RhodeIslandWithholdingCalculator : IStateWithholdingCalculat
 
         private readonly IReadOnlyList<string> _filingStatusOptions;
 
-    public RhodeIslandWithholdingCalculator(IStateSchemaProvider schemaProvider)
+        private readonly StatePayrollAssessments _assessments;
+
+    public RhodeIslandWithholdingCalculator(IStateSchemaProvider schemaProvider, StatePayrollAssessments assessments)
     {
         _filingStatusOptions = schemaProvider.GetOptions(UsState.RI, "FilingStatus");
+        _assessments = assessments;
     }
 
 public UsState State => UsState.RI;
@@ -152,7 +155,8 @@ public UsState State => UsState.RI;
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding  = withholding
+            Withholding  = withholding,
+            TaxLines = BuildTaxLines(context, values, withholding)
         };
     }
 
@@ -196,4 +200,27 @@ public UsState State => UsState.RI;
         PayFrequency.Annual       => 1,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
+
+    /// <summary>
+    /// The state income-tax line plus every employee-paid RI payroll assessment
+    /// this pay period. Programs the employee is exempt from are omitted entirely.
+    /// </summary>
+    private IReadOnlyList<StateTaxLine> BuildTaxLines(
+        CommonWithholdingContext context,
+        StateInputValues values,
+        decimal withholding)
+    {
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding
+            }
+        };
+        lines.AddRange(_assessments.BuildLines(State, context, values));
+        return lines;
+    }
+
 }

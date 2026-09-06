@@ -111,6 +111,7 @@ public sealed class GrossUpCalculator
             Deductions = input.Deductions,
             YtdSocialSecurityWages = input.YtdSocialSecurityWages,
             YtdMedicareWages = input.YtdMedicareWages,
+            YtdStateWages = input.YtdStateWages,
             PaycheckNumber = input.PaycheckNumber
         };
         return _payCalculator.Calculate(probe);

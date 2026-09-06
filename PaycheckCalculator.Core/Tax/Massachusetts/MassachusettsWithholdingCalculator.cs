@@ -85,9 +85,12 @@ public sealed class MassachusettsWithholdingCalculator : IStateWithholdingCalcul
 
     private readonly IReadOnlyList<string> _filingStatusOptions;
 
-    public MassachusettsWithholdingCalculator(IStateSchemaProvider schemaProvider)
+    private readonly StatePayrollAssessments _assessments;
+
+    public MassachusettsWithholdingCalculator(IStateSchemaProvider schemaProvider, StatePayrollAssessments assessments)
     {
         _filingStatusOptions = schemaProvider.GetOptions(UsState.MA, "FilingStatus");
+        _assessments = assessments;
     }
 
     public UsState State => UsState.MA;
@@ -161,7 +164,8 @@ public sealed class MassachusettsWithholdingCalculator : IStateWithholdingCalcul
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding = withholding
+            Withholding = withholding,
+            TaxLines = BuildTaxLines(context, values, withholding)
         };
     }
 
@@ -201,4 +205,27 @@ public sealed class MassachusettsWithholdingCalculator : IStateWithholdingCalcul
         PayFrequency.Annual      => 1,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
+
+    /// <summary>
+    /// The state income-tax line plus every employee-paid MA payroll assessment
+    /// this pay period. Programs the employee is exempt from are omitted entirely.
+    /// </summary>
+    private IReadOnlyList<StateTaxLine> BuildTaxLines(
+        CommonWithholdingContext context,
+        StateInputValues values,
+        decimal withholding)
+    {
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding
+            }
+        };
+        lines.AddRange(_assessments.BuildLines(State, context, values));
+        return lines;
+    }
+
 }

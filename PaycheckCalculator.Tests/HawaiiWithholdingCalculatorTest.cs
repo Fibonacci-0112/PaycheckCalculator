@@ -22,7 +22,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void State_ReturnsHawaii()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         Assert.Equal(UsState.HI, calc.State);
     }
 
@@ -31,7 +31,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsFilingStatus_WithSingleAndMarriedOptions()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         var field = Assert.Single(schema, f => f.Key == "FilingStatus");
@@ -48,7 +48,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsAllowances()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         var field = Assert.Single(schema, f => f.Key == "Allowances");
@@ -60,7 +60,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Schema_ContainsAdditionalWithholding()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var schema = calc.GetInputSchema();
 
         var field = Assert.Single(schema, f => f.Key == "AdditionalWithholding");
@@ -76,7 +76,7 @@ public class HawaiiWithholdingCalculatorTest
     [InlineData(HawaiiWithholdingCalculator.StatusMarried)]
     public void Validate_ValidFilingStatus_ReturnsNoErrors(string status)
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues { ["FilingStatus"] = status };
         Assert.Empty(calc.Validate(values));
     }
@@ -84,7 +84,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Validate_InvalidFilingStatus_ReturnsError()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues { ["FilingStatus"] = "Bogus" };
         var errors = calc.Validate(values);
 
@@ -94,7 +94,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAllowances_ReturnsError()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = HawaiiWithholdingCalculator.StatusSingle,
@@ -107,7 +107,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Validate_NegativeAdditionalWithholding_ReturnsError()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var values = new StateInputValues
         {
             ["FilingStatus"] = HawaiiWithholdingCalculator.StatusSingle,
@@ -139,7 +139,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_Single_Biweekly_2000_NoAllowances()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 2_000m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026);
@@ -168,7 +168,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_Single_TwoAllowances_ReducesWithholding()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 2_000m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026);
@@ -190,7 +190,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_Single_BelowStandardDeduction_ReturnsZero()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 30m,
             PayPeriod: PayFrequency.Weekly, Year: 2026);
@@ -210,7 +210,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_ZeroGrossWages_ReturnsZero()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 0m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026);
@@ -241,7 +241,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_Single_HighEarner_ReachesTopBracket()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 30_000m,
             PayPeriod: PayFrequency.Monthly, Year: 2026);
@@ -274,7 +274,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_Married_Biweekly_2000_NoAllowances()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 2_000m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026);
@@ -301,7 +301,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_Married_Biweekly_3000_ThreeAllowances()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 3_000m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026);
@@ -326,7 +326,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_AdditionalWithholding_IsAdded()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 2_000m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026);
@@ -353,7 +353,7 @@ public class HawaiiWithholdingCalculatorTest
     [Fact]
     public void Calculate_PreTaxDeductions_ReduceTaxableWages()
     {
-        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider);
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
         var context = new CommonWithholdingContext(
             UsState.HI, GrossWages: 2_000m,
             PayPeriod: PayFrequency.Biweekly, Year: 2026,
@@ -369,4 +369,94 @@ public class HawaiiWithholdingCalculatorTest
         Assert.Equal(1_800m, result.TaxableWages);
         Assert.Equal(113.27m, result.Withholding);
     }
+
+    // ── TDI employee contribution ─────────────────────────────────────
+    //
+    // Hawaii DLIR Disability Compensation Division, 2026 Maximum Weekly Wage
+    // Base (December 10, 2025): the employee share may not exceed 0.5% of
+    // weekly wages nor the $7.50 maximum weekly deduction.
+    // https://labor.hawaii.gov/dcd/files/2025/12/2026-Maximum-Weekly-Wage-Base.pdf
+
+    [Fact]
+    public void Tdi_BelowWeeklyCap_IsHalfOfOnePercent()
+    {
+        // Weekly $1,000 × 0.5% = $5.00, under the $7.50 weekly ceiling.
+        var result = CalculateAssessments(grossWages: 1000m, frequency: PayFrequency.Weekly);
+
+        Assert.Equal(5.00m, Assert.Single(result.TaxLines!, l => l.ShortCode == "TDI").Amount);
+    }
+
+    [Fact]
+    public void Tdi_AboveWeeklyCap_IsCappedAtMaximumWeeklyDeduction()
+    {
+        // Weekly $3,000 × 0.5% = $15.00, capped to $7.50.
+        var result = CalculateAssessments(grossWages: 3000m, frequency: PayFrequency.Weekly);
+
+        Assert.Equal(7.50m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Tdi_WeeklyCapScalesWithPayFrequency()
+    {
+        // Biweekly caps at 2 × $7.50; semimonthly at 52/24 × $7.50 = $16.25.
+        var biweekly = CalculateAssessments(grossWages: 10_000m, frequency: PayFrequency.Biweekly);
+        var semimonthly = CalculateAssessments(grossWages: 10_000m, frequency: PayFrequency.Semimonthly);
+
+        Assert.Equal(15.00m, biweekly.DisabilityInsurance);
+        Assert.Equal(16.25m, semimonthly.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Tdi_UsesGrossWages_NotReducedByPreTaxDeductions()
+    {
+        var result = CalculateAssessments(
+            grossWages: 1000m, frequency: PayFrequency.Weekly, preTaxDeductions: 400m);
+
+        Assert.Equal(5.00m, result.DisabilityInsurance);
+    }
+
+    [Fact]
+    public void Tdi_EmployerPaysFullPremium_SuppressesDeduction()
+    {
+        // Hawaii lets the employer carry the whole cost rather than share it.
+        var result = CalculateAssessments(
+            grossWages: 1000m, frequency: PayFrequency.Weekly, employerPays: true);
+
+        Assert.Equal(0m, result.DisabilityInsurance);
+        Assert.DoesNotContain(result.TaxLines!, l => l.Kind == StateTaxLineKind.PayrollAssessment);
+    }
+
+    [Fact]
+    public void Tdi_RoundsAwayFromZero()
+    {
+        // Weekly $101 × 0.5% = 0.505 exactly — a true midpoint, so away-from-zero
+        // gives 0.51 where banker's rounding would give 0.50.
+        var result = CalculateAssessments(grossWages: 101m, frequency: PayFrequency.Weekly);
+
+        Assert.Equal(0.51m, result.DisabilityInsurance);
+    }
+
+    private static StateWithholdingResult CalculateAssessments(
+        decimal grossWages,
+        PayFrequency frequency = PayFrequency.Biweekly,
+        decimal preTaxDeductions = 0m,
+        decimal ytdStateWages = 0m,
+        bool employerPays = false)
+    {{
+        var calc = new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table);
+
+        var context = new CommonWithholdingContext(
+            UsState.HI,
+            GrossWages: grossWages,
+            PayPeriod: frequency,
+            Year: 2026,
+            PreTaxDeductionsReducingStateWages: preTaxDeductions,
+            YtdStateWages: ytdStateWages);
+
+        var values = PayCalculatorTestHarness.DefaultValues(TestSchemas.Provider.GetSchema(UsState.HI));
+        values["EmployerPaysTdi"] = employerPays;
+
+        return calc.Calculate(context, values);
+    }}
+
 }

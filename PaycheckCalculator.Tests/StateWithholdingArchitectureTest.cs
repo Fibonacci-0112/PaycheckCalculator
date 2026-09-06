@@ -769,11 +769,11 @@ public class FullRegistryIntegrationTest
 
         var coDataPath = Path.Combine(AppContext.BaseDirectory, "co_dr0004_2026.json");
         var coJson = File.ReadAllText(coDataPath);
-        registry.Register(new ColoradoWithholdingCalculator(coJson, TestSchemas.Provider));
+        registry.Register(new ColoradoWithholdingCalculator(coJson, TestSchemas.Provider, TestAssessments.Table));
 
         var ctDataPath = Path.Combine(AppContext.BaseDirectory, "connecticut_withholding_2026.json");
         var ctJson = File.ReadAllText(ctDataPath);
-        registry.Register(new ConnecticutWithholdingCalculator(ctJson, TestSchemas.Provider));
+        registry.Register(new ConnecticutWithholdingCalculator(ctJson, TestSchemas.Provider, TestAssessments.Table));
 
         registry.Register(new DelawareWithholdingCalculator(TestSchemas.Provider));
 
@@ -781,7 +781,7 @@ public class FullRegistryIntegrationTest
 
         registry.Register(new GeorgiaWithholdingCalculator(TestSchemas.Provider));
 
-        registry.Register(new HawaiiWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new HawaiiWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 
         registry.Register(new IdahoWithholdingCalculator(TestSchemas.Provider));
 
@@ -794,9 +794,9 @@ public class FullRegistryIntegrationTest
 
         registry.Register(new MaineWithholdingCalculator(TestSchemas.Provider));
 
-        registry.Register(new MarylandWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new MarylandWithholdingCalculator(TestSchemas.Provider, TestMarylandCountyRates.Table));
 
-        registry.Register(new MassachusettsWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new MassachusettsWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 
         registry.Register(new MichiganWithholdingCalculator());
 
@@ -810,11 +810,11 @@ public class FullRegistryIntegrationTest
 
         registry.Register(new NebraskaWithholdingCalculator(TestSchemas.Provider));
 
-        registry.Register(new NewJerseyWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new NewJerseyWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 
         registry.Register(new NewMexicoWithholdingCalculator(TestSchemas.Provider));
 
-        registry.Register(new NewYorkWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new NewYorkWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 
         registry.Register(new NorthCarolinaWithholdingCalculator(TestSchemas.Provider));
 
@@ -822,9 +822,9 @@ public class FullRegistryIntegrationTest
 
         registry.Register(new OhioWithholdingCalculator());
 
-        registry.Register(new OregonWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new OregonWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 
-        registry.Register(new RhodeIslandWithholdingCalculator(TestSchemas.Provider));
+        registry.Register(new RhodeIslandWithholdingCalculator(TestSchemas.Provider, TestAssessments.Table));
 
         registry.Register(new SouthCarolinaWithholdingCalculator(TestSchemas.Provider));
 

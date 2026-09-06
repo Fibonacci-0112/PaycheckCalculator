@@ -38,12 +38,13 @@ internal static class PaycheckCsvRenderer
         Money(sb, "Income", "FICA Taxable Income", result.FicaTaxableWages);
         Money(sb, "Income", "State Taxable Income", result.StateTaxableWages);
 
-        Money(sb, "Taxes", "Federal Tax", result.FederalWithholding);
-        Money(sb, "Taxes", "Social Security Tax", result.SocialSecurityWithholding);
-        Money(sb, "Taxes", "Medicare Tax", result.MedicareWithholding + result.AdditionalMedicareWithholding);
-        Money(sb, "Taxes", "State Income Tax", result.StateWithholding);
-        if (result.StateDisabilityInsurance > 0m)
-            Money(sb, "Taxes", result.StateDisabilityInsuranceLabel, result.StateDisabilityInsurance);
+        Money(sb, "Federal Taxes", "Federal Tax", result.FederalWithholding);
+        Money(sb, "Federal Taxes", "Social Security Tax", result.SocialSecurityWithholding);
+        Money(sb, "Federal Taxes", "Medicare Tax", result.MedicareWithholding + result.AdditionalMedicareWithholding);
+
+        var stateSection = $"{result.StateName} Taxes";
+        foreach (var line in result.StateTaxLines)
+            Money(sb, stateSection, line.Label, line.Amount);
 
         if (result.PreTaxDeductions > 0m)
             Money(sb, "Deductions", "Pre-Tax Deductions", result.PreTaxDeductions);

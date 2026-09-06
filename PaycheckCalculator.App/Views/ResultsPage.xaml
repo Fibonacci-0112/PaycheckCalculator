@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:PaycheckCalculator.App.Controls"
              xmlns:helpers="clr-namespace:PaycheckCalculator.App.Helpers"
+             xmlns:state="clr-namespace:PaycheckCalculator.Core.Tax.State;assembly=PaycheckCalculator.Core"
+             xmlns:vm="clr-namespace:PaycheckCalculator.App.ViewModels"
              x:Class="PaycheckCalculator.App.Views.ResultsPage"
              Title="Results"
              BackgroundColor="{StaticResource Canvas}">
@@ -418,9 +420,12 @@
                        FontSize="10" FontAttributes="Bold"
                        Margin="4,4,0,0" />
 
-                <!-- Tax rows card: Federal Tax, Social Security Tax, Medicare Tax, State Tax -->
+                <!-- Tax rows card: federal group, then the state's own lines -->
                 <Border Style="{StaticResource CardBorder}" Padding="16,8">
                     <VerticalStackLayout Spacing="0">
+
+                        <Label Text="Federal" TextColor="{StaticResource Ink}"
+                               FontSize="13" FontAttributes="Bold" Padding="0,8,0,2" />
 
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
                             <Label Text="Federal Tax" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
@@ -470,39 +475,33 @@
                         </Grid>
                         <BoxView Style="{StaticResource RowSeparator}" />
 
-                        <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
-                            <Label Text="State Income Tax" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
-                                   FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
-                                   AutomationProperties.Name="Show how State Income Tax is calculated">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ShowExplanationCommand}" CommandParameter="StateWithholding" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                            <Label Text="{Binding ResultCard.StateWithholding, StringFormat='{0:C}'}"
-                                   Grid.Column="2"
-                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
-                                   FontSize="13" VerticalTextAlignment="Center" />
-                        </Grid>
+                        <Label Text="{Binding ResultCard.StateName}" TextColor="{StaticResource Ink}"
+                               FontSize="13" FontAttributes="Bold" Padding="0,14,0,2"
+                               IsVisible="{Binding ResultCard.HasStateTaxLines}" />
 
-                        <BoxView HeightRequest="1" Color="{StaticResource BorderSubtle}"
-                                 IsVisible="{Binding ResultCard.StateDisabilityInsurance, Converter={StaticResource GreaterThanZeroConverter}}" />
-
-                        <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10"
-                              IsVisible="{Binding ResultCard.StateDisabilityInsurance, Converter={StaticResource GreaterThanZeroConverter}}">
-                            <Label Text="{Binding ResultCard.StateDisabilityInsuranceLabel}" TextColor="{StaticResource BodyText}" FontSize="13" VerticalTextAlignment="Center" />
-                            <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
-                                   FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
-                                   AutomationProperties.Name="Show how State Disability is calculated">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ShowExplanationCommand}" CommandParameter="StateDisability" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                            <Label Text="{Binding ResultCard.StateDisabilityInsurance, StringFormat='{0:C}'}"
-                                   Grid.Column="2"
-                                   TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
-                                   FontSize="13" VerticalTextAlignment="Center" />
-                        </Grid>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding ResultCard.StateTaxLines}" Spacing="0">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="state:StateTaxLine">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" Padding="0,10">
+                                        <Label Text="{Binding Label}" TextColor="{StaticResource BodyText}"
+                                               FontSize="13" VerticalTextAlignment="Center" />
+                                        <Label Text="&#x24D8;" Grid.Column="1" TextColor="{StaticResource Muted}"
+                                               FontSize="14" Padding="6,0" VerticalTextAlignment="Center"
+                                               AutomationProperties.Name="Show how this state tax line is calculated">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CalculatorViewModel}}, Path=ShowStateLineExplanationCommand}"
+                                                    CommandParameter="{Binding}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                        <Label Text="{Binding Amount, StringFormat='{0:C}'}"
+                                               Grid.Column="2"
+                                               TextColor="{StaticResource DangerStrong}" FontAttributes="Bold"
+                                               FontSize="13" VerticalTextAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
 
                     </VerticalStackLayout>
                 </Border>

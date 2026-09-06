@@ -155,9 +155,12 @@ public sealed class NewJerseyWithholdingCalculator : IStateWithholdingCalculator
 
     private readonly IReadOnlyList<string> _filingStatusOptions;
 
-    public NewJerseyWithholdingCalculator(IStateSchemaProvider schemaProvider)
+    private readonly StatePayrollAssessments _assessments;
+
+    public NewJerseyWithholdingCalculator(IStateSchemaProvider schemaProvider, StatePayrollAssessments assessments)
     {
         _filingStatusOptions = schemaProvider.GetOptions(UsState.NJ, "FilingStatus");
+        _assessments = assessments;
     }
 
     public UsState State => UsState.NJ;
@@ -221,7 +224,8 @@ public sealed class NewJerseyWithholdingCalculator : IStateWithholdingCalculator
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding  = withholding
+            Withholding  = withholding,
+            TaxLines = BuildTaxLines(context, values, withholding)
         };
     }
 
@@ -327,4 +331,27 @@ public sealed class NewJerseyWithholdingCalculator : IStateWithholdingCalculator
         PayFrequency.Annual      => 1,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
+
+    /// <summary>
+    /// The state income-tax line plus every employee-paid NJ payroll assessment
+    /// this pay period. Programs the employee is exempt from are omitted entirely.
+    /// </summary>
+    private IReadOnlyList<StateTaxLine> BuildTaxLines(
+        CommonWithholdingContext context,
+        StateInputValues values,
+        decimal withholding)
+    {
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding
+            }
+        };
+        lines.AddRange(_assessments.BuildLines(State, context, values));
+        return lines;
+    }
+
 }

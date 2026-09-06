@@ -21,6 +21,12 @@
     <None Include="Data\connecticut_withholding_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Data\md_county_rates_2026.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\state_payroll_assessments_2026.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Data\state_supplemental_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

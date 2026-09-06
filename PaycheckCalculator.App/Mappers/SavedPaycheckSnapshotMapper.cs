@@ -1,6 +1,7 @@
 using PaycheckCalculator.App.Helpers;
 using PaycheckCalculator.App.Models;
 using PaycheckCalculator.Core.Models;
+using PaycheckCalculator.Core.Tax.State;
 using PaycheckCalculator.Shared.Snapshots;
 
 namespace PaycheckCalculator.App.Mappers;
@@ -32,6 +33,13 @@ public static class SavedPaycheckSnapshotMapper
                 StateWithholding = card.StateWithholding,
                 StateDisabilityInsurance = card.StateDisabilityInsurance,
                 StateDisabilityInsuranceLabel = card.StateDisabilityInsuranceLabel,
+                StateTaxLines = card.StateTaxLines.Select(line => new SavedStateTaxLineDto
+                {
+                    Kind = line.Kind,
+                    Label = line.Label,
+                    Amount = line.Amount,
+                    ShortCode = line.ShortCode
+                }).ToList(),
                 PreTaxDeductions = card.PreTaxDeductions,
                 PostTaxDeductions = card.PostTaxDeductions,
                 TotalTaxes = card.TotalTaxes,
@@ -59,6 +67,13 @@ public static class SavedPaycheckSnapshotMapper
             StateWithholding = r.StateWithholding,
             StateDisabilityInsurance = r.StateDisabilityInsurance,
             StateDisabilityInsuranceLabel = r.StateDisabilityInsuranceLabel,
+            StateTaxLines = r.StateTaxLines.Select(line => new StateTaxLine
+            {
+                Kind = line.Kind,
+                Label = line.Label,
+                Amount = line.Amount,
+                ShortCode = line.ShortCode
+            }).ToList(),
             PreTaxDeductions = r.PreTaxDeductions,
             PostTaxDeductions = r.PostTaxDeductions,
             TotalTaxes = r.TotalTaxes,

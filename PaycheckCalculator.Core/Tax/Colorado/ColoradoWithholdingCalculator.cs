@@ -21,15 +21,17 @@ public sealed class ColoradoWithholdingCalculator : IStateWithholdingCalculator
     /// <summary>Colorado flat income tax rate (4.4%).</summary>
     private const decimal FlatRate = 0.044m;
 
-    /// <summary>Colorado FMLI premium rate (0.044%).</summary>
-    private const decimal FmliRate = 0.00044m;
-
     private readonly IReadOnlyList<CoDr0004Allowance> _allowances;
+    private readonly StatePayrollAssessments _assessments;
     private readonly IReadOnlyList<string> _filingStatusOptions;
     private readonly IReadOnlyList<string> _numberOfJobsOptions;
 
-    public ColoradoWithholdingCalculator(string json, IStateSchemaProvider schemaProvider)
+    public ColoradoWithholdingCalculator(
+        string json,
+        IStateSchemaProvider schemaProvider,
+        StatePayrollAssessments assessments)
     {
+        _assessments = assessments;
         var root = JsonSerializer.Deserialize<CoDr0004Root>(json,
                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                    ?? throw new InvalidOperationException("Failed to deserialize Colorado DR 0004 JSON data.");
@@ -81,14 +83,21 @@ public sealed class ColoradoWithholdingCalculator : IStateWithholdingCalculator
         var withholding = Math.Round(periodTax, 2, MidpointRounding.AwayFromZero)
                         + values.GetValueOrDefault("AdditionalWithholding", 0m);
 
-        // FMLI: 0.044% of ALL gross wages (no wage cap)
-        var fmli = Math.Round(Math.Max(0m, context.GrossWages) * FmliRate, 2, MidpointRounding.AwayFromZero);
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding
+            }
+        };
+        lines.AddRange(_assessments.BuildLines(State, context, values));
 
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding = withholding,
-            DisabilityInsurance = fmli
+            TaxLines = lines
         };
     }
 

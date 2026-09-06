@@ -23,6 +23,15 @@ public sealed record SavedPaycheckResultDto
     public decimal StateDisabilityInsurance { get; init; }
     public string StateDisabilityInsuranceLabel { get; init; } = "State Disability Insurance";
 
+    /// <summary>
+    /// The itemized state lines — state/county/local income tax and one entry per
+    /// payroll assessment — already in display order. Empty on snapshots written
+    /// before the itemized model existed; the front-ends fall back to the scalar
+    /// <see cref="StateWithholding"/> / <see cref="StateDisabilityInsurance"/>
+    /// fields above, which stay populated for exactly that reason.
+    /// </summary>
+    public IReadOnlyList<SavedStateTaxLineDto> StateTaxLines { get; init; } = Array.Empty<SavedStateTaxLineDto>();
+
     public decimal PreTaxDeductions { get; init; }
     public decimal PostTaxDeductions { get; init; }
 

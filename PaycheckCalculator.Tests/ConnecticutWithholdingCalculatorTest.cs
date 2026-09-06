@@ -9,7 +9,7 @@ public class ConnecticutWithholdingCalculatorTest
     {
         var dataPath = Path.Combine(AppContext.BaseDirectory, "connecticut_withholding_2026.json");
         var json = File.ReadAllText(dataPath);
-        return new ConnecticutWithholdingCalculator(json, TestSchemas.Provider);
+        return new ConnecticutWithholdingCalculator(json, TestSchemas.Provider, TestAssessments.Table);
     }
 
     [Fact]
@@ -613,7 +613,7 @@ public class ConnecticutWithholdingCalculatorTest
     [InlineData("Code A")]
     [InlineData("Code E")]
     [InlineData("No Form CT-W4")]
-    public void DisabilityInsuranceLabel_IsFamilyLeaveInsurance(string code)
+    public void DisabilityInsuranceLabel_IsPaidFamilyAndMedicalLeave(string code)
     {
         // Connecticut PFMLI should be labeled "Family Leave Insurance",
         // not the generic "State Disability Insurance" used by California.
@@ -625,7 +625,9 @@ public class ConnecticutWithholdingCalculatorTest
 
         var result = calc.Calculate(context, values);
 
-        Assert.Equal("Family Leave Insurance (FLI)", result.DisabilityInsuranceLabel);
+        // CT's program is Paid Family and Medical Leave; "FLI" is New Jersey's
+        // separate program and would be misleading now that NJ withholds one.
+        Assert.Equal("Paid Family and Medical Leave (PFMLI)", result.DisabilityInsuranceLabel);
     }
 
     // ── Default inputs ──────────────────────────────────────────────

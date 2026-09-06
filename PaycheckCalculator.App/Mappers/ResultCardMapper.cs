@@ -96,12 +96,17 @@ public static class ResultCardMapper
             StateWithholding = result.StateWithholding,
             StateDisabilityInsurance = result.StateDisabilityInsurance,
             StateDisabilityInsuranceLabel = result.StateDisabilityInsuranceLabel,
+            StateTaxLines = result.StateTaxLines,
             PreTaxDeductions = result.PreTaxDeductions,
             PostTaxDeductions = result.PostTaxDeductions,
             TotalTaxes = result.TotalTaxes,
             NetPay = result.NetPay,
             StateName = EnumDisplay.UsStateName(result.State.ToString()),
             Explanation = result.Explanation,
+            // The manifest's approximations and exclusions for the rules this
+            // result actually used. Without this the assumptions banner never
+            // appeared in standard or gross-up mode, even though the notes existed.
+            AccuracyNotes = result.Explanation.AccuracyNotes,
             IsGrossUp = isGrossUp,
             TargetNetPay = targetNetPay,
             GrossUpCost = isGrossUp ? result.GrossPay - targetNetPay : 0m,

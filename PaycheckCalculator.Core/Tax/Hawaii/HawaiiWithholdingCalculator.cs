@@ -127,9 +127,12 @@ public sealed class HawaiiWithholdingCalculator : IStateWithholdingCalculator
 
     private readonly IReadOnlyList<string> _filingStatusOptions;
 
-    public HawaiiWithholdingCalculator(IStateSchemaProvider schemaProvider)
+    private readonly StatePayrollAssessments _assessments;
+
+    public HawaiiWithholdingCalculator(IStateSchemaProvider schemaProvider, StatePayrollAssessments assessments)
     {
         _filingStatusOptions = schemaProvider.GetOptions(UsState.HI, "FilingStatus");
+        _assessments = assessments;
     }
 
     public UsState State => UsState.HI;
@@ -191,7 +194,8 @@ public sealed class HawaiiWithholdingCalculator : IStateWithholdingCalculator
         return new StateWithholdingResult
         {
             TaxableWages = taxableWages,
-            Withholding = withholding
+            Withholding = withholding,
+            TaxLines = BuildTaxLines(context, values, withholding)
         };
     }
 
@@ -227,4 +231,27 @@ public sealed class HawaiiWithholdingCalculator : IStateWithholdingCalculator
         PayFrequency.Annual => 1,
         _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported pay frequency")
     };
+
+    /// <summary>
+    /// The state income-tax line plus every employee-paid HI payroll assessment
+    /// this pay period. Programs the employee is exempt from are omitted entirely.
+    /// </summary>
+    private IReadOnlyList<StateTaxLine> BuildTaxLines(
+        CommonWithholdingContext context,
+        StateInputValues values,
+        decimal withholding)
+    {
+        var lines = new List<StateTaxLine>
+        {
+            new()
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateTaxLineResolver.StateIncomeLabel,
+                Amount = withholding
+            }
+        };
+        lines.AddRange(_assessments.BuildLines(State, context, values));
+        return lines;
+    }
+
 }

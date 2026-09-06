@@ -1,0 +1,128 @@
+{
+  "taxYear": 2026,
+  "documentTitle": "Employee-paid state disability, paid-leave and long-term-care payroll assessments (2026)",
+  "note": "Employee contribution rates only. Employer shares are out of scope: this calculator models the employee's paycheck. Every rate below is verified against the cited official publication.",
+  "states": {
+    "CO": {
+      "programs": [
+        {
+          "label": "Family and Medical Leave Insurance (FAMLI)",
+          "shortCode": "FAMLI",
+          "rate": 0.0044,
+          "annualWageBase": 184500,
+          "reference": "Colorado FAMLI 2026: total premium 0.88% of wages split evenly, so the employee pays 0.44% on wages up to the $184,500 federal Social Security wage cap.",
+          "sourceUrl": "https://famli.colorado.gov/individuals-and-families/how-famli-works/premium-and-benefits-calculator"
+        }
+      ]
+    },
+    "CT": {
+      "programs": [
+        {
+          "label": "Paid Family and Medical Leave (PFMLI)",
+          "shortCode": "PFMLI",
+          "rate": 0.005,
+          "reference": "CT Paid Leave: employers deduct a 0.5% worker contribution via payroll deduction.",
+          "sourceUrl": "https://www.ctpaidleave.org/how-ct-paid-leave-works",
+          "note": "Connecticut caps contributions at the Social Security contribution base, but that cap is not applied here because it could not be confirmed against a machine-readable official 2026 publication. The manifest discloses the omission."
+        }
+      ]
+    },
+    "HI": {
+      "programs": [
+        {
+          "label": "Temporary Disability Insurance (TDI)",
+          "shortCode": "TDI",
+          "rate": 0.005,
+          "maxWeeklyDeduction": 7.5,
+          "exemptFieldKey": "EmployerPaysTdi",
+          "reference": "Hawaii DLIR Disability Compensation Division, 2026 Maximum Weekly Wage Base (December 10, 2025): employee share capped at 0.5% of weekly wages and a $7.50 maximum weekly deduction.",
+          "sourceUrl": "https://labor.hawaii.gov/dcd/files/2025/12/2026-Maximum-Weekly-Wage-Base.pdf"
+        }
+      ]
+    },
+    "MA": {
+      "programs": [
+        {
+          "label": "Paid Medical Leave (PFML)",
+          "shortCode": "PFML-M",
+          "rate": 0.0028,
+          "annualWageBase": 184500,
+          "reference": "Massachusetts DFML 2026: up to 0.28% of eligible wages withheld for medical leave; individual contributions capped by the Social Security taxable maximum.",
+          "sourceUrl": "https://www.mass.gov/info-details/paid-family-and-medical-leave-employer-contribution-rates-and-calculator"
+        },
+        {
+          "label": "Paid Family Leave (PFML)",
+          "shortCode": "PFML-F",
+          "rate": 0.0018,
+          "annualWageBase": 184500,
+          "reference": "Massachusetts DFML 2026: up to 0.18% of eligible wages withheld for family leave; individual contributions capped by the Social Security taxable maximum.",
+          "sourceUrl": "https://www.mass.gov/info-details/paid-family-and-medical-leave-employer-contribution-rates-and-calculator"
+        }
+      ]
+    },
+    "NJ": {
+      "programs": [
+        {
+          "label": "Temporary Disability Insurance (TDI)",
+          "shortCode": "SDI",
+          "rate": 0.0019,
+          "annualWageBase": 171100,
+          "reference": "New Jersey DOL 2026 worker rate: D.I. 0.0019 on the $171,100 worker taxable wage base.",
+          "sourceUrl": "https://www.nj.gov/labor/ea/employer-services/rate-info/"
+        },
+        {
+          "label": "Family Leave Insurance (FLI)",
+          "shortCode": "FLI",
+          "rate": 0.0023,
+          "annualWageBase": 171100,
+          "reference": "New Jersey DOL 2026 worker rate: F.L.I. 0.0023 on the $171,100 worker taxable wage base.",
+          "sourceUrl": "https://www.nj.gov/labor/ea/employer-services/rate-info/"
+        }
+      ]
+    },
+    "NY": {
+      "programs": [
+        {
+          "label": "Disability Benefits (DBL)",
+          "shortCode": "DBL",
+          "rate": 0.005,
+          "maxWeeklyDeduction": 0.6,
+          "reference": "New York Workers' Compensation Law 209(3)(a): one-half of one percent of wages, not in excess of sixty cents per week.",
+          "sourceUrl": "https://www.nysenate.gov/legislation/laws/WKC/209"
+        },
+        {
+          "label": "Paid Family Leave (PFL)",
+          "shortCode": "PFL",
+          "rate": 0.00432,
+          "maxAnnualContribution": 411.91,
+          "reference": "New York Paid Family Leave 2026: 0.432% of gross wages, capped at $411.91 for the year.",
+          "sourceUrl": "https://paidfamilyleave.ny.gov/2026"
+        }
+      ]
+    },
+    "OR": {
+      "programs": [
+        {
+          "label": "Paid Leave Oregon",
+          "shortCode": "PFML",
+          "rate": 0.006,
+          "annualWageBase": 184500,
+          "reference": "Paid Leave Oregon 2026: total contribution 1% of gross wages up to $184,500; employees pay 60% of that (0.6%).",
+          "sourceUrl": "https://paidleave.oregon.gov/employers/Pages/default.aspx"
+        }
+      ]
+    },
+    "RI": {
+      "programs": [
+        {
+          "label": "Temporary Disability Insurance (TDI)",
+          "shortCode": "TDI",
+          "rate": 0.011,
+          "annualWageBase": 100000,
+          "reference": "Rhode Island DLT 2026: 1.1% employee wage deduction on a $100,000 taxable wage base.",
+          "sourceUrl": "https://dlt.ri.gov/individuals/temporary-disability-caregiver-insurance/employers"
+        }
+      ]
+    }
+  }
+}

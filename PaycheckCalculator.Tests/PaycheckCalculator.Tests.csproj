@@ -56,6 +56,14 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>connecticut_withholding_2026.json</Link>
     </None>
+    <None Include="..\PaycheckCalculator.Core\Data\md_county_rates_2026.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>md_county_rates_2026.json</Link>
+    </None>
+    <None Include="..\PaycheckCalculator.Core\Data\state_payroll_assessments_2026.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>state_payroll_assessments_2026.json</Link>
+    </None>
     <None Include="..\PaycheckCalculator.Core\Data\state_supplemental_2026.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>state_supplemental_2026.json</Link>

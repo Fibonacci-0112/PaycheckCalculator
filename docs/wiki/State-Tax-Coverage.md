@@ -31,12 +31,12 @@ Every income-tax jurisdiction has a dedicated calculator under `PaycheckCalculat
 | AZ | `ArizonaWithholdingCalculator` | A-4 percentage-election method. |
 | AR | `ArkansasWithholdingCalculator` | JSON-backed DFA formula method. |
 | CA | `CaliforniaWithholdingCalculator` | Method B, JSON-backed percentage data, SDI. |
-| CO | `ColoradoWithholdingCalculator` | JSON-backed DR 0004 allowance data, flat income tax, FMLI. |
+| CO | `ColoradoWithholdingCalculator` | JSON-backed DR 0004 allowance data, flat income tax, FAMLI. |
 | CT | `ConnecticutWithholdingCalculator` | JSON-backed TPG-211-style withholding, PFMLI. |
 | DC | `DistrictOfColumbiaWithholdingCalculator` | D-4-style inputs and graduated brackets. |
 | DE | `DelawareWithholdingCalculator` | DE W-4 allowances and graduated brackets. |
 | GA | `GeorgiaWithholdingCalculator` | G-4 inputs, standard deduction, allowances/dependents. |
-| HI | `HawaiiWithholdingCalculator` | HW-4 allowances and graduated brackets. |
+| HI | `HawaiiWithholdingCalculator` | HW-4 allowances, graduated brackets, TDI. |
 | IA | `IowaWithholdingCalculator` | Flat-rate withholding model. |
 | ID | `IdahoWithholdingCalculator` | Flat-rate model with state-specific deduction/allowance handling. |
 | IL | `IllinoisWithholdingCalculator` | Flat rate with IL-W-4 allowances. |
@@ -44,8 +44,8 @@ Every income-tax jurisdiction has a dedicated calculator under `PaycheckCalculat
 | KS | `KansasWithholdingCalculator` | K-4 allowances and bracket formula. |
 | KY | `KentuckyWithholdingCalculator` | Flat rate with standard deduction / allowance credit behavior. |
 | LA | `LouisianaWithholdingCalculator` | L-4 exemptions/dependents and brackets. |
-| MA | `MassachusettsWithholdingCalculator` | M-4 exemptions and surtax handling. |
-| MD | `MarylandWithholdingCalculator` | MW507 exemptions and bracket formula. |
+| MA | `MassachusettsWithholdingCalculator` | M-4 exemptions, surtax handling, PFML. |
+| MD | `MarylandWithholdingCalculator` | MW507 exemptions, bracket formula, and county income tax. |
 | ME | `MaineWithholdingCalculator` | W-4ME allowances and brackets. |
 | MI | `MichiganWithholdingCalculator` | Flat rate with MI-W4 exemptions. |
 | MN | `MinnesotaWithholdingCalculator` | W-4MN allowances and brackets. |
@@ -55,14 +55,14 @@ Every income-tax jurisdiction has a dedicated calculator under `PaycheckCalculat
 | NC | `NorthCarolinaWithholdingCalculator` | Flat rate with NC-4 allowance handling. |
 | ND | `NorthDakotaWithholdingCalculator` | Federal-style statuses and brackets. |
 | NE | `NebraskaWithholdingCalculator` | W-4N credits and brackets. |
-| NJ | `NewJerseyWithholdingCalculator` | NJ-W4 status tables. |
+| NJ | `NewJerseyWithholdingCalculator` | NJ-W4 status tables, TDI and FLI. |
 | NM | `NewMexicoWithholdingCalculator` | RPD-41272-style deductions/exemptions and brackets. |
-| NY | `NewYorkWithholdingCalculator` | IT-2104 allowances and brackets. |
+| NY | `NewYorkWithholdingCalculator` | IT-2104 allowances and brackets, DBL and PFL. |
 | OH | `OhioWithholdingCalculator` | IT-4 exemptions and two-bracket formula. |
 | OK | `OklahomaWithholdingCalculator` | JSON-backed OW-2 percentage method with whole-dollar rounding. |
-| OR | `OregonWithholdingCalculator` | OR-W-4 allowance credit and brackets. |
+| OR | `OregonWithholdingCalculator` | OR-W-4 allowance credit and brackets, Paid Leave Oregon. |
 | PA | `PennsylvaniaWithholdingCalculator` | Flat income tax. |
-| RI | `RhodeIslandWithholdingCalculator` | RI W-4 exemptions and brackets. |
+| RI | `RhodeIslandWithholdingCalculator` | RI W-4 exemptions and brackets, TDI. |
 | SC | `SouthCarolinaWithholdingCalculator` | SC W-4 allowances and brackets. |
 | UT | `UtahWithholdingCalculator` | Flat rate with phase-out allowance credit. |
 | VA | `VirginiaWithholdingCalculator` | VA-4 exemptions and brackets. |
@@ -74,16 +74,40 @@ When documentation and implementation disagree, trust the calculator and its tes
 
 ---
 
-## State Disability / Paid-Leave Premiums
+## State Tax Lines
 
-Employee-paid state disability or paid-leave premiums are returned as `StateWithholdingResult.DisabilityInsurance` with a display label. They appear as separate result/export/chart lines.
+Every state result carries an ordered `StateTaxLine` list — state, county and local income tax plus one line per employee-paid payroll assessment. `StateTaxLineOrdering` defines the order once (income broadest to narrowest, then assessments largest first) and both front-ends, all four exporters, and the A/B comparison use it.
 
-| Jurisdiction | Premium | Result label |
-|---|---|---|
-| CA | State Disability Insurance | `State Disability Insurance (SDI)` |
-| CO | Family and Medical Leave Insurance | `State Disability Insurance` |
-| CT | Paid Family and Medical Leave Insurance | `Family Leave Insurance (FLI)` |
-| WA | WA Cares Fund / Long-Term Care | `WA Cares Fund (Long-Term Care)` |
+The scalar `StateWithholding` and `StateDisabilityInsurance` members are **derived** from those lines, so they cannot disagree with what the user sees.
+
+### Employee-paid payroll assessments
+
+Rates, wage bases and caps live in `PaycheckCalculator.Core/Data/state_payroll_assessments_2026.json`, each entry citing the official 2026 publication behind it.
+
+| Jurisdiction | Programs | Rate | Cap |
+|---|---|---|---|
+| CA | State Disability Insurance (SDI) | 1.30% | none |
+| CO | Family and Medical Leave Insurance (FAMLI) | 0.44% | $184,500 wage base |
+| CT | Paid Family and Medical Leave (PFMLI) | 0.50% | cap disclosed, not applied |
+| HI | Temporary Disability Insurance (TDI) | 0.50% | $7.50 per week |
+| MA | Paid Medical Leave / Paid Family Leave | 0.28% / 0.18% | $184,500 wage base |
+| NJ | Temporary Disability Insurance / Family Leave Insurance | 0.19% / 0.23% | $171,100 wage base |
+| NY | Disability Benefits (DBL) / Paid Family Leave (PFL) | 0.50% / 0.432% | $0.60 per week / $411.91 per year |
+| OR | Paid Leave Oregon | 0.60% | $184,500 wage base |
+| RI | Temporary Disability Insurance (TDI) | 1.10% | $100,000 wage base |
+| WA | WA Cares Fund (Long-Term Care) | 0.58% | none |
+
+Three cap shapes are modeled explicitly rather than approximated: an annual taxable wage base, a statutory per-week ceiling that scales with payroll frequency, and a maximum contribution for the year. `PaycheckInput.YtdStateWages` supplies the year-to-date figure the capped programs need.
+
+Programs that exist but are **not** withheld — Washington's PFML, Minnesota Paid Leave, Maine PFML, Delaware Paid Leave — are disclosed as exclusions on the state's regular-withholding rule so the note reaches the user.
+
+## Local Income Tax
+
+| Jurisdiction | Coverage |
+|---|---|
+| MD | County income tax for all 23 counties plus Baltimore City, from `Data/md_county_rates_2026.json`. Anne Arundel and Frederick apply graduated marginal rates. Selected via a schema-driven `County` picker; defaults to the highest local rate when unreported, as the Comptroller directs. |
+
+No other local income tax is withheld. Where a state has one — Indiana counties, NYC/Yonkers, PA EIT, Ohio municipalities, Michigan cities, Missouri earnings taxes, Kentucky occupational taxes — the state's manifest rule discloses that it is not applied.
 
 ---
 
@@ -129,6 +153,8 @@ The following calculators load tax-table data from JSON at startup:
 | `ConnecticutWithholdingCalculator` | `connecticut_withholding_2026.json` |
 | `OklahomaOw2PercentageCalculator` | `ok_ow2_2026_percentage.json` |
 | `StateSupplementalCalculator` | `state_supplemental_2026.json` |
+| `StatePayrollAssessments` | `state_payroll_assessments_2026.json` |
+| `MarylandCountyRates` | `md_county_rates_2026.json` |
 
 If a tax-data file is renamed, update `AddPaycheckCalculatorCore`, MAUI `MauiAsset` entries, Blazor `TaxData` links, test project copy/link entries, and any tests or docs that reference the file.
 

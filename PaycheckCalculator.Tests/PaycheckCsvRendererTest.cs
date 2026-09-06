@@ -52,10 +52,10 @@ public sealed class PaycheckCsvRendererTest
             "Income,Federal Taxable Income,1850.00\r\n" +
             "Income,FICA Taxable Income,1850.00\r\n" +
             "Income,State Taxable Income,1850.00\r\n" +
-            "Taxes,Federal Tax,180.00\r\n" +
-            "Taxes,Social Security Tax,114.70\r\n" +
-            "Taxes,Medicare Tax,26.83\r\n" +
-            "Taxes,State Income Tax,75.00\r\n" +
+            "Federal Taxes,Federal Tax,180.00\r\n" +
+            "Federal Taxes,Social Security Tax,114.70\r\n" +
+            "Federal Taxes,Medicare Tax,26.83\r\n" +
+            "California Taxes,State Income Tax,75.00\r\n" +
             "Deductions,Pre-Tax Deductions,150.00\r\n" +
             "Summary,Total Taxes,396.53\r\n" +
             "Summary,Net Pay,1453.47\r\n";

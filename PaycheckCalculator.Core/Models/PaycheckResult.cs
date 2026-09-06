@@ -1,9 +1,12 @@
 using PaycheckCalculator.Core.Explanation;
+using PaycheckCalculator.Core.Tax.State;
 
 namespace PaycheckCalculator.Core.Models;
 
 public sealed class PaycheckResult
 {
+    private readonly IReadOnlyList<StateTaxLine> _stateTaxLines = Array.Empty<StateTaxLine>();
+
     public decimal GrossPay { get; init; }
     public decimal PreTaxDeductions { get; init; }
     public decimal PostTaxDeductions { get; init; }
@@ -16,6 +19,26 @@ public sealed class PaycheckResult
     public decimal StateWithholding { get; init; }
     public decimal StateDisabilityInsurance { get; init; }
     public string StateDisabilityInsuranceLabel { get; init; } = "State Disability Insurance";
+
+    /// <summary>
+    /// Every state-level tax line this paycheck carries — state, county and local
+    /// income tax plus each payroll assessment — already ordered for display by
+    /// <see cref="StateTaxLineOrdering"/>. The scalar members above remain
+    /// populated as the aggregate of these lines.
+    /// <para>
+    /// Falls back to synthesizing lines from those scalars when none were supplied,
+    /// so a hand-constructed result or one restored from an older snapshot still
+    /// renders and exports correctly.
+    /// </para>
+    /// </summary>
+    public IReadOnlyList<StateTaxLine> StateTaxLines
+    {
+        get => _stateTaxLines.Count > 0
+            ? _stateTaxLines
+            : StateTaxLineResolver.FromTotals(
+                StateWithholding, StateDisabilityInsurance, StateDisabilityInsuranceLabel);
+        init => _stateTaxLines = value ?? Array.Empty<StateTaxLine>();
+    }
 
     public decimal FicaTaxableWages { get; init; }
     public decimal SocialSecurityWithholding { get; init; }
