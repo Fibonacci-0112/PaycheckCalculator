@@ -17,7 +17,7 @@ public sealed class SyncDbContextDesignTimeFactory : IDesignTimeDbContextFactory
     {
         var connectionString =
             Environment.GetEnvironmentVariable("ConnectionStrings__Sync")
-            ?? "Host=localhost;Port=5432;Database=paycheckcalc;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Port=5432;Database=paycheckcalculator_dev;Username=admin;Password=password";
 
         var options = new DbContextOptionsBuilder<SyncDbContext>()
             .UseNpgsql(connectionString)

@@ -8,7 +8,11 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: paycheckcalculator_dev
     ports:
-      - "5432:5432"
+      # Loopback only: the seeded credentials are public (they live in this file and in
+      # appsettings.Development.json), so the database must not be reachable from the local
+      # network. The API runs on the host and connects via localhost, so this is sufficient;
+      # container-to-container traffic uses the compose network's `postgres:5432` instead.
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
