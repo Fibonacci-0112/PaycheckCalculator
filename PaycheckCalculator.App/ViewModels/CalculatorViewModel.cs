@@ -317,6 +317,13 @@ public partial class CalculatorViewModel : ObservableObject
     [ObservableProperty] public partial decimal YtdMedicareWages { get; set; }
 
     /// <summary>
+    /// Year-to-date wages already counted toward the state's payroll-assessment
+    /// wage base. Several states cap a disability or paid-leave premium at an
+    /// annual base; states with no cap ignore this.
+    /// </summary>
+    [ObservableProperty] public partial decimal YtdStateWages { get; set; }
+
+    /// <summary>
     /// The tax year the calculation is performed under. Defaults to
     /// <see cref="TaxYearSupport.Default"/>; restored from a loaded saved paycheck so a prior
     /// year's snapshot is never silently recalculated under newer tax data.
@@ -594,6 +601,38 @@ public partial class CalculatorViewModel : ObservableObject
     public bool ShowBothDeductions =>
         (ResultCard?.PreTaxDeductions ?? 0m) > 0m && (ResultCard?.PostTaxDeductions ?? 0m) > 0m;
 
+    /// <summary>
+    /// Shows the explanation for one state tax line. A state can levy several lines
+    /// of the same kind — New Jersey withholds both SDI and FLI — so the sibling is
+    /// located by its own sub-key rather than by <see cref="ExplanationLineKey"/> alone.
+    /// </summary>
+    [RelayCommand]
+    private async Task ShowStateLineExplanation(StateTaxLine? taxLine)
+    {
+        if (ResultCard is null || taxLine is null) return;
+
+        var key = taxLine.Kind switch
+        {
+            StateTaxLineKind.CountyIncome => ExplanationLineKey.StateCountyIncome,
+            StateTaxLineKind.LocalIncome => ExplanationLineKey.StateLocalIncome,
+            StateTaxLineKind.PayrollAssessment => ExplanationLineKey.StateDisability,
+            _ => ExplanationLineKey.StateWithholding
+        };
+
+        var line = ResultCard.Explanation.Get(key, taxLine.ExplanationSubKey)
+            ?? ResultCard.Explanation.Get(key);
+        if (line is null) return;
+
+        var shell = Shell.Current;
+        if (shell is null) return;
+
+        var sources = ResultCard.Explanation.Sources
+            .Where(source => source.RuleId is not null
+                && line.SourceRuleIds?.Contains(source.RuleId) == true)
+            .ToList();
+        await shell.DisplayAlertAsync(line.Title, FormatExplanation(line, sources), "OK");
+    }
+
     /// <summary>Shows a <c>DisplayAlertAsync</c> for the explanation of a particular paycheck line identified by
     /// <paramref name="keyName"/>. Bound from XAML info-icon TapGestureRecognizers
     /// with a CommandParameter naming one of <see cref="ExplanationLineKey"/>.
@@ -804,11 +843,12 @@ public partial class CalculatorViewModel : ObservableObject
             new ComparisonRow("Medicare",
                 a.MedicareWithholding + a.AdditionalMedicareWithholding,
                 b.MedicareWithholding + b.AdditionalMedicareWithholding),
-            new ComparisonRow("State Income Tax", a.StateWithholding, b.StateWithholding),
         };
 
-        if (a.StateDisabilityInsurance > 0m || b.StateDisabilityInsurance > 0m)
-            rows.Add(new ComparisonRow("State Disability", a.StateDisabilityInsurance, b.StateDisabilityInsurance));
+        // One row per state line — a New Jersey paycheck compares its SDI and FLI
+        // against whatever the other side levies, or against zero.
+        foreach (var pair in SavedStateTaxLinePairing.Build(a, b))
+            rows.Add(new ComparisonRow(pair.Label, pair.AmountA, pair.AmountB));
 
         if (a.PreTaxDeductions > 0m || b.PreTaxDeductions > 0m)
             rows.Add(new ComparisonRow("Pre-Tax Deductions", a.PreTaxDeductions, b.PreTaxDeductions));
@@ -998,6 +1038,7 @@ public partial class CalculatorViewModel : ObservableObject
         TaxYear = input.TaxYear;
         YtdSocialSecurityWages = input.YtdSocialSecurityWages;
         YtdMedicareWages = input.YtdMedicareWages;
+        YtdStateWages = input.YtdStateWages;
 
         // Federal W-4
         SelectedFederalPickerItem = FederalStatuses.FirstOrDefault(s => s.Value == input.FederalW4.FilingStatus);

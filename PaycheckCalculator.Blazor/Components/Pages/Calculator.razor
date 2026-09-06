@@ -169,7 +169,7 @@
                 }
                 @if (!_hourlySalaryMode)
                 {
-                    <div class="form-section-title">Year-to-Date Wages (for FICA caps)</div>
+                    <div class="form-section-title">Year-to-Date Wages (for wage-base caps)</div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>YTD Social Security Wages ($)</label>
@@ -178,6 +178,17 @@
                         <div class="form-group">
                             <label>YTD Medicare Wages ($)</label>
                             <input type="number" @bind="_ytdMedWages" min="0" step="0.01" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>YTD State Wages ($)</label>
+                            <input type="number" @bind="_ytdStateWages" min="0" step="0.01" />
+                            <span class="form-note">
+                                Used where a state caps its disability or paid-leave premium at an
+                                annual wage base — New Jersey, Massachusetts, Rhode Island, Oregon,
+                                Colorado and New York's Paid Family Leave.
+                            </span>
                         </div>
                     </div>
                 }
@@ -770,6 +781,8 @@
 
                     <div class="result-card">
                         <div class="result-card-title">Tax Withholdings</div>
+
+                        <div class="result-group-heading">Federal</div>
                         <div class="result-row">
                             <span>Federal Income Tax</span>
                             <div class="result-right">
@@ -801,22 +814,20 @@
                                 </div>
                             </div>
                         }
-                        <div class="result-row">
-                            <span>@_result.State State Income Tax</span>
-                            <div class="result-right">
-                                <span class="result-value">@_result.StateWithholding.ToString("C")</span>
-                                <button class="btn-info" @onclick='() => OpenExplanation(ExplanationLineKey.StateWithholding)' title="Show calculation">?</button>
-                            </div>
-                        </div>
-                        @if (_result.StateDisabilityInsurance > 0)
+
+                        @if (_result.StateTaxLines.Count > 0)
                         {
-                            <div class="result-row">
-                                <span>@_result.StateDisabilityInsuranceLabel</span>
-                                <div class="result-right">
-                                    <span class="result-value">@_result.StateDisabilityInsurance.ToString("C")</span>
-                                    <button class="btn-info" @onclick='() => OpenExplanation(ExplanationLineKey.StateDisability)' title="Show calculation">?</button>
+                            <div class="result-group-heading">@UsStateNames.GetDisplayName(_result.State)</div>
+                            @foreach (var line in _result.StateTaxLines)
+                            {
+                                <div class="result-row">
+                                    <span>@line.Label</span>
+                                    <div class="result-right">
+                                        <span class="result-value">@line.Amount.ToString("C")</span>
+                                        <button class="btn-info" @onclick="() => OpenStateLineExplanation(line)" title="Show calculation">?</button>
+                                    </div>
                                 </div>
-                            </div>
+                            }
                         }
                     </div>
 
@@ -1114,6 +1125,7 @@
     private int _paycheckNumber = 1;
     private decimal _ytdSsWages = 0m;
     private decimal _ytdMedWages = 0m;
+    private decimal _ytdStateWages = 0m;
 
     // Calculation mode (standard paycheck vs. gross-up vs. bonus / supplemental wage)
     private string _mode = "standard";
@@ -1389,7 +1401,8 @@
             },
             Deductions = _deductions.Select(d => d.ToDeduction()).ToArray(),
             YtdSocialSecurityWages = _ytdSsWages,
-            YtdMedicareWages = _ytdMedWages
+            YtdMedicareWages = _ytdMedWages,
+            YtdStateWages = _ytdStateWages
         };
 
         try
@@ -1741,6 +1754,24 @@
     private void OpenExplanation(ExplanationLineKey key)
     {
         _modalExplanation = _result?.Explanation.Get(key);
+        if (_modalExplanation != null)
+            _showModal = true;
+    }
+
+    private void OpenStateLineExplanation(StateTaxLine line)
+    {
+        // Several lines can share a key — New Jersey's SDI and FLI are both
+        // StateDisability — so look the sibling up by its own sub-key.
+        var key = line.Kind switch
+        {
+            StateTaxLineKind.CountyIncome => ExplanationLineKey.StateCountyIncome,
+            StateTaxLineKind.LocalIncome => ExplanationLineKey.StateLocalIncome,
+            StateTaxLineKind.PayrollAssessment => ExplanationLineKey.StateDisability,
+            _ => ExplanationLineKey.StateWithholding
+        };
+
+        _modalExplanation = _result?.Explanation.Get(key, line.ExplanationSubKey)
+            ?? _result?.Explanation.Get(key);
         if (_modalExplanation != null)
             _showModal = true;
     }

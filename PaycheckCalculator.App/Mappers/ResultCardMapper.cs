@@ -96,6 +96,7 @@ public static class ResultCardMapper
             StateWithholding = result.StateWithholding,
             StateDisabilityInsurance = result.StateDisabilityInsurance,
             StateDisabilityInsuranceLabel = result.StateDisabilityInsuranceLabel,
+            StateTaxLines = result.StateTaxLines,
             PreTaxDeductions = result.PreTaxDeductions,
             PostTaxDeductions = result.PostTaxDeductions,
             TotalTaxes = result.TotalTaxes,

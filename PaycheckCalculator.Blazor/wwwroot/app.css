@@ -948,6 +948,21 @@ html, body {
     margin-bottom: 8px;
 }
 
+/* Groups the withholding lines under a bold Federal / <state> heading so the
+   two jurisdictions read as separate blocks, the way a paystub does. */
+.result-group-heading {
+    font-size: 0.85em;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 12px 0 2px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.25));
+}
+
+.result-group-heading:first-of-type {
+    margin-top: 0;
+}
+
 .result-row {
     display: flex;
     align-items: center;

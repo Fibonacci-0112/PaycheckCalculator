@@ -292,6 +292,19 @@
                                 </Entry.Behaviors>
                             </Entry>
                         </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Prior State Wages (this year)" Grid.Column="0"
+                                   Style="{StaticResource FieldLabel}" />
+                            <Entry Text="{Binding YtdStateWages}" Keyboard="Numeric" Grid.Column="1"
+                                   TextColor="{StaticResource Ink}" BackgroundColor="{StaticResource SurfaceSunken}">
+                                <Entry.Behaviors>
+                                    <behaviors:DecimalFormatBehavior IsCurrency="True" />
+                                </Entry.Behaviors>
+                            </Entry>
+                        </Grid>
+                        <Label Text="Used where a state caps its disability or paid-leave premium at an annual wage base."
+                               Style="{StaticResource FieldLabel}" FontSize="11"
+                               TextColor="{StaticResource Muted}" />
                         </VerticalStackLayout>
 
                         <Button Text="Calculate" Command="{Binding CalculateCommand}"

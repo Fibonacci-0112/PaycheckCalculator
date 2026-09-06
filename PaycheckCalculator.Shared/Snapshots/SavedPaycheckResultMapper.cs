@@ -23,6 +23,13 @@ public static class SavedPaycheckResultMapper
             StateWithholding = result.StateWithholding,
             StateDisabilityInsurance = result.StateDisabilityInsurance,
             StateDisabilityInsuranceLabel = result.StateDisabilityInsuranceLabel,
+            StateTaxLines = result.StateTaxLines.Select(line => new SavedStateTaxLineDto
+            {
+                Kind = line.Kind,
+                Label = line.Label,
+                Amount = line.Amount,
+                ShortCode = line.ShortCode
+            }).ToList(),
             PreTaxDeductions = result.PreTaxDeductions,
             PostTaxDeductions = result.PostTaxDeductions,
             TotalTaxes = result.TotalTaxes,

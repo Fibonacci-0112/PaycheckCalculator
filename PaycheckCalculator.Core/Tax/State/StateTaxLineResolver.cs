@@ -32,6 +32,31 @@ public static class StateTaxLineResolver
         return StateTaxLineOrdering.Order(lines.Select(Round));
     }
 
+    /// <summary>
+    /// Builds display lines from the scalar amounts alone, for callers that hold a
+    /// result without itemized lines — a hand-constructed <c>PaycheckResult</c>, or
+    /// one restored from a snapshot saved before the itemized model existed.
+    /// </summary>
+    public static IReadOnlyList<StateTaxLine> FromTotals(
+        decimal stateWithholding,
+        decimal assessment,
+        string assessmentLabel)
+        => StateTaxLineOrdering.Order(new[]
+        {
+            new StateTaxLine
+            {
+                Kind = StateTaxLineKind.StateIncome,
+                Label = StateIncomeLabel,
+                Amount = stateWithholding
+            },
+            new StateTaxLine
+            {
+                Kind = StateTaxLineKind.PayrollAssessment,
+                Label = assessmentLabel,
+                Amount = assessment
+            }
+        });
+
     private static IEnumerable<StateTaxLine> Synthesize(StateWithholdingResult stateResult)
     {
         yield return new StateTaxLine

@@ -1,5 +1,6 @@
 using PaycheckCalculator.Core.Explanation;
 using PaycheckCalculator.Core.Models;
+using PaycheckCalculator.Core.Tax.State;
 
 namespace PaycheckCalculator.App.Models;
 
@@ -23,6 +24,13 @@ public sealed class ResultCardModel
     public decimal AdditionalMedicareWithholding { get; init; }
     public decimal StateWithholding { get; init; }
     public decimal StateDisabilityInsurance { get; init; }
+
+    /// <summary>
+    /// The itemized state lines — state/county/local income tax and one entry per
+    /// payroll assessment — already in display order. The Results page binds its
+    /// state block to this rather than to the scalar fields above.
+    /// </summary>
+    public IReadOnlyList<StateTaxLine> StateTaxLines { get; init; } = Array.Empty<StateTaxLine>();
 
     // ── Deductions ──────────────────────────────────────────
     public decimal PreTaxDeductions { get; init; }
@@ -73,6 +81,9 @@ public sealed class ResultCardModel
     // ── Display helpers (UI-only concerns) ──────────────────
     /// <summary>True when state disability insurance is non-zero and should be shown.</summary>
     public bool ShowStateDisabilityInsurance => StateDisabilityInsurance > 0;
+
+    /// <summary>True when the paycheck has any state-level tax line to show.</summary>
+    public bool HasStateTaxLines => StateTaxLines.Count > 0;
 
     /// <summary>
     /// Display label for the disability-insurance line item.
