@@ -107,10 +107,12 @@ public static class StateTaxConfigs2026
             // (5.80%/6.75%/7.15%) per Maine Revenue Services 2026 Withholding Tables.
 
             // Maryland uses a dedicated calculator (MarylandWithholdingCalculator)
-            // — MW507 filing statuses (Single/Married/Head of Household), variable
-            // standard deduction (15% of wages, min $1,600/$3,200, max $2,550/$5,100),
-            // $3,200 per MW507 exemption, and ten graduated brackets (2%–6.5%) per the
-            // Comptroller of Maryland 2026 Employer Withholding Guide.
+            // — MW507 filing statuses (Single/Married/Head of Household) and the
+            // guide's per-payroll-period percentage method: a flat $3,400 standard
+            // deduction and $3,200 per MW507 exemption, both prorated to the period,
+            // a rate schedule floored at the 4.75% statutory minimum, and a separate
+            // county income tax line, per the Comptroller of Maryland 2026 Employer
+            // Withholding Guide. Note this one does not annualize.
 
             // Minnesota uses a dedicated calculator (MinnesotaWithholdingCalculator)
             // — W-4MN filing statuses (Single/Married/Head of Household),

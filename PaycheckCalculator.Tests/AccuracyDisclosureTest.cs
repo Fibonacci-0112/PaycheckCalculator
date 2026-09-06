@@ -40,11 +40,25 @@ public sealed class AccuracyDisclosureTest
     }
 
     [Fact]
-    public void Maryland_DisclosesItsDivergenceFromThePublishedTables()
+    public void Maryland_NoLongerClaimsToDivergeFromThePublishedTables()
+    {
+        // The calculator used to annualize wages and apply the pre-2025 variable
+        // 15% standard deduction, and said so in a note. It now follows the
+        // guide's per-period percentage method, so the note must be gone rather
+        // than left warning about a difference that no longer exists.
+        var notes = NotesFor(UsState.MD);
+
+        Assert.DoesNotContain(notes, note =>
+            note.Description.Contains("15% standard deduction", StringComparison.OrdinalIgnoreCase)
+            || note.Description.Contains("differ modestly from the published tables", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Maryland_StillDisclosesTheDelawareCommutersTableItDoesNotImplement()
     {
         var notes = NotesFor(UsState.MD);
 
-        Assert.Contains(notes, note => note.Description.Contains("standard deduction", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(notes, note => note.Description.Contains("work in Delaware", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

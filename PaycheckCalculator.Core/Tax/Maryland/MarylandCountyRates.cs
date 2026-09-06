@@ -10,9 +10,14 @@ namespace PaycheckCalculator.Core.Tax.Maryland;
 /// <c>md_county_rates_2026.json</c>.
 /// <para>
 /// Unlike the optional local taxes other states levy, every Maryland employee
-/// pays a county rate, applied to the same taxable wages the state brackets use.
-/// Most counties charge a single rate; Anne Arundel and Frederick apply
+/// pays a county rate, applied to the same taxable income the state schedule
+/// uses. Most counties charge a single rate; Anne Arundel and Frederick apply
 /// graduated marginal brackets that differ by filing status.
+/// </para>
+/// <para>
+/// The county's actual rate is used, not the rounded-up rate group the
+/// Comptroller's printed tables bucket it into — those groups exist so manual
+/// filers have ten tables to look up instead of twenty-four.
 /// </para>
 /// </summary>
 public sealed class MarylandCountyRates
@@ -70,14 +75,24 @@ public sealed class MarylandCountyRates
     public bool IsKnown(string? county) => county is not null && _byName.ContainsKey(county);
 
     /// <summary>
-    /// Computes the county income tax on <paramref name="annualTaxableIncome"/> and
-    /// the worksheet behind it. Falls back to <see cref="DefaultCounty"/> — the
-    /// Comptroller's own rule — when the selection is missing or unrecognized.
+    /// Computes one payroll period's county income tax on
+    /// <paramref name="taxableIncome"/> and the worksheet behind it. Falls back to
+    /// <see cref="DefaultCounty"/> — the Comptroller's own rule — when the
+    /// selection is missing or unrecognized.
     /// </summary>
-    public MarylandCountyTax Calculate(string? county, decimal annualTaxableIncome, bool isMarriedOrHeadOfHousehold)
+    /// <param name="county">The county of residence reported on Form MW507.</param>
+    /// <param name="taxableIncome">Maryland taxable income for this payroll period.</param>
+    /// <param name="bracketDivisor">
+    /// Divisor that scales the graduated counties' annual bracket ceilings down to
+    /// the payroll period, matching how the state schedule is scaled. Ignored by
+    /// the flat-rate counties, whose rate is the same at any income.
+    /// </param>
+    /// <param name="isMarriedOrHeadOfHousehold">Selects the joint bracket set.</param>
+    public MarylandCountyTax Calculate(
+        string? county, decimal taxableIncome, int bracketDivisor, bool isMarriedOrHeadOfHousehold)
     {
         var rate = _byName.TryGetValue(county ?? "", out var found) ? found : _byName[DefaultCounty];
-        var income = Math.Max(0m, annualTaxableIncome);
+        var income = Math.Max(0m, taxableIncome);
         var steps = new List<ExplanationStep>();
 
         if (rate.Brackets is null)
@@ -85,7 +100,7 @@ public sealed class MarylandCountyRates
             var flat = income * rate.FlatRate;
             steps.Add(new ExplanationStep(
                 $"{rate.Name} local rate",
-                "Maryland county income tax applies to the same taxable wages as the state brackets.",
+                "Maryland county income tax applies to the same taxable income as the state schedule.",
                 flat,
                 $"{Money(income)} × {Percent(rate.FlatRate)} = {Money(flat)}"));
             return new MarylandCountyTax(rate.Name, flat, steps);
@@ -97,9 +112,12 @@ public sealed class MarylandCountyRates
 
         foreach (var bracket in brackets)
         {
-            var upper = bracket.UpTo ?? decimal.MaxValue;
             if (income <= lower)
                 break;
+
+            var upper = bracket.UpTo is { } annualCeiling
+                ? annualCeiling / bracketDivisor
+                : decimal.MaxValue;
 
             var slice = Math.Min(income, upper) - lower;
             var portion = slice * bracket.Rate;
@@ -186,11 +204,11 @@ public sealed class MarylandCountyRates
     }
 }
 
-/// <summary>The county income tax for a year, plus the steps that produced it.</summary>
+/// <summary>One payroll period's county income tax, plus the steps that produced it.</summary>
 /// <param name="CountyName">The county actually used, after any fallback.</param>
-/// <param name="AnnualTax">County tax on the annualized taxable income.</param>
+/// <param name="Tax">County tax on the period's taxable income, unrounded.</param>
 /// <param name="Steps">Worksheet steps for the "Show Your Work" breakdown.</param>
 public sealed record MarylandCountyTax(
     string CountyName,
-    decimal AnnualTax,
+    decimal Tax,
     IReadOnlyList<ExplanationStep> Steps);

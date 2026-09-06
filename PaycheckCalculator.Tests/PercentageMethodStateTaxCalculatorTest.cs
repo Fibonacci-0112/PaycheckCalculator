@@ -246,9 +246,10 @@ public class PercentageMethodWithholdingAdapterExtendedTest
         // standard deduction, $5,300 allowance, three graduated brackets).
         //
         // Maryland is also absent: it uses the dedicated
-        // MarylandWithholdingCalculator (MW507 filing statuses, variable
-        // standard deduction 15% of wages with min/max, $3,200 per exemption,
-        // ten graduated brackets 2%–6.5%).
+        // MarylandWithholdingCalculator (MW507 filing statuses, the guide's
+        // per-payroll-period percentage method with a flat $3,400 standard
+        // deduction and $3,200 per exemption, a rate schedule floored at the
+        // 4.75% statutory minimum, and a separate county income tax line).
         //
         // Massachusetts is also absent: it uses the dedicated
         // MassachusettsWithholdingCalculator (M-4 filing statuses, personal/

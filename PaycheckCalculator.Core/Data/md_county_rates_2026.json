@@ -1,8 +1,8 @@
 {
   "taxYear": 2026,
-  "documentTitle": "2026 Maryland State and Local Income Tax Withholding Information, Attachment 1 — Local Income Tax Withholding Rates for 2026",
-  "sourceUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/md/state-payroll/memos/2026/2026-maryland-state-and-local-withholding-information.pdf",
-  "note": "Rates are a percentage of Maryland taxable wages — the same base the state brackets use. The county of residence reported on Form MW507 determines the rate. Anne Arundel and Frederick apply graduated rates; the brackets are marginal, matching how the state schedule works.",
+  "documentTitle": "Maryland Withholding Tax Facts, January 2026 – December 2026 (COM RAD 098, revised 12/25) — County Rates",
+  "sourceUrl": "https://www.marylandcomptroller.gov/content/dam/mdcomp/tax/legal-publications/facts/withholding-tax-facts-2026.pdf",
+  "note": "Rates are a percentage of Maryland taxable income — the same base the state schedule uses. The county of residence reported on Form MW507 determines the rate. These are each county's actual rate; the Comptroller also groups them into ten rounded-up rate brackets (2.25%, 2.40%, 2.65%, 2.75%, 2.85%, 3.00%, 3.05%, 3.10%, 3.20%, 3.30%) so that manual filers have ten lookup tables instead of twenty-four, but an automated system applies the actual rate. Anne Arundel and Frederick apply graduated rates on annual taxable income; the brackets are marginal and are scaled to the payroll period, matching how the state schedule works.",
   "defaultCounty": "Unknown Maryland County",
   "defaultNote": "The Comptroller directs employers to withhold at the highest local rate (3.30% for 2026) when the employee has not reported a county, so that is this calculator's default too.",
   "counties": [
