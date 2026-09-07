@@ -19,6 +19,7 @@ Scope: this file applies to everything under `PaycheckCalculator.Blazor/`.
 - Core tax data is linked into build output under `TaxData/`; keep link names aligned with Core loader expectations, especially `TaxData/schemas/*.json`.
 - CSV/PDF export logic belongs in `Services/Export/` and should render from domain results plus projection/comparison data. Do not recalculate values inside exporters.
 - Keep `wwwroot/export.js` limited to browser download/print glue. Business logic belongs in C# services.
+- `wwwroot/auto-select.js` handles select-all-on-focus for inputs globally; do not add per-field focus/select handlers in Razor markup.
 - Maintain print styles in CSS and avoid layout changes that break printable results.
 
 ## UI consistency

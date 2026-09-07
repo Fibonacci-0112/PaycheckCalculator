@@ -26,6 +26,7 @@ Scope: this file applies to everything under `PaycheckCalculator.App/`.
 - Keep CSV/PDF/print rendering in `Services/` and presentation models. Services should persist/open rendered bytes; they should not recalculate taxes.
 - Results, annual projections, and A/B comparisons should stay consistent with the Blazor experience unless a task explicitly asks for platform-specific behavior.
 - Prefer accessible, predictable controls over custom drawing. Use custom drawables only for genuinely visual components such as charts.
+- Select-all-on-focus for `Entry` fields is installed globally by `Behaviors/EntryAutoSelect.cs` (hooked from `MauiProgram`); do not add per-field `Focused` handlers for it. Opt a field out with `behaviors:EntryAutoSelect.IsEnabled="False"`.
 
 ## Useful commands
 
