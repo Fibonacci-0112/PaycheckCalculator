@@ -23,6 +23,10 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
 
+        // Every Entry highlights its whole value when it takes focus, so moving from field to
+        // field leaves the input ready to be typed over. See Behaviors/EntryAutoSelect.cs.
+        Behaviors.EntryAutoSelect.Install();
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
