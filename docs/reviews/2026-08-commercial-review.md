@@ -1,6 +1,26 @@
 # Improvement Recommendations
 
-_Prepared August 2026, against commit `788337b`. Companion to [ROADMAP.md](ROADMAP.md), which stays the engineering plan of record; this document is a commercial reprioritization of it._
+> **Archived — point-in-time review, not the plan of record.**
+>
+> This is a commercial review written in August 2026 against commit `788337b`. It is kept
+> for its analysis and its reasoning, and is **not maintained**. Its live recommendations were
+> folded into [`ROADMAP.md`](../../ROADMAP.md) on September 10, 2026; the roadmap is the only
+> plan of record. Where the two disagree, the roadmap wins.
+>
+> Four findings below were already closed by later work and should be read as history:
+>
+> | Finding | Status |
+> |---|---|
+> | §2.3 `HourlySalaryCalculator` "built, unsurfaced" | **Closed** — surfaced in both front-ends (#238) |
+> | §3.2 web app forgets everything when the tab closes | **Closed** — `localStorage` behind the session stores (#238) |
+> | §5 `CLAUDE.md`/`AGENTS.md` describe .NET 11 | **Closed** in the root files (the per-project `AGENTS.md` files and `docs/wiki/` still drift) |
+> | §5 API falls back to development credentials | **Open**, and unchanged — see roadmap Milestone 4.1 |
+>
+> The premise that dates fastest is §1.2 and Part 2: both assume traffic to measure and acquire.
+> Nothing is deployed, so that work is sequenced behind a deployment in the roadmap rather than
+> ahead of it.
+
+_Prepared August 2026, against commit `788337b`. Companion to [ROADMAP.md](../../ROADMAP.md), which stays the engineering plan of record; this document is a commercial reprioritization of it._
 
 ## The one-paragraph version
 
