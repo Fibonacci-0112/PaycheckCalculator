@@ -34,4 +34,4 @@ dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~California|Ful
 dotnet test PaycheckCalculator.Tests --filter "DisplayName~Rounds"
 ```
 
-The full test project targets `net11.0` and should remain runnable without the MAUI workload.
+The full test project targets `net10.0` and should remain runnable without the MAUI workload.

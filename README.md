@@ -20,7 +20,7 @@ The tax, gross-up, annual projection, budgeting, and reporting engines live in t
 - **Federal income tax** — Implements the IRS Publication 15-T 2026 percentage method for automated payroll systems. Supported W-4 inputs include filing status, Step 2 checkbox, Step 3 credits, Step 4(a) other income, Step 4(b) deductions, and Step 4(c) extra withholding.
 - **FICA taxes** — Calculates Social Security, Medicare, and Additional Medicare withholding, with YTD wage inputs available where needed to handle the Social Security wage-base cap and Additional Medicare threshold mid-year.
 - **State withholding for all 50 states plus DC** — Each jurisdiction is handled by a registered `IStateWithholdingCalculator` under `PaycheckCalculator.Core/Tax/<StateName>/`. State-specific UI inputs are schema-driven from `PaycheckCalculator.Core/Data/Schemas/*.json`.
-- **State disability / paid-leave premiums** — California SDI, Colorado FMLI, Connecticut PFMLI, and Washington WA Cares Fund are surfaced as separate result lines with dynamic labels.
+- **State disability / paid-leave premiums** — Employee-paid premiums for ten jurisdictions are surfaced as separate result lines with dynamic labels: California SDI, Colorado FAMLI, Connecticut PFMLI, Washington WA Cares Fund, New Jersey TDI and FLI, New York DBL and PFL, Massachusetts PFML (medical and family), Rhode Island TDI, Oregon Paid Leave, and Hawaii TDI. Maryland county income tax is withheld as its own line. Rates, wage bases, and per-week or annual caps live in `state_payroll_assessments_2026.json` and `md_county_rates_2026.json`.
 - **Pre-tax and post-tax deductions** — Deductions can be dollar amounts or percentages. Pre-tax deductions independently control whether they reduce federal taxable wages, state taxable wages, and/or FICA wages.
 - **Show Your Work explanations** — Result lines carry step-by-step explanations through the Core `Explanation/` model and are displayed by both front-ends.
 - **Annual projection** — Projects per-paycheck results across the full year, including annualized totals, projected YTD values, estimated annual liability, and over/under withholding.
@@ -132,7 +132,7 @@ dotnet test PaycheckCalculator.Tests
 
 The test project covers the paycheck pipeline, federal withholding, FICA, all state calculators, dynamic schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, reports, snapshot JSON, merge behavior, sync API integration, and export renderers.
 
-CI explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux. Its project references build `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.API`, and `PaycheckCalculator.Blazor` transitively; the MAUI app is not built by that workflow. CodeQL runs in a separate workflow.
+CI runs two jobs on Linux. The `build` job restores, builds, and tests `PaycheckCalculator.Tests`, whose project references build `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.API`, and `PaycheckCalculator.Blazor` transitively. The `MAUI Android build` job builds `PaycheckCalculator.App` for `net10.0-android`; the iOS, Mac Catalyst, and Windows targets require other runners and are not built. CodeQL runs in a separate workflow.
 
 ### Run the Blazor web app
 

@@ -26,7 +26,7 @@ Start at the top if you are new. Jump directly to a chapter if you are chasing a
 
 1. **[Solution, Projects & Build](01-solution-and-build.md)**
    The six projects, their dependency graph and layering rules, target frameworks, the pinned
-   preview SDK, NuGet dependencies, CI workflows, and the local/container run scripts.
+   pinned SDK, NuGet dependencies, CI workflows, and the local/container run scripts.
 
 2. **[Core Domain Model](02-core-domain-model.md)**
    Every type in `PaycheckCalculator.Core/Models/` — `PaycheckInput`, `PaycheckResult`,

@@ -32,12 +32,12 @@ configurations, the analogue of the classic `.sln` deploy flag.
 
 | Project | SDK | Target framework(s) | Role |
 |---|---|---|---|
-| `PaycheckCalculator.Core` | `Microsoft.NET.Sdk` | `net11.0` | All tax/pay/budget math. No UI, HTTP, or persistence. |
-| `PaycheckCalculator.Shared` | `Microsoft.NET.Sdk` | `net11.0` | Sync DTOs, JSON config, mergers, typed HTTP client, store + entitlement abstractions. |
-| `PaycheckCalculator.API` | `Microsoft.NET.Sdk.Web` | `net11.0` | ASP.NET Core minimal API: Identity accounts + authorized sync. |
-| `PaycheckCalculator.Blazor` | `Microsoft.NET.Sdk.Web` | `net11.0` | Blazor Server web front-end. |
-| `PaycheckCalculator.App` | `Microsoft.NET.Sdk` (`UseMaui`) | `net11.0-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0` | .NET MAUI native front-end. |
-| `PaycheckCalculator.Tests` | `Microsoft.NET.Sdk` | `net11.0` | xUnit suite covering Core, Shared, Api, and the Blazor exporters. |
+| `PaycheckCalculator.Core` | `Microsoft.NET.Sdk` | `net10.0` | All tax/pay/budget math. No UI, HTTP, or persistence. |
+| `PaycheckCalculator.Shared` | `Microsoft.NET.Sdk` | `net10.0` | Sync DTOs, JSON config, mergers, typed HTTP client, store + entitlement abstractions. |
+| `PaycheckCalculator.API` | `Microsoft.NET.Sdk.Web` | `net10.0` | ASP.NET Core minimal API: Identity accounts + authorized sync. |
+| `PaycheckCalculator.Blazor` | `Microsoft.NET.Sdk.Web` | `net10.0` | Blazor Server web front-end. |
+| `PaycheckCalculator.App` | `Microsoft.NET.Sdk` (`UseMaui`) | `net10.0-android`, `-ios`, `-maccatalyst`, `-windows10.0.19041.0` | .NET MAUI native front-end. |
+| `PaycheckCalculator.Tests` | `Microsoft.NET.Sdk` | `net10.0` | xUnit suite covering Core, Shared, Api, and the Blazor exporters. |
 
 Every project sets `ImplicitUsings=enable` and `Nullable=enable`.
 
@@ -47,9 +47,9 @@ Every project sets `ImplicitUsings=enable` and `Nullable=enable`.
 produce:
 
 ```xml
-<TargetFrameworks>net11.0-android</TargetFrameworks>
-<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
-<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
+<TargetFrameworks>net10.0-android</TargetFrameworks>
+<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 ```
 
 So Android builds everywhere, Apple targets only on macOS, and Windows only on Windows. Minimum
@@ -130,23 +130,27 @@ Without the alias, the Blazor host's `Program` would collide with
 // global.json
 {
   "sdk": {
-    "version": "11.0.100-preview.7.26381.103",
-    "rollForward": "latestFeature",
-    "allowPrerelease": true
+    "version": "10.0.400",
+    "rollForward": "latestFeature"
   }
 }
 ```
 
-The repo runs on a **.NET 11 preview SDK**. `latestFeature` roll-forward lets a newer patch of
-the same feature band satisfy the requirement. Package versions across the graph are pinned to
-matching preview builds (`11.0.0-preview.6.26359.118` and friends).
+The repo runs on the **.NET 10 GA SDK**. `latestFeature` roll-forward lets a newer patch of the
+same feature band satisfy the requirement. Package versions across the graph are the matching
+10.0 releases (`Microsoft.AspNetCore.Identity.EntityFrameworkCore` 10.0.11,
+`Npgsql.EntityFrameworkCore.PostgreSQL` 10.0.3, `Microsoft.Maui.Controls` 10.0.90); no preview
+packages remain.
 
 The MAUI project additionally sets `<LangVersion>preview</LangVersion>`, which is required for
 the `[ObservableProperty]`-on-partial-property syntax used throughout the view models (see
 [13 — The MAUI App](13-maui-app.md)).
 
-Setup notes for the preview SDK are recorded in
-[`.agents/memory/dotnet-preview-sdk-setup.md`](../../.agents/memory/dotnet-preview-sdk-setup.md).
+Claude Code on the web installs this SDK automatically via the `SessionStart` hook
+`.claude/hooks/session-start.sh`, which reads the pin out of `global.json` at run time.
+[`.agents/memory/dotnet-preview-sdk-setup.md`](../../.agents/memory/dotnet-preview-sdk-setup.md)
+records the older manual workaround from when the repo pinned a preview SDK; it no longer
+applies here.
 
 ---
 
@@ -199,7 +203,7 @@ dotnet run --project PaycheckCalculator.App
 ```
 
 **Linux/CI reality check:** `Core`, `Shared`, `Api`, `Blazor`, and `Tests` all target plain
-`net11.0` and build on Linux with no MAUI workload installed. Only `PaycheckCalculator.App`
+`net10.0` and build on Linux with no MAUI workload installed. Only `PaycheckCalculator.App`
 needs the workload. That is why CI can validate the entire engine and both server-side
 projects without ever touching MAUI.
 
@@ -266,14 +270,28 @@ See also [`replit.md`](../../replit.md) and [`replit.nix`](../../replit.nix).
 
 Runs on push and pull request against `main`, on `ubuntu-latest`:
 
-1. `actions/setup-dotnet@v4` with the exact pinned SDK `11.0.100-preview.7.26381.103`
+Two parallel jobs.
+
+`build`:
+
+1. `actions/setup-dotnet@v4` with the pinned SDK `10.0.400`
 2. `dotnet restore PaycheckCalculator.Tests`
 3. `dotnet build PaycheckCalculator.Tests --no-restore`
 4. `dotnet test PaycheckCalculator.Tests --no-build --verbosity normal`
 
 Targeting the test project alone transitively restores, builds, and validates Core, Shared,
 Api, and Blazor through project references — while never requiring the MAUI workload.
-`permissions: contents: read` keeps the token minimal.
+
+`MAUI Android build`:
+
+1. `actions/setup-dotnet@v4` reading the pin from `global.json`
+2. `dotnet workload install maui-android`
+3. `dotnet build … -t:InstallAndroidDependencies` to provision the Android SDK platform, which
+   the runner's preinstalled SDK does not necessarily carry
+4. `dotnet restore` + `dotnet build PaycheckCalculator.App -f net10.0-android`
+
+Android is the only MAUI target that builds on a Linux runner, so iOS, Mac Catalyst, and
+Windows remain uncovered by CI. `permissions: contents: read` keeps the token minimal.
 
 ### `.github/workflows/codeql.yml`
 
@@ -296,9 +314,10 @@ manual build instead runs `actions/setup-dotnet` against `global.json`, then res
 `PaycheckCalculator.Tests` — the same Linux-buildable set as `dotnet.yml`, including the generated
 Razor code. Each job uploads under `category: "/language:<language>"`.
 
-**MAUI is not built by either workflow**, so `PaycheckCalculator.App` is outside CodeQL's C#
-coverage. A change that only compiles under the MAUI workload will not be caught by CI — build
-`PaycheckCalculator.App` locally when you touch it.
+**CodeQL does not build MAUI**, so `PaycheckCalculator.App` is outside CodeQL's C# coverage even
+though `dotnet.yml`'s `MAUI Android build` job now compiles it. Android compilation breakage is
+caught by CI; a change that only breaks the iOS, Mac Catalyst, or Windows targets is not, so build
+those locally when you touch platform-specific code.
 
 ---
 
@@ -307,7 +326,7 @@ coverage. A change that only compiles under the MAUI workload will not be caught
 ```text
 PaycheckCalculator/
 ├── PaycheckCalculator.slnx          # Solution (XML .slnx format)
-├── global.json                      # Pinned preview SDK
+├── global.json                      # Pinned .NET 10 SDK
 ├── compose.yml                      # Local PostgreSQL
 ├── start-api.sh / start-blazor.sh   # Container run scripts
 ├── CLAUDE.md / AGENTS.md            # Agent guidance (kept in sync with each other)

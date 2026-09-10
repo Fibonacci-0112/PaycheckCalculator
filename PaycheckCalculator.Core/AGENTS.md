@@ -34,4 +34,4 @@ dotnet build PaycheckCalculator.Core
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~<CalculatorOrScenarioName>"
 ```
 
-`PaycheckCalculator.Core` targets `net11.0`.
+`PaycheckCalculator.Core` targets `net10.0`.

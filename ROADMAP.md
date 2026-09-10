@@ -94,25 +94,31 @@ loudly on a missing or malformed entry, so an uncited number cannot ship quietly
 - **Open:** property tests for gross-up convergence.
 - Standing obligation: a regression case for every confirmed production calculation defect.
 
-### 0.3 Documentation reconciliation — **regressed, needs a sweep**
+### 0.3 Documentation reconciliation — **swept**
 
-The baselines below are correct in `README.md`, `CLAUDE.md` and the root `AGENTS.md`, and **wrong**
-in the six per-project `AGENTS.md` files, `docs/wiki/{Home,Getting-Started,Contributing}.md`,
-`docs/reference/01-solution-and-build.md`, and `replit.md`, all of which still describe .NET 11 and a
-preview SDK pin:
+These baselines are now stated consistently across `README.md`, `CLAUDE.md`, the root and six
+per-project `AGENTS.md` files, `docs/wiki/`, `docs/reference/`, and `replit.md`. They had regressed
+to .NET 11 and a preview SDK pin everywhere except the root guidance files:
 
-- Core targets **.NET 10** only; the SDK pin is `10.0.400` with `latestFeature` roll-forward.
+- Core targets **.NET 10** only; the SDK pin is `10.0.400` with `latestFeature` roll-forward, and no preview packages remain.
 - The API uses Npgsql/PostgreSQL in normal operation; SQLite is limited to integration tests.
-- CI restores, builds and tests `PaycheckCalculator.Tests`, building Core, Shared, API and Blazor transitively, and separately builds the MAUI Android target.
+- CI runs two jobs: one restores, builds and tests `PaycheckCalculator.Tests` (building Core, Shared, API and Blazor transitively), and one builds the MAUI Android target. iOS, Mac Catalyst and Windows need other runners and stay uncovered.
+- `README.md` lists all ten disability/paid-leave jurisdictions and Maryland county tax, not the four it previously named.
 
-`README.md` also under-reports state coverage: it lists four disability/paid-leave states where ten
-are implemented.
+Deliberately left alone: `.agents/memory/dotnet-preview-sdk-setup.md` keeps its .NET 11 worked
+example, since it documents a technique for any project pinning an SDK newer than the available
+modules; it carries a note that it no longer describes this repository. The archived review under
+`docs/reviews/` is frozen by design and is not swept.
+
+Standing obligation: this is the second time these baselines have drifted. The durable fix is
+mechanical — a CI check that greps the docs for the TFMs and SDK pin actually declared in
+`global.json` and the csproj files — and belongs with the other CI work in 2.2.
 
 ### Exit criteria
 
 - Every production calculator has a source record and verification owner/date. **Met.**
 - All 51 jurisdictions pass registration, schema, and representative calculation tests. **Met.**
-- Known documentation contradictions are resolved. **Not met** — see 0.3.
+- Known documentation contradictions are resolved. **Met** — see 0.3. Staying met needs the automated check noted there.
 - A calculation defect can be reported, reproduced, fixed, and documented through a defined workflow. **Met.**
 
 ## Milestone 1 — Tax-year platform — **NOW**
@@ -173,6 +179,7 @@ Build a platform-aware matrix rather than invoking only the test project:
 - ~~MAUI Android build on a Linux runner.~~ **Done** — the `android` job in `dotnet.yml`. This closed a real gap: the MAUI app was merged broken at least once (#241 fixed a CS1503 that reached main because the change could not be compiled where it was written), and #243 shipped MAUI code its own description records as never compiled.
 - MAUI Windows build on a Windows runner; iOS/Mac Catalyst on macOS. Still uncovered.
 - Formatting/analyzer checks, dependency vulnerability review, and tax-pack validation.
+- A documentation consistency check: assert the TFMs and SDK version named in `README.md`, `docs/` and the `AGENTS.md` files match `global.json` and the csproj files. This drift has now been repaired twice by hand (0.3).
 - Coverage reporting for Core/Shared, plus mutation testing for the highest-risk calculation primitives.
 - Publish test reports and build artifacts for failed-run diagnosis.
 - **Watch CodeQL.** All three analysis jobs failed together on main between September 6 and 7 and nothing surfaced it; they pass again as of run 146. Simultaneous failure across three unrelated languages at the upload step points at infrastructure rather than code, but an unnoticed two-day outage in the security workflow is itself the finding.
@@ -222,7 +229,7 @@ about acquisition, conversion or pricing is currently unanswerable. This milesto
 
 - Stand up the Blazor app at a real domain, with TLS, a health check, and a documented redeploy path.
 - Decide whether the sync API deploys alongside it or stays local-only for now. The calculator works fully without it.
-- The Replit configuration in `.replit`/`replit.md` is the closest thing to a deployment story and is stale — it describes a .NET 11 preview SDK and a `dotnet-7.0` Nix module. Either repair it or replace it with the real target.
+- The Replit configuration is the closest thing to a deployment story and does not currently work: `.replit` declares a `dotnet-7.0` module that cannot satisfy the `10.0.400` pin, and `start-api.sh`/`start-blazor.sh` still point `DOTNET_ROOT` at a local `.dotnet/` directory nothing provisions. `replit.md` now documents this honestly rather than describing it as working. Either repair it or replace it with the real deployment target.
 
 ### 3.2 Settle the hosting model before traffic arrives
 
@@ -420,7 +427,7 @@ liability and should not imply preparation of a tax return.
 | Unenforced formatting | ~400 `dotnet format` whitespace violations across ~30 files; nothing checks it | One mechanical pass, then `--verify-no-changes` in CI (2.1) |
 | UI orchestration size | `Calculator.razor` 1,948 lines; `CalculatorViewModel` 1,474; both grow per calculation mode | Capability-based refactor (2.3) |
 | Repeated asset wiring | Tax JSON declared separately for MAUI, Blazor and tests, plus the DI loader | Manifest-driven MSBuild wiring (1.3) |
-| Documentation drift | Six per-project `AGENTS.md`, three wiki pages, a reference chapter, and `replit.md` still describe .NET 11; `README.md` under-reports state coverage | Documentation sweep (0.3) |
+| ~~Documentation drift~~ **Resolved, twice now** | Had regressed to .NET 11 across six per-project `AGENTS.md`, three wiki pages, two reference chapters and `replit.md`; `README.md` under-reported state coverage | Swept (0.3). Recurrence is the real risk — add a docs-vs-`global.json` CI check (2.2) |
 | Hosting model | `InteractiveServer` on the whole router; every anonymous visitor holds a circuit | Decide before traffic (3.2) |
 | No measurement | No analytics, telemetry, or event logging anywhere in the solution | Funnel instrumentation (3.5) |
 | No purchase path | `IsPro` hardcoded `false`; the only gate is a dead end with no price or link | Milestone 5 |
