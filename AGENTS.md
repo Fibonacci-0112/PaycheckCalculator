@@ -51,6 +51,8 @@ dotnet run --project PaycheckCalculator.App
 
 `PaycheckCalculator.App` targets `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst`, and `net10.0-windows10.0.19041.0`; Apple targets are included only on macOS and the Windows target only on Windows. CI (`.github/workflows/dotnet.yml`) explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux, transitively building Core, Shared, API, and Blazor through its project references. MAUI is not built by that workflow; `codeql.yml` runs CodeQL separately.
 
+Claude Code on the web (and any other remote container) starts without a .NET SDK, so `.claude/hooks/session-start.sh` — registered as a `SessionStart` hook in `.claude/settings.json` — installs the `global.json` SDK into `~/.dotnet`, runs `dotnet tool restore` (dotnet-ef), and builds `PaycheckCalculator.Tests` so tests, `dotnet format`, and analyzers are ready. It is remote-only (guarded on `CLAUDE_CODE_REMOTE`), idempotent, and skips the MAUI app, which needs the `maui` workload and a platform SDK. If the pinned SDK version in `global.json` changes, the hook picks it up automatically; no edit is needed.
+
 ## Architecture
 
 ### Layering (do not blur)
