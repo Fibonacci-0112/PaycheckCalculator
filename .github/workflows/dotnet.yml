@@ -29,3 +29,31 @@ jobs:
       run: dotnet build PaycheckCalculator.Tests --no-restore
     - name: Test
       run: dotnet test PaycheckCalculator.Tests --no-build --verbosity normal
+
+  # PaycheckCalculator.App is not covered by the job above: it needs a MAUI workload, so
+  # `dotnet build PaycheckCalculator.Tests` never compiles it. Without this job nothing
+  # verifies the MAUI app builds, and it has been merged broken before (PR #241 fixed a
+  # CS1503 that reached main because the change could not be compiled where it was written).
+  #
+  # Android is the one MAUI target that builds on a Linux runner. iOS and Mac Catalyst need
+  # macOS and Windows needs a Windows runner; both are deliberately still uncovered.
+  android:
+    name: MAUI Android build
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      # Reads the pin from global.json so bumping it needs no edit here.
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+    # `maui-android` rather than `maui`: the Apple and Windows workloads cannot build on
+    # this runner anyway, and skipping them keeps the install to roughly a minute.
+    - name: Install MAUI Android workload
+      run: dotnet workload install maui-android
+    - name: Restore dependencies
+      run: dotnet restore PaycheckCalculator.App
+    - name: Build
+      run: dotnet build PaycheckCalculator.App -f net10.0-android --no-restore
