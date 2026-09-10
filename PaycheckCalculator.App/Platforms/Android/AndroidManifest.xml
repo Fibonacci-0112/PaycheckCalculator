@@ -5,7 +5,7 @@
       android:icon="@mipmap/appicon"
       android:roundIcon="@mipmap/appicon_round"
       android:supportsRtl="true" />
-  <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="37" />
+  <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="36" />
   <!-- Required for account sign-in and paycheck sync with the server. -->
   <uses-permission android:name="android.permission.INTERNET" />
   <!-- Allow the app to detect/launch Adobe Reader and other PDF viewers, plus
