@@ -5,6 +5,13 @@
       android:icon="@mipmap/appicon"
       android:roundIcon="@mipmap/appicon_round"
       android:supportsRtl="true" />
+  <!-- targetSdkVersion must not exceed the API level the .NET Android SDK compiles against
+       (Microsoft.Android.Sdk.Linux 36.1.69 -> API 36). aapt2 links resources against the TARGET
+       SDK, so raising this to 37 makes every build demand platforms/android-37/android.jar, which
+       no stock Android SDK provides: Google publishes API 37 as platforms;android-37.0. That is
+       XA5207, and it broke the build everywhere except machines with a hand-made android-37
+       directory. The toolchain flags the mismatch as XA1008. Raise this only together with the
+       Android SDK pack. -->
   <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="36" />
   <!-- Required for account sign-in and paycheck sync with the server. -->
   <uses-permission android:name="android.permission.INTERNET" />

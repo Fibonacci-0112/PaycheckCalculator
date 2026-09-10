@@ -22,13 +22,20 @@ Both scripts export `ASPNETCORE_URLS`/`DOTNET_ROOT`/`PATH` and start the process
 
 ### .NET SDK
 
-This project pins `global.json` to a **.NET 11 preview SDK** (`11.0.100-preview.7.26381.103`), which isn't available as a Replit Nix module (the highest module is .NET 10). It's installed locally instead:
+`global.json` pins the **.NET 10 GA SDK** (`10.0.400`, `latestFeature` roll-forward). This is a
+released SDK, so the earlier workaround — hand-installing a .NET 11 preview into `.dotnet/`
+because no Nix module provided it — is no longer needed.
 
-- Downloaded via `dotnet-install.sh` into `.dotnet/` (git-ignored) — matches the exact preview version pinned in `global.json`.
-- `icu` was added as a system dependency (required by the preview SDK's globalization support).
-- The two `start-*.sh` scripts prepend `.dotnet/` to `PATH` and set `DOTNET_ROOT` so `dotnet` resolves to the preview SDK instead of the system-wide .NET 7.
+**This Replit setup has not been revalidated since that change and is known to be inconsistent:**
 
-If `global.json` is ever bumped to a newer preview build, re-run `dotnet-install.sh --version <new-version> --install-dir .dotnet` to refresh it.
+- `.replit` still declares the `dotnet-7.0` module, which cannot satisfy a `10.0.400` pin. A
+  `dotnet-10.0` module is available and is what this project now needs.
+- `start-api.sh` and `start-blazor.sh` still prepend `$PWD/.dotnet` to `PATH` and set
+  `DOTNET_ROOT` to it, so they depend on a local SDK directory that is git-ignored and no longer
+  provisioned by anything in the repo.
+
+Repairing or replacing this is tracked as Milestone 3.1 in [`ROADMAP.md`](ROADMAP.md). Until then,
+treat the commands below as describing intent rather than a working configuration.
 
 ### Database
 

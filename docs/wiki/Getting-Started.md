@@ -6,7 +6,7 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
 
 ## Prerequisites
 
-- **.NET 11 SDK preview** pinned in [`global.json`](../../global.json): `11.0.100-preview.7.26381.103`, `latestFeature` roll-forward, prerelease allowed.
+- **.NET 10 SDK** pinned in [`global.json`](../../global.json): `10.0.400`, `latestFeature` roll-forward.
 - **.NET MAUI workload** only when building or running `PaycheckCalculator.App`:
   ```bash
   dotnet workload install maui
@@ -16,7 +16,7 @@ This page covers the prerequisites, layout, and commands needed to build, test, 
 
 `PaycheckCalculator.Core`, `PaycheckCalculator.Shared`, `PaycheckCalculator.API`, `PaycheckCalculator.Blazor`, and `PaycheckCalculator.Tests` build without the MAUI workload. `PaycheckCalculator.App` requires the MAUI workload.
 
-All non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android`, `net11.0-ios`, `net11.0-maccatalyst`, and `net11.0-windows10.0.19041.0`; Apple targets are included only when MSBuild runs on macOS, and the Windows target is included only on Windows.
+All non-MAUI projects target `net10.0`. The MAUI app targets `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst`, and `net10.0-windows10.0.19041.0`; Apple targets are included only when MSBuild runs on macOS, and the Windows target is included only on Windows.
 
 ---
 
@@ -24,7 +24,7 @@ All non-MAUI projects target `net11.0`. The MAUI app targets `net11.0-android`, 
 
 ```text
 PaycheckCalculator.slnx
-├── global.json                   # .NET 11 preview SDK pin
+├── global.json                   # .NET 10 SDK pin
 ├── PaycheckCalculator.Core/            # UI-agnostic tax, pay, gross-up, projection, budget, and report engines
 ├── PaycheckCalculator.App/             # .NET MAUI frontend for Android, iOS, macOS, and Windows
 ├── PaycheckCalculator.Blazor/          # Blazor Server web frontend
@@ -77,7 +77,7 @@ dotnet test PaycheckCalculator.Tests
 
 The test suite covers federal withholding, FICA, all state calculators, dynamic state schemas, gross-up, annual projection, budgeting, recurring bills, savings goals, budget reports, snapshot JSON round-trips, deterministic merge behavior, sync API integration, and CSV/PDF export renderers.
 
-CI (`.github/workflows/dotnet.yml`) explicitly restores, builds, and tests `PaycheckCalculator.Tests` on Linux with the pinned .NET 11 preview SDK. The test project's references build Core, Shared, API, and Blazor transitively; MAUI is not built by this workflow. CodeQL runs separately.
+CI (`.github/workflows/dotnet.yml`) runs two jobs on Linux. The `build` job restores, builds, and tests `PaycheckCalculator.Tests`, whose project references build Core, Shared, API, and Blazor transitively. The `MAUI Android build` job installs the `maui-android` workload, provisions the Android SDK platform, and builds `PaycheckCalculator.App` for `net10.0-android`; the iOS, Mac Catalyst, and Windows targets need other runners and are not built. CodeQL runs separately.
 
 ---
 
@@ -133,16 +133,16 @@ Target-specific run examples:
 
 ```bash
 # Android
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-android
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-android
 
 # iOS (requires macOS and Xcode)
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-ios
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-ios
 
 # macOS via Mac Catalyst (requires macOS and Xcode)
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-maccatalyst
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-maccatalyst
 
 # Windows
-dotnet build PaycheckCalculator.App -t:Run -f net11.0-windows10.0.19041.0
+dotnet build PaycheckCalculator.App -t:Run -f net10.0-windows10.0.19041.0
 ```
 
 The MAUI app packages tax JSON as `MauiAsset` files and reads them through `MauiAppPackageTaxDataReader`.

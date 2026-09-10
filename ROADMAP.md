@@ -6,36 +6,54 @@ This is the living product and engineering roadmap for PaycheckCalculator, and t
 record**. It describes intended direction, not a promise of dates. Milestones are ordered by
 dependency and risk; accuracy, explainability, and data safety take priority over feature count.
 
+## Scope
+
+**This is a personal project, built for its own sake and for the author's own use.** It is not
+pursuing users, revenue, or a market. That decision is what orders everything below, so it is stated
+first rather than left implicit.
+
+Concretely, it means the work worth doing is the work that makes the thing *correct*, *pleasant to
+own*, and *still working next year* — not the work that would make it sell. Milestones aimed at
+acquisition, measurement, and monetization are **parked**: kept in the document with their analysis
+intact, so they can be revived if the goal ever changes, but explicitly not scheduled and not
+blocking anything.
+
 A commercial review from August 2026 is archived at
-[`docs/reviews/2026-08-commercial-review.md`](docs/reviews/2026-08-commercial-review.md). Its live
-recommendations are folded into this document — chiefly Milestones 3 and 5, which did not previously
-exist. That review is history and is not maintained; where it disagrees with this file, this file wins.
+[`docs/reviews/2026-08-commercial-review.md`](docs/reviews/2026-08-commercial-review.md). Most of it
+argues for a goal this project does not have. It is retained because its *technical* findings — the
+hosting model, the `robots.txt` bug, the entitlement seam — are sound regardless of motive, and
+because reversing the scope decision should start from a real analysis rather than a fresh guess.
 
 ## Status
 
-| | Milestone | Why now |
+| | Milestone | Why |
 |---|---|---|
-| **Now** | **1 — Tax-year platform** | The only item on this roadmap with an external deadline. The engine is hardcoded to 2026 and fails closed on every other year, so the product stops working for the 2027 season unless this lands first. |
-| **Next** | 2 — Reliable v1 foundation, then 3 — Ship and distribute | Nothing is deployed. Until it is, no question about traffic, conversion, or pricing can be answered with data rather than opinion. |
-| **Later** | 4 — Production accounts and sync · 5 — Revenue · 6 — Planning tools · 7 — Platform growth | Each is gated on something above it. |
+| **Now** | **1 — Tax-year platform** | The only item here with a real deadline. The engine is hardcoded to 2026 and fails closed on every other year, so it simply stops working for the 2027 season unless this lands. Everything else can wait; this cannot. |
+| **Next** | 2 — Craft and maintainability | The actual point of a project like this. CI coverage, the ~400 unenforced formatting violations, and the two thousand-line orchestration files are the things that make it pleasant or unpleasant to come back to. |
+| **Then** | 3 — Run it somewhere · 6 — Features worth having | Deploy it so it can be used from a phone without a local SDK, then build the handful of features the author would actually use. |
+| **Background** | 0 — Trust baseline · 4 — Sync reliability | Standing obligations rather than scheduled work. 4 matters only to the degree accounts get used across devices. |
+| **Parked** | 5 — Revenue · most of 3 · parts of 7 | Out of scope under the goal above. Kept, not scheduled. |
 
 Only one milestone is "Now" at a time. Moving work forward out of order requires an explicit tradeoff,
 recorded here.
 
 ## Product direction
 
-PaycheckCalculator should become the most trustworthy, understandable, and practical US
-paycheck-planning tool for employees and independent contractors.
+PaycheckCalculator aims to be a genuinely correct, genuinely explainable US paycheck calculator —
+because that is a satisfying thing to build and a useful thing to own, not because it is trying to win
+a market. The standard it holds itself to is the same either way; only the reason for holding it
+differs.
 
-The product should remain:
+The qualities below are the point of the project, not a positioning statement, and they hold whether
+or not anyone else ever uses it:
 
 - **Accuracy-first** — every supported calculation is traceable to an authoritative rule or table and protected by explicit test cases.
-- **Explainable** — users can see how each result was calculated and which tax-year source supports it.
+- **Explainable** — every result can be traced step by step to the rule that produced it. This is the most interesting part of the codebase and the reason the engine is worth having.
 - **Private by default** — core calculations work without an account, and local/offline use remains a first-class path.
-- **Cross-platform** — MAUI and web experiences share one calculation engine and reach feature parity deliberately.
+- **Cross-platform, deliberately** — MAUI and web share one calculation engine. Parity is a choice to re-examine per feature (see Milestone 7), not an obligation.
 - **Honest about scope** — estimates, unsupported local taxes, and assumptions are disclosed instead of hidden behind a precise-looking number.
 
-Core calculation accuracy and source explanations should never become paid-only features.
+Nothing here is or will be gated behind payment; see Milestone 5, which is parked.
 
 ## Current baseline
 
@@ -49,8 +67,9 @@ Verified against `b000521` on September 10, 2026:
 - MAUI clients for Android, iOS, Mac Catalyst and Windows; a Blazor Server web app; an optional account/sync API.
 - Saved-paycheck comparison, CSV/PDF export, budgeting, recurring bills, savings goals, and reports.
 
-**Nothing is deployed.** There is no public instance, no users, and therefore no usage data. This is
-the single most important fact for sequencing: it is what places Milestone 3 ahead of Milestone 5.
+**Nothing is deployed.** There is no public instance and no users, and under the scope above that is
+a fact to work with rather than a problem to solve. It means Milestone 3 shrinks to "somewhere to run
+it", and it means every milestone premised on traffic is parked.
 
 The repository has **no open GitHub issues and has never had any**. Milestone work should be converted
 into focused issues before implementation begins — a document is not a work queue, and its absence is
@@ -58,18 +77,19 @@ a large part of why the next step is hard to see from a cold start.
 
 ## Delivery map
 
-| Order | Milestone | Primary outcome | Planning size |
+| Order | Milestone | Primary outcome | Status |
 |---|---|---|---|
-| 0 | Trust baseline | Make correctness and source provenance measurable | Largely complete |
-| **1** | **Tax-year platform** | Replace the single-year design with versioned tax data | 4–8 weeks |
-| 2 | Reliable v1 foundation | Broaden CI, reduce UI duplication, automate releases | 6–10 weeks |
-| 3 | Ship and distribute | Get it deployed, reachable, and measurable | 3–6 weeks |
-| 4 | Production accounts and sync | Harden identity, persistence, operations, conflict handling | 6–10 weeks |
-| 5 | Revenue | A path from willing customer to paid, enforced server-side | 4–8 weeks |
-| 6 | Planning tools | The highest-value user features on a stable foundation | Incremental |
-| 7 | Platform growth | Accessibility, additional platforms, sustainable Pro tiers | Later |
+| 0 | Trust baseline | Correctness and source provenance stay measurable | Largely complete; standing obligations |
+| **1** | **Tax-year platform** | Replace the single-year design with versioned tax data | **Now** — 2027 deadline |
+| 2 | Craft and maintainability | CI coverage, enforced formatting, no thousand-line orchestrators | Next |
+| 3 | Run it somewhere | Deployed and usable from a browser without a local SDK | Then — 3.1 and 3.3 only |
+| 4 | Sync reliability | Accounts and multi-device sync that do not lose data | Background; only if used |
+| 5 | Revenue | — | **Parked** — out of scope |
+| 6 | Features worth having | The handful the author would actually use | Then — pick individually |
+| 7 | Accessibility and platform | WCAG 2.2 AA on the web; settle the MAUI question | Later; Pro/billing items parked |
 
-Planning sizes assume focused development and should be revised after issues are estimated.
+There are no time estimates. This is unpaid work with no deadline except the tax year, and inventing
+week counts for a hobby project would only manufacture guilt.
 
 ## Milestone 0 — Trust baseline
 
@@ -94,25 +114,31 @@ loudly on a missing or malformed entry, so an uncited number cannot ship quietly
 - **Open:** property tests for gross-up convergence.
 - Standing obligation: a regression case for every confirmed production calculation defect.
 
-### 0.3 Documentation reconciliation — **regressed, needs a sweep**
+### 0.3 Documentation reconciliation — **swept**
 
-The baselines below are correct in `README.md`, `CLAUDE.md` and the root `AGENTS.md`, and **wrong**
-in the six per-project `AGENTS.md` files, `docs/wiki/{Home,Getting-Started,Contributing}.md`,
-`docs/reference/01-solution-and-build.md`, and `replit.md`, all of which still describe .NET 11 and a
-preview SDK pin:
+These baselines are now stated consistently across `README.md`, `CLAUDE.md`, the root and six
+per-project `AGENTS.md` files, `docs/wiki/`, `docs/reference/`, and `replit.md`. They had regressed
+to .NET 11 and a preview SDK pin everywhere except the root guidance files:
 
-- Core targets **.NET 10** only; the SDK pin is `10.0.400` with `latestFeature` roll-forward.
+- Core targets **.NET 10** only; the SDK pin is `10.0.400` with `latestFeature` roll-forward, and no preview packages remain.
 - The API uses Npgsql/PostgreSQL in normal operation; SQLite is limited to integration tests.
-- CI restores, builds and tests `PaycheckCalculator.Tests`, building Core, Shared, API and Blazor transitively, and separately builds the MAUI Android target.
+- CI runs two jobs: one restores, builds and tests `PaycheckCalculator.Tests` (building Core, Shared, API and Blazor transitively), and one builds the MAUI Android target. iOS, Mac Catalyst and Windows need other runners and stay uncovered.
+- `README.md` lists all ten disability/paid-leave jurisdictions and Maryland county tax, not the four it previously named.
 
-`README.md` also under-reports state coverage: it lists four disability/paid-leave states where ten
-are implemented.
+Deliberately left alone: `.agents/memory/dotnet-preview-sdk-setup.md` keeps its .NET 11 worked
+example, since it documents a technique for any project pinning an SDK newer than the available
+modules; it carries a note that it no longer describes this repository. The archived review under
+`docs/reviews/` is frozen by design and is not swept.
+
+Standing obligation: this is the second time these baselines have drifted. The durable fix is
+mechanical — a CI check that greps the docs for the TFMs and SDK pin actually declared in
+`global.json` and the csproj files — and belongs with the other CI work in 2.2.
 
 ### Exit criteria
 
 - Every production calculator has a source record and verification owner/date. **Met.**
 - All 51 jurisdictions pass registration, schema, and representative calculation tests. **Met.**
-- Known documentation contradictions are resolved. **Not met** — see 0.3.
+- Known documentation contradictions are resolved. **Met** — see 0.3. Staying met needs the automated check noted there.
 - A calculation defect can be reported, reproduced, fixed, and documented through a defined workflow. **Met.**
 
 ## Milestone 1 — Tax-year platform — **NOW**
@@ -154,7 +180,7 @@ Adding a year currently means touching all four.
 - Adding a tax year does not require editing hardcoded filenames in multiple project files.
 - Missing or partial tax data cannot produce a normal-looking result.
 
-## Milestone 2 — Reliable v1 foundation
+## Milestone 2 — Craft and maintainability
 
 ### 2.1 Supported runtime and dependency management
 
@@ -173,6 +199,7 @@ Build a platform-aware matrix rather than invoking only the test project:
 - ~~MAUI Android build on a Linux runner.~~ **Done** — the `android` job in `dotnet.yml`. This closed a real gap: the MAUI app was merged broken at least once (#241 fixed a CS1503 that reached main because the change could not be compiled where it was written), and #243 shipped MAUI code its own description records as never compiled.
 - MAUI Windows build on a Windows runner; iOS/Mac Catalyst on macOS. Still uncovered.
 - Formatting/analyzer checks, dependency vulnerability review, and tax-pack validation.
+- A documentation consistency check: assert the TFMs and SDK version named in `README.md`, `docs/` and the `AGENTS.md` files match `global.json` and the csproj files. This drift has now been repaired twice by hand (0.3).
 - Coverage reporting for Core/Shared, plus mutation testing for the highest-risk calculation primitives.
 - Publish test reports and build artifacts for failed-run diagnosis.
 - **Watch CodeQL.** All three analysis jobs failed together on main between September 6 and 7 and nothing surfaced it; they pass again as of run 146. Simultaneous failure across three unrelated languages at the upload step points at infrastructure rather than code, but an unnoticed two-day outage in the security workflow is itself the finding.
@@ -213,18 +240,25 @@ Refactor by user capability, not arbitrary line count:
 - Critical calculation paths meet agreed coverage and mutation thresholds.
 - Major MAUI and Blazor workflows no longer depend on single thousand-line orchestration files.
 
-## Milestone 3 — Ship and distribute
+## Milestone 3 — Run it somewhere
 
-New in this revision, from the archived review's Parts 2 and 3. Nothing is deployed, so every question
-about acquisition, conversion or pricing is currently unanswerable. This milestone makes them answerable.
+Scoped down to what a personal project needs: somewhere to use it from, and links that reproduce a
+calculation. The acquisition and measurement sections below are parked.
 
 ### 3.1 Deploy something
 
 - Stand up the Blazor app at a real domain, with TLS, a health check, and a documented redeploy path.
 - Decide whether the sync API deploys alongside it or stays local-only for now. The calculator works fully without it.
-- The Replit configuration in `.replit`/`replit.md` is the closest thing to a deployment story and is stale — it describes a .NET 11 preview SDK and a `dotnet-7.0` Nix module. Either repair it or replace it with the real target.
+- The Replit configuration is the closest thing to a deployment story and does not currently work: `.replit` declares a `dotnet-7.0` module that cannot satisfy the `10.0.400` pin, and `start-api.sh`/`start-blazor.sh` still point `DOTNET_ROOT` at a local `.dotnet/` directory nothing provisions. `replit.md` now documents this honestly rather than describing it as working. Either repair it or replace it with the real deployment target.
 
-### 3.2 Settle the hosting model before traffic arrives
+### 3.2 Hosting model — **parked**
+
+The concern below is real but priced in visitor concurrency, which a personal instance does not have.
+One user holding one SignalR circuit is fine. Revive this only if the app is ever opened to traffic.
+
+<details>
+<summary>Original analysis</summary>
+
 
 `Components/App.razor` applies `@rendermode="InteractiveServer"` to the whole router, and `Program.cs`
 registers only the interactive-server render mode. Every anonymous visitor therefore opens and holds a
@@ -236,16 +270,39 @@ depends on a socket round-trip, and a dropped connection breaks the page.
 - Reserve circuits for signed-in workflows where the cost is justified.
 - Size this honestly: it is a significant refactor, and it determines the unit economics of every acquisition channel. Deciding it after traffic arrives is more expensive than deciding it now.
 
-### 3.3 Make results addressable
+</details>
+
+### 3.3 Make results addressable — **keep**
+
+Worth doing regardless of audience: a URL that reproduces a calculation is how you bookmark your own
+scenarios, compare two of them side by side in tabs, or send one to someone. Small change, genuinely
+useful to a single user.
 
 Calculator state lives entirely in the circuit. There is no `?state=ca&salary=75000&frequency=biweekly`
-representation, so results cannot be shared or bookmarked, ads cannot land on pre-filled intent, and
-generated landing pages have nothing to link into.
+representation, so a result cannot be bookmarked or reopened — every visit starts from an empty form.
 
 - Add deep-link query parameters for the calculator's inputs, round-tripped through the URL.
-- This is a small change that unblocks sharing, paid-acquisition testing and 3.4 simultaneously.
+- Pairs naturally with the tax-year identity work in 1.2: a shared link should pin the year it was calculated for, or it silently means something different next January.
 
-### 3.4 Deepen the SEO surface that already exists
+### 3.4–3.6 Acquisition, measurement, and commercial legal pages — **parked**
+
+All three exist to convert strangers into users and users into customers. None of that applies here.
+
+Two exceptions worth doing anyway, because they are correctness bugs rather than growth work, and
+they take minutes:
+
+- `wwwroot/robots.txt` ends with `Sitemap: /sitemap.xml`. The sitemaps protocol requires an absolute URL. Wrong is wrong even when nobody is crawling.
+- `Home.razor` uses a relative canonical (`href="/"`) while `StateLandingPage.razor` uses an absolute one. Make both absolute for consistency.
+
+And one that changes shape rather than parking: if the app is ever deployed on a public URL, a short,
+honest privacy note is worth writing — not for a payment processor, but because it is the decent thing
+to put on a page that accepts salary figures. That is a paragraph, not the compliance document 3.6
+describes.
+
+<details>
+<summary>Original analysis (3.4 SEO, 3.5 funnel, 3.6 commercial legal pages)</summary>
+
+#### 3.4 Deepen the SEO surface that already exists
 
 51 state landing pages, a generated sitemap, canonical tags, OpenGraph and JSON-LD are already in place.
 Four things hold them back:
@@ -255,7 +312,7 @@ Four things hold them back:
 - Each state page is ~5 lines of unique prose over an identical calculator — a recognizable thin-page pattern at 51 URLs. Generate real per-state substance from data already shipped: the 2026 bracket table, the disability/paid-leave line where one exists, a worked take-home table at several salary points, and reciprocity/local-tax caveats.
 - Emit `FAQPage` structured data alongside the existing `WebApplication` schema.
 
-### 3.5 Instrument the funnel
+#### 3.5 Instrument the funnel
 
 There is no analytics, telemetry or event logging anywhere in the solution. Before feature work resumes,
 add a privacy-preserving funnel: `landed → calculated → saved → signed up → hit gate → converted`,
@@ -264,23 +321,28 @@ segmented by landing page and state.
 - **Never log payroll values by default** — event names and coarse dimensions only.
 - Given the product's privacy positioning, self-hosted event capture in the existing API is a better fit than a third-party pixel, and avoids a cookie-consent burden on every page.
 
-### 3.6 Legal pages that survive review
+#### 3.6 Legal pages that survive review
 
 `Privacy.razor` and `Terms.razor` are 20 lines each, most of it markup. That is below the bar for
 payment-processor onboarding, ad-network approval, and app-store review, and it blocks every revenue
 path at once. Needed: data categories collected, retention periods, sub-processors, deletion mechanics,
 cookie/advertising disclosure, children's-data statement, contact address, and an effective date.
 
+</details>
+
 ### Exit criteria
 
-- A real person can reach the calculator at a stable URL and get a correct answer.
+- The calculator is reachable at a stable URL and gives a correct answer.
 - A calculation can be shared as a link that reproduces it.
-- The funnel above produces numbers for a week of real traffic.
-- Legal pages are complete enough to submit to a payment processor.
+- Redeploying is one documented command, not an archaeology exercise.
 
-## Milestone 4 — Production-ready accounts and sync
+## Milestone 4 — Sync reliability
 
-Keep sync optional. Do not market it as production-ready until this milestone is complete.
+Keep sync optional. Under the personal-project scope this is **background work, sized to actual use**:
+if the account feature is never used across devices, most of it is unnecessary. Two items are worth
+doing the moment the API runs anywhere but localhost, because they are about not getting burned rather
+than about scale — the fallback credentials in 4.1 and the data-loss cases in 4.3. The rest can wait
+indefinitely.
 
 ### 4.1 API and identity hardening
 
@@ -317,13 +379,23 @@ The current deterministic last-write-wins design trusts client timestamps. Impro
 - Backup restoration and account deletion are exercised in automated or documented drills.
 - Two offline devices can reconcile supported edits without silent loss in the tested conflict matrix.
 
-## Milestone 5 — Revenue
+## Milestone 5 — Revenue — **PARKED**
 
-New in this revision, from the archived review's Parts 1 and 4. Gated on Milestone 3 (you cannot price
-what you cannot measure) and Milestone 4 (taking money makes the API's gaps financial risk rather than
-technical debt).
+Out of scope: this is a personal project and is not being sold. The section is kept intact so that
+reversing that decision starts from analysis rather than a blank page, but nothing here is scheduled
+and nothing else in this roadmap waits on it.
 
-### 5.1 A path from willing customer to paid
+One consequence is worth acting on now, though, and it is the opposite of monetization: **the Pro gate
+is currently getting in the author's own way.** `FreeEntitlementProvider.IsPro` is hardcoded `false`,
+so `Budget.razor` hides the budget report views behind a "Pro feature" notice that leads nowhere — a
+paywall with no product behind it, locking the author out of a feature that is already built and paid
+for. Either delete the gate and the `IEntitlementProvider` indirection, or have the default provider
+return `true`. Deleting is tidier; returning `true` keeps the seam if the scope decision ever reverses.
+
+<details>
+<summary>Original analysis, retained for a possible future change of scope</summary>
+
+#### 5.1 A path from willing customer to paid
 
 `FreeEntitlementProvider.IsPro` is a hardcoded `false`, registered in both front-ends. The only paywall
 in the product renders the words "Pro feature" and a description, with no price, button, waitlist or
@@ -333,7 +405,7 @@ link. A user who has decided to pay cannot.
 2. **Then:** a checkout flow and webhook against `PaycheckCalculator.API`, with a subscriptions table keyed to the existing `IdentityUser`. `IEntitlementProvider` is already the right seam — swap the implementation, don't redesign it.
 3. **Non-negotiable:** entitlement is currently presentation-only. `IsPro` gates markup, not data. The moment a paid tier exists, every Pro-only computation must be enforced server-side. A client flag is not a paywall.
 
-### 5.2 What to actually sell
+#### 5.2 What to actually sell
 
 Free calculators are abundant, and nothing currently gated would make someone pay. Ranked by
 willingness-to-pay against build cost:
@@ -347,7 +419,7 @@ willingness-to-pay against build cost:
 **Hold the line:** current-year accuracy, source citations and the explanation tree stay free. They are
 the acquisition engine and the trust asset.
 
-### 5.3 The other option — license the engine
+#### 5.3 The other option — license the engine
 
 A deliberate divergence from the original roadmap, which deferred any public API to "later."
 
@@ -363,15 +435,23 @@ highest-margin option in the repository by a year. **Validate demand cheaply and
 and ten customer conversations, run in parallel with whatever else is in flight. If the demand is real,
 this milestone reorders.
 
-### Exit criteria
+#### Exit criteria (if ever revived)
 
 - A customer can pay, and paying changes what the server returns, not just what the client renders.
 - Entitlements are enforced in the API for every gated computation.
 - Free-tier accuracy, citations and explanations are unchanged by the existence of a paid tier.
 
-## Milestone 6 — High-value planning features
+</details>
 
-Implement these in order unless user research changes the ranking.
+## Milestone 6 — Features worth having
+
+Previously ranked by willingness-to-pay. Under the personal-project scope the only ranking that
+matters is **which of these the author would actually use**, so treat the table as a menu rather than
+a queue and pick individually. Nothing here is owed to anyone.
+
+The P1 rows are still the strongest candidates on their merits: the paycheck audit turns the existing
+explanation tree into an answer to "why is my check short?", and the 1099 planner and multi-state
+support each close a real gap in what the engine can currently tell you.
 
 | Priority | Feature | User outcome | Dependency |
 |---|---|---|---|
@@ -405,12 +485,15 @@ liability and should not imply preparation of a tax return.
 
 ## Milestone 7 — Platform growth
 
-- Meet WCAG 2.2 AA for the web experience and test keyboard, screen-reader, scaling, contrast, and error-state behavior on MAUI. For a US consumer-finance site this is legal exposure, not only a quality item, and should move earlier once anything is deployed.
-- **Decide the MAUI question.** Four platforms of maintenance currently carry no store presence: `ApplicationId` is `com.erik.paycheckcalc`, versions are hardcoded, and only Android is built by CI. Either commit to it as a retention and subscription-delivery surface for existing users — which needs a real bundle identifier, build-supplied versioning, store listings and full CI coverage first — or freeze it and put the marginal effort into web. Leaving it undecided means paying parity costs on every feature without deciding whether they buy anything.
-- Enforce entitlements server-side for hosted features and support receipt validation, grace periods, refunds, and restore-purchase flows.
-- Use privacy-preserving product analytics with opt-out controls to learn which inputs and explanations cause abandonment — never collect payroll values by default.
+- Meet WCAG 2.2 AA for the web experience and test keyboard, screen-reader, scaling, contrast, and error-state behavior on MAUI. The legal-exposure argument does not apply to a personal project, but the craft argument does, and keyboard and contrast work benefits the author too.
+- **Decide the MAUI question.** Four platforms of maintenance currently carry no store presence: `ApplicationId` is `com.erik.paycheckcalc` and versions are hardcoded. Only Android is built by CI, so iOS, Mac Catalyst and Windows breakage is still invisible until someone builds locally. Under this scope, store listings are irrelevant — the real question is narrower: **which platforms does the author actually run it on?** Keep those, and drop or freeze the rest rather than paying parity costs on every feature for targets nobody launches. Currently undecided.
+- ~~Enforce entitlements server-side, receipt validation, grace periods, refunds, restore-purchase flows.~~ **Parked** with Milestone 5.
+- ~~Product analytics.~~ **Parked** — there is no funnel to learn about. If curiosity ever motivates local instrumentation, the rule still holds: never collect payroll values.
 
 ## Engineering debt register
+
+Scored against the personal-project scope: several entries that read as debt for a commercial product
+are simply not debt here, and say so rather than sitting on the list forever accruing guilt.
 
 | Finding | Evidence at `b000521` | Planned response |
 |---|---|---|
@@ -420,12 +503,12 @@ liability and should not imply preparation of a tax return.
 | Unenforced formatting | ~400 `dotnet format` whitespace violations across ~30 files; nothing checks it | One mechanical pass, then `--verify-no-changes` in CI (2.1) |
 | UI orchestration size | `Calculator.razor` 1,948 lines; `CalculatorViewModel` 1,474; both grow per calculation mode | Capability-based refactor (2.3) |
 | Repeated asset wiring | Tax JSON declared separately for MAUI, Blazor and tests, plus the DI loader | Manifest-driven MSBuild wiring (1.3) |
-| Documentation drift | Six per-project `AGENTS.md`, three wiki pages, a reference chapter, and `replit.md` still describe .NET 11; `README.md` under-reports state coverage | Documentation sweep (0.3) |
-| Hosting model | `InteractiveServer` on the whole router; every anonymous visitor holds a circuit | Decide before traffic (3.2) |
-| No measurement | No analytics, telemetry, or event logging anywhere in the solution | Funnel instrumentation (3.5) |
-| No purchase path | `IsPro` hardcoded `false`; the only gate is a dead end with no price or link | Milestone 5 |
+| ~~Documentation drift~~ **Resolved, twice now** | Had regressed to .NET 11 across six per-project `AGENTS.md`, three wiki pages, two reference chapters and `replit.md`; `README.md` under-reported state coverage | Swept (0.3). Recurrence is the real risk — add a docs-vs-`global.json` CI check (2.2) |
+| Hosting model | `InteractiveServer` on the whole router; every visitor holds a SignalR circuit | **Not debt at this scope** — one user, one circuit. Parked (3.2); revisit only if opened to traffic |
+| No measurement | No analytics, telemetry, or event logging anywhere in the solution | **Not debt at this scope** — nothing to measure and nobody to measure. Parked (3.5) |
+| Pro gate blocks the author | `IsPro` hardcoded `false`, so `Budget.razor` hides already-built report views behind a dead-end notice | Inverted by the scope decision: not a missing purchase path but an unnecessary lock. Delete the gate or default `IsPro` to `true` (see Milestone 5 preamble) |
 | Client-clock conflict resolution | Sync merge uses client `DateTimeOffset` values for last-write-wins and retains tombstones | Server revisions, delta sync, compaction (4.3) |
-| API production gaps | Fallback database credentials, startup migrations, no rate limiting or health endpoint | Milestone 4 hardening |
+| API production gaps | Fallback database credentials (`admin`/`password`), startup migrations, no rate limiting or health endpoint | Only bites if the API leaves localhost — but then it bites hard, so fix the credential fallback before any remote deploy (4.1) |
 | Manual release identity | MAUI version fields hardcoded; no release workflow | Versioned release pipeline and SBOM (2.4) |
 | Unwatched security workflow | All three CodeQL jobs failed on main for two days in September and nothing surfaced it | Alerting on workflow failure (2.2) |
 
@@ -440,23 +523,27 @@ A roadmap item is not complete until applicable requirements are met:
 - Saved snapshots, sync compatibility, exports, and explanations are evaluated.
 - Accessibility and privacy impacts are reviewed.
 - README/wiki/architecture documentation is updated.
-- CI is green and release notes identify user-visible assumptions or changes.
+- CI is green, and anything that changes a calculation says so plainly in the commit message.
+- The change would still make sense to you six months later — the only reviewer this project reliably has.
 
 ## Success measures
 
-Targets, not current readings. Track a small set that rewards trust rather than vanity:
+Targets, not current readings. A short list, all of which are about the work being right rather than
+about anyone noticing:
 
 - Verified jurisdictions for the active tax year: **51 of 51**.
 - Official/golden example pass rate: **100%**.
-- Shipped runtime build coverage in CI: **100%**.
-- Unresolved confirmed P0/P1 calculation defects at release: **0**.
-- Sync conflict test-matrix pass rate before production launch: **100%**.
+- Runtime build coverage in CI for every platform actually shipped: **100%**.
+- Unresolved confirmed calculation defects: **0**.
 - Web accessibility: **WCAG 2.2 AA** on critical flows.
-- Accuracy reports with reproducible test cases and an initial maintainer response: target service level defined before v1.
+- Time from picking the repo up after a month away to a green build: **minutes**. This is the measure a personal project lives or dies by, and it is what Milestone 2 is really for.
+
+Removed with the commercial scope: conversion, traffic, and any target framed around a launch or a
+service level owed to users.
 
 ## Deliberately not now
 
-These ideas add major legal, security, or operational scope and should not distract from the milestones above:
+These add major legal, security, or operational scope and should not distract from the milestones above:
 
 - Filing tax returns or acting as a payroll processor.
 - Direct bank-account aggregation.
@@ -465,11 +552,23 @@ These ideas add major legal, security, or operational scope and should not distr
 - Nationwide local-tax claims without a maintainable authoritative data pipeline.
 - Organization/team accounts before single-user sync is production-ready.
 
+And, following from the scope decision at the top — not because they are bad ideas, but because they
+serve a goal this project does not have:
+
+- Charging anyone for anything, and the billing, entitlement enforcement, and commercial legal pages that would require.
+- SEO depth, generated landing-page families, and structured data aimed at search traffic.
+- Funnel analytics and conversion measurement.
+- Licensing the engine commercially.
+
+None of these are ruled out forever. They are ruled out *now*, by choice, and the analysis for each
+survives in Milestone 5 and the archived review if that choice is ever revisited.
+
 ## Roadmap maintenance
 
-- Review this document monthly and after every tax-data correction.
-- Convert the active milestone into scoped GitHub issues with an owner, acceptance criteria, dependencies, and size. The repository has none today.
+- Review this document after every tax-data correction, and whenever picking the project back up after a gap. Monthly review is a process for teams; here it would just be a recurring chore to feel bad about skipping.
+- Convert the active milestone into GitHub issues with acceptance criteria and dependencies. The repository has none today, and a 400-line document is not a work queue. Skip "owner" and "size" — there is one person and no sprint.
 - Label work by priority, area, kind, and tax year.
 - Keep only one milestone "Now"; moving work forward requires an explicit tradeoff recorded in the Status table.
-- Record completed outcomes in release notes rather than allowing this file to become a second changelog.
+- Record completed outcomes in release notes or commit messages rather than letting this file become a second changelog.
+- If the scope statement at the top ever changes, re-read the parked sections and the archived review before rescheduling anything — they hold the reasoning, and re-deriving it from scratch would waste the analysis already done.
 - This is the only plan of record. Do not start a second planning document; if a review produces one, fold its live findings in here and archive it under `docs/reviews/` with a date.

@@ -39,4 +39,4 @@ dotnet run --project PaycheckCalculator.API
 dotnet test PaycheckCalculator.Tests --filter "FullyQualifiedName~SyncApi"
 ```
 
-The API targets `net11.0` and should build without the MAUI workload.
+The API targets `net10.0` and should build without the MAUI workload.
