@@ -53,7 +53,18 @@ jobs:
     # this runner anyway, and skipping them keeps the install to roughly a minute.
     - name: Install MAUI Android workload
       run: dotnet workload install maui-android
+    # The runner's preinstalled Android SDK does not necessarily carry the API level the
+    # app targets, so provision it rather than assuming — this is the mechanism XA5207
+    # itself recommends, and it is a no-op when the platform is already present.
+    - name: Provision Android SDK dependencies
+      run: >
+        dotnet build PaycheckCalculator.App -f net10.0-android
+        -t:InstallAndroidDependencies
+        -p:AndroidSdkDirectory="$ANDROID_SDK_ROOT"
+        -p:AcceptAndroidSDKLicenses=True
     - name: Restore dependencies
       run: dotnet restore PaycheckCalculator.App
     - name: Build
-      run: dotnet build PaycheckCalculator.App -f net10.0-android --no-restore
+      run: >
+        dotnet build PaycheckCalculator.App -f net10.0-android --no-restore
+        -p:AndroidSdkDirectory="$ANDROID_SDK_ROOT"
